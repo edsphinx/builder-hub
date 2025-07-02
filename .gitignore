@@ -1,23 +1,46 @@
-# dependencies
-node_modules
+# Node modules
+node_modules/
+.next/
+.cache/
+.env
+.env.local
+dist/
+artifacts/
+cache/
+build/
+out/
 
-# yarn
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# eslint
-.eslintcache
+# Dependency directories
+.pnp/
+.pnp.js
+__pycache__/
 
-# misc
+# OS files
 .DS_Store
+Thumbs.db
 
-# IDE
-.vscode
-.idea
+# IDEs
+.vscode/
+.idea/
 
-# cli
-dist
+# Hardhat & Foundry
+artifacts/
+cache/
+coverage/
+typechain/
+broadcast/
+deployments/
+
+# Compiled contracts
+*.tsbuildinfo
+
+# Misc
+*.log
+*.sqlite
+*.pid
+*.seed

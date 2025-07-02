@@ -30,6 +30,29 @@ const config: HardhatUserConfig = {
       {
         version: "0.8.20",
         settings: {
+          evmVersion: "cancun",
+          optimizer: {
+            enabled: true,
+            // https://docs.soliditylang.org/en/latest/using-the-compiler.html#optimizer-options
+            runs: 200,
+          },
+        },
+      },
+      {
+        version: "0.8.24",
+        settings: {
+          evmVersion: "cancun",
+          optimizer: {
+            enabled: true,
+            // https://docs.soliditylang.org/en/latest/using-the-compiler.html#optimizer-options
+            runs: 200,
+          },
+        },
+      },
+      {
+        version: "0.8.28",
+        settings: {
+          evmVersion: "cancun",
           optimizer: {
             enabled: true,
             // https://docs.soliditylang.org/en/latest/using-the-compiler.html#optimizer-options
@@ -50,10 +73,20 @@ const config: HardhatUserConfig = {
     // View the networks that are pre-configured.
     // If the network you are looking for is not here you can add new network settings
     hardhat: {
-      forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${providerApiKey}`,
-        enabled: process.env.MAINNET_FORKING_ENABLED === "true",
-      },
+      hardfork: "cancun", // <─ VM local ejecuta Cancún
+      chainId: 31337,
+      /** ── opcional: fork de mainnet ── */
+      forking:
+        process.env.MAINNET_FORKING_ENABLED === "true"
+          ? {
+              url: `https://eth-mainnet.alchemyapi.io/v2/${providerApiKey}`,
+              blockNumber: undefined, // o fija uno concreto si lo deseas
+            }
+          : undefined,
+    },
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      chainId: 31337,
     },
     mainnet: {
       url: `https://eth-mainnet.alchemyapi.io/v2/${providerApiKey}`,
@@ -164,6 +197,11 @@ const config: HardhatUserConfig = {
   },
   sourcify: {
     enabled: false,
+  },
+  typechain: {
+    outDir: "typechain-types",
+    target: "ethers-v6", // explícito por claridad
+    alwaysGenerateOverloads: false,
   },
 };
 
