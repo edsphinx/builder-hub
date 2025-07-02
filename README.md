@@ -2,15 +2,27 @@
 
 <!-- README.md – Gasless Paymaster (ERC-4337) -->
 
-![Gasless Paymaster](<https://github.com/edsphinx/builder-hub/main/.github/banner.svg> =640x)
+<p align="center">
+  <img src="https://github.com/edsphinx/builder-hub/blob/main/.github/banner.svg" alt="Gasless Paymaster" width="640" />
+</p>
 
-{: .center}
-**Production-ready ERC-4337 Paymaster that subsidises USDC check-outs across Base, Arbitrum & Scroll**
-_Composable, upgrade-safe and 100 % open-source_
-[![CI](https://github.com/edsphinx/builder-hub/workflows/CI/badge.svg)](https://github.com/edsphinx/builder-hub/actions)
-[![Chat](https://img.shields.io/badge/chat-Telegram-blue?logo=telegram)](https://t.me/edsphinx)
-[LICENSE](LICENSE)
-![MIT License](https://img.shields.io/badge/License-MIT-success)
+<p align="center">
+  <strong>Production-ready ERC-4337 Paymaster that subsidises USDC check-outs across Base, Arbitrum & Scroll</strong>  
+  <br />
+  <em>Composable, upgrade-safe and 100% open-source</em>
+</p>
+
+<p align="center">
+  <a href="https://github.com/edsphinx/builder-hub/actions">
+    <img src="https://github.com/edsphinx/builder-hub/workflows/CI/badge.svg" alt="CI" />
+  </a>
+  <a href="https://t.me/edsphinx">
+    <img src="https://img.shields.io/badge/chat-Telegram-blue?logo=telegram" alt="Telegram" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-success" alt="MIT License" />
+  </a>
+</p>
 
 ---
 
