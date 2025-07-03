@@ -44,3 +44,7 @@ deployments/
 *.sqlite
 *.pid
 *.seed
+
+# Ignore manually cloned AA lib and symlinks
+/aa-lib/
+/packages/hardhat/contracts/@account-abstraction/
