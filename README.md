@@ -1,7 +1,7 @@
 # WalletFuel - Gasless Paymaster (ERC-4337)
 
 <p align="center">
-  <img src="https://github.com/edsphinx/builder-hub/.github/assets/walletFuel.png" alt="WalletFuel Gasless Paymaster" width="640" />
+  <img src="https://github.com/edsphinx/builder-hub/blob/main/.github/assets/walletFuel.png" alt="WalletFuel Gasless Paymaster" width="640" />
 </p>
 
 <p align="center">
