@@ -26,7 +26,7 @@ describe("WalletFuel", () => {
 
     // Deploy a fresh EntryPoint
     const epFactory = (await ethers.getContractFactory(
-      "contracts/@account-abstraction/contracts/core/EntryPoint.sol:EntryPoint",
+      "@account-abstraction/contracts/core/EntryPoint.sol:EntryPoint",
     )) as EntryPoint__factory;
     entryPoint = await epFactory.deploy();
     await entryPoint.waitForDeployment();

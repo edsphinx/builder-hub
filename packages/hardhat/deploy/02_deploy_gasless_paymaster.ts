@@ -134,4 +134,4 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
 export default func;
 func.tags = ["WalletFuel"];
-// func.dependencies = ["EntryPoint"]; // ← asegura que 00_entrypoint se ejecute antes
+func.dependencies = ["EntryPoint"]; // ← asegura que 00_entrypoint se ejecute antes

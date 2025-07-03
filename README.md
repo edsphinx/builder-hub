@@ -13,9 +13,6 @@
 <p align="center">
   <a href="https://github.com/edsphinx/builder-hub/actions">
     <img src="https://github.com/edsphinx/builder-hub/workflows/CI/badge.svg" alt="CI" />
-  </a>
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/edsphinx/builder-hub/:workflow)
-
   <a href="https://t.me/edsphinx">
     <img src="https://img.shields.io/badge/chat-Telegram-blue?logo=telegram" alt="Telegram" />
   </a>

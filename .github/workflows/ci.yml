@@ -10,20 +10,26 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js, Yarn
-        uses: actions/setup-node@v3
+      - name: ⬇️ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🧰 Set up Node.js 20.19.3
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 20.19.3
           cache: 'yarn'
-      - name: Install dependencies
-        run: yarn
+
+      - name: 📦 Install dependencies (Yarn v3)
+        run: yarn install --immutable
+
       - name: Initialize vendor libs
         run: yarn aa:init
+
       - name: Compile contracts
         run: |
           cd packages/hardhat
           yarn compile
+
       - name: Run Hardhat tests
         run: |
           cd packages/hardhat

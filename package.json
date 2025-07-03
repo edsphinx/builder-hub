@@ -4,12 +4,13 @@
 	"private": true,
 	"workspaces": {
 		"packages": [
-			"packages/*"
+			"packages/*",
+			"!packages/aa-lib"
 		]
 	},
 	"scripts": {
-		"aa:init": "./scripts/aa-init.sh",
-		"aa:clean": "./scripts/aa-clean.sh",
+		"aa:init": "bash ./scripts/aa-init.sh",
+		"aa:clean": "bash ./scripts/aa-clean.sh",
 		"ci": "yarn aa:init && cd packages/hardhat && yarn compile && yarn test",
 		"account": "yarn hardhat:account",
 		"account:generate": "yarn workspace @se-2/hardhat account:generate",
@@ -61,6 +62,6 @@
 	},
 	"packageManager": "yarn@3.2.3",
 	"engines": {
-		"node": ">=20.18.3"
+		"node": ">=20.19.3"
 	}
 }

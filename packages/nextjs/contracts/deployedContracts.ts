@@ -1567,6 +1567,478 @@ const deployedContracts = {
         withdrawTo: "@account-abstraction/contracts/core/BasePaymaster.sol",
       },
     },
+    WalletFuel: {
+      address: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "contract IEntryPoint",
+              name: "_entryPoint",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_config",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_treasury",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+          ],
+          name: "OwnableInvalidOwner",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "OwnableUnauthorizedAccount",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "gasUsed",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "feeWei",
+              type: "uint256",
+            },
+          ],
+          name: "GasSponsored",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousOwner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferStarted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousOwner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferred",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "acceptOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint32",
+              name: "unstakeDelaySec",
+              type: "uint32",
+            },
+          ],
+          name: "addStake",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4",
+              name: "",
+              type: "bytes4",
+            },
+          ],
+          name: "allowedSelectors",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "config",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "deposit",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "entryPoint",
+          outputs: [
+            {
+              internalType: "contract IEntryPoint",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getDeposit",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "limits",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "maxGas",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "maxUsd",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "pendingOwner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "enum IPaymaster.PostOpMode",
+              name: "mode",
+              type: "uint8",
+            },
+            {
+              internalType: "bytes",
+              name: "context",
+              type: "bytes",
+            },
+            {
+              internalType: "uint256",
+              name: "actualGasCost",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "actualUserOpFeePerGas",
+              type: "uint256",
+            },
+          ],
+          name: "postOp",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "renounceOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "gas",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "usd",
+              type: "uint256",
+            },
+          ],
+          name: "setLimit",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4",
+              name: "sel",
+              type: "bytes4",
+            },
+            {
+              internalType: "bool",
+              name: "ok",
+              type: "bool",
+            },
+          ],
+          name: "setSelector",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "treasury",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "unlockStake",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              components: [
+                {
+                  internalType: "address",
+                  name: "sender",
+                  type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "nonce",
+                  type: "uint256",
+                },
+                {
+                  internalType: "bytes",
+                  name: "initCode",
+                  type: "bytes",
+                },
+                {
+                  internalType: "bytes",
+                  name: "callData",
+                  type: "bytes",
+                },
+                {
+                  internalType: "bytes32",
+                  name: "accountGasLimits",
+                  type: "bytes32",
+                },
+                {
+                  internalType: "uint256",
+                  name: "preVerificationGas",
+                  type: "uint256",
+                },
+                {
+                  internalType: "bytes32",
+                  name: "gasFees",
+                  type: "bytes32",
+                },
+                {
+                  internalType: "bytes",
+                  name: "paymasterAndData",
+                  type: "bytes",
+                },
+                {
+                  internalType: "bytes",
+                  name: "signature",
+                  type: "bytes",
+                },
+              ],
+              internalType: "struct PackedUserOperation",
+              name: "userOp",
+              type: "tuple",
+            },
+            {
+              internalType: "bytes32",
+              name: "userOpHash",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint256",
+              name: "maxCost",
+              type: "uint256",
+            },
+          ],
+          name: "validatePaymasterUserOp",
+          outputs: [
+            {
+              internalType: "bytes",
+              name: "context",
+              type: "bytes",
+            },
+            {
+              internalType: "uint256",
+              name: "validationData",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address payable",
+              name: "withdrawAddress",
+              type: "address",
+            },
+          ],
+          name: "withdrawStake",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address payable",
+              name: "withdrawAddress",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "withdrawTo",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {
+        acceptOwnership: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        addStake: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        deposit: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        entryPoint: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        getDeposit: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        owner: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        pendingOwner: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        postOp: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        renounceOwnership: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        transferOwnership: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        unlockStake: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        validatePaymasterUserOp: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        withdrawStake: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        withdrawTo: "@account-abstraction/contracts/core/BasePaymaster.sol",
+      },
+    },
   },
 } as const;
 

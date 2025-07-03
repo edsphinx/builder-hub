@@ -3,10 +3,17 @@ import { DeployFunction } from "hardhat-deploy/types";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployments, getNamedAccounts, ethers } = hre;
-  const { deploy, log } = deployments;
+  const { deploy, getOrNull, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  // 1. Despliega EntryPoint v0.8  (no arguments)
+  // Verifica si ya existe una EntryPoint desplegada
+  const existing = await getOrNull("EntryPoint");
+  if (existing) {
+    log(`⚠️  EntryPoint already deployed at ${existing.address}, skipping...`);
+    return;
+  }
+
+  // 1. Despliega EntryPoint v0.8 (si no existe)
   const ep = await deploy("EntryPoint", {
     from: deployer,
     contract: "@account-abstraction/contracts/core/EntryPoint.sol:EntryPoint", // ← FQN
@@ -26,5 +33,5 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   log("📥 Deposit 0.5 ETH added to EntryPoint");
 };
 
-// export default func;
+export default func;
 func.tags = ["EntryPoint"];
