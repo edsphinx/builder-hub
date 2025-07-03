@@ -14,6 +14,8 @@
   <a href="https://github.com/edsphinx/builder-hub/actions">
     <img src="https://github.com/edsphinx/builder-hub/workflows/CI/badge.svg" alt="CI" />
   </a>
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/edsphinx/builder-hub/:workflow)
+
   <a href="https://t.me/edsphinx">
     <img src="https://img.shields.io/badge/chat-Telegram-blue?logo=telegram" alt="Telegram" />
   </a>
@@ -121,6 +123,18 @@ yarn aa:clean
 This will:
 
 Clean all cloned repos and delete the symlink and directories.
+
+---
+
+## 🔁 Continuous Integration
+
+We use GitHub Actions to ensure code quality:
+
+Runs on every push/PR to main
+
+Installs dependencies and clones local AA vendor (yarn aa:init)
+
+Compiles contracts and runs Hardhat tests in packages/hardhat
 
 ---
 
