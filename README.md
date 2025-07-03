@@ -179,7 +179,7 @@ The `WalletFuel` contract has been thoroughly tested via Hardhat using a custom 
 
 ---
 
-## 🟡 Implementation Status
+## 🟡 Implementation Status (updated)
 
 > WalletFuel is a functional MVP designed for real-world USDC-based gas sponsorship.  
 > The core logic is minimal, modular, and ready for progressive enhancement.
@@ -187,23 +187,31 @@ The `WalletFuel` contract has been thoroughly tested via Hardhat using a custom 
 ### ✅ Implemented
 
 - ✅ **Selector whitelist**: prevents malicious drain vectors.
-- ✅ **Gas ceiling**: enforces max `callGasLimit` per UserOperation.
-- ✅ **Expiry enforcement**: subsidized ops require a future `expiry` timestamp.
-- ✅ **PostOp event**: emits granular `GasSponsored()` for analytics/indexing.
-- ✅ **Upgradeable (UUPS)**: uses 50-slot storage gap + ownership transfer.
-- ✅ **EntryPoint v0.8 compatibility**: fully wired and testable via harness.
-- ✅ **CI + full test coverage**: see [Test Coverage](#-test-coverage)
+- ✅ **Gas ceiling**: enforces a max `callGasLimit` per `UserOperation`.
+- ✅ **Expiry enforcement**: all sponsored ops require a future `expiry` timestamp.
+- ✅ **PostOp event**: emits granular `GasSponsored()` for analytics and indexing.
+- ✅ **Upgradeable (UUPS)**: 50-slot storage gap + ownership handover guard.
+- ✅ **EntryPoint v0.8 compatibility**: fully integrated and testable via harness.
+- ✅ **CI + test coverage**: full suite validated via GitHub Actions.
+- ✅ **External Config contract**: deployed via `01_deploy_config.ts`.
+- ✅ **Config-aware scripts**: `useConfig.ts` auto-loads addresses per network.
+- ✅ **USD limits settable**: scripts (`setMaxUsd.ts`, `bulkSetMaxUsd.ts`) load and apply per-address caps.
+
+### ⚠️ Partially implemented
+
+| Module / Feature              | Status | Detail                                         |
+| ----------------------------- | ------ | ---------------------------------------------- |
+| Oracle signature verification | ⚠️     | `_verifyOracleSig()` stubbed, not yet enforced |
+| USD-based limit enforcement   | ⚠️     | Stored in config but not checked on-chain      |
 
 ### ⚠️ To be implemented
 
-| Module / Intention                               | Present? | Detail                                  |
-| ------------------------------------------------ | -------- | --------------------------------------- |
-| Oracle signature validation (`_verifyOracleSig`) | ❌       | Signature not verified against `config` |
-| USD-based subsidy limit (`limits.maxUsd`)        | ❌       | Placeholder exists but not enforced     |
-| External config usage                            | ❌       | `config` address unused so far          |
-| Duplicate subsidy protection                     | ⚠️       | No check for repeat abuse by sender     |
-| `PostOpMode` handling                            | ❌       | Mode not interpreted (e.g. OpReverted)  |
-| Address-level or nonce-level filtering           | ❌       | No rules for trusted users or blacklist |
+| Module / Intention                     | Present? | Detail                                           |
+| -------------------------------------- | -------- | ------------------------------------------------ |
+| External config usage                  | ❌       | `config` address unused so far                   |
+| Subsidy duplication protection         | ❌       | No checks for repeated abuse by same sender      |
+| `PostOpMode` handling                  | ❌       | Mode not interpreted (e.g. OpReverted)           |
+| Address-level or nonce-level filtering | ❌       | No whitelist/blacklist or fine-grained filtering |
 
 > These modules are planned for future releases and externalized via a `Config` contract.
 
