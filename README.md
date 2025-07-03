@@ -1,7 +1,7 @@
 # WalletFuel - Gasless Paymaster (ERC-4337)
 
 <p align="center">
-  <img src="https://github.com/edsphinx/builder-hub/blob/main/.github/banner.svg" alt="Gasless Paymaster" width="640" />
+  <img src="https://github.com/edsphinx/builder-hub/.github/assets/walletFuel.png" alt="WalletFuel Gasless Paymaster" width="640" />
 </p>
 
 <p align="center">
@@ -49,22 +49,50 @@ Grant reviewers can assess _at a glance_ how the module meets each programme’s
 
 ## 📂 Repository structure
 
-```
-
+```bash
 packages/
-├─ hardhat/ # Solidity contracts + Foundry tests
-│ └─ contracts/
-│ ├─ WalletFuel.sol
-│ ├─ modifiers/… # guard libraries
-│ └─ mocks/…
+├─ hardhat/ # Solidity contracts + scripts + helpers + tasks
+│  ├─ contracts/
+│  │  ├─ WalletFuel.sol
+│  │  ├─ Config.sol
+│  ├─ deploy/
+│  │  ├─ 01_deploy_config.ts
+│  │  └─ 02_deploy_walletfuel.ts
+│  ├─ scripts/
+│  │  ├─ setMaxUsd.ts
+│  │  ├─ bulkSetMaxUsd.ts
+│  │  ├─ loadAndSetMaxUsd.ts
+│  │  ├─ useConfig.ts
+│  │  └─ addresses.ts
+│  ├─ helpers/
+│  │  ├─ environment.ts
+│  │  └─ addresses.ts
+│  └─ tasks/
+│     └─ showAddress.ts
+│
 ├─ nextjs/ # demo storefront (Scaffold-ETH 2)
-│ └─ app/
-│ └─ checkout/… # React route using the Paymaster SDK
-└─ docs/ # Grant PDFs & diagrams
-
+│  └─ app/
+│     └─ checkout/…
+│
+└─ docs/ # Structured documentation for GitBook/Docusaurus
+   ├─ walletfuel.md
+   ├─ config.md
+   ├─ dev-vs-prod.md
+   └─ project_docs_index.md
 ```
 
 _One mono-repo – contracts, front-end demo and docs live together, simplifying review & CI._
+
+---
+
+## 📘 Documentation
+
+Modular technical documentation is under `docs/` and ready to be imported into GitBook or Docusaurus:
+
+- [`docs/index.md`](docs/index.md): index / outline
+- [`docs/dev-vs-prod.md`](docs/dev-vs-prod.md): runtime environment behavior
+- [`docs/walletfuel.md`](docs/walletfuel.md): main WalletFuel contract logic
+- [`docs/config.md`](docs/config.md): external config contract details
 
 ---
 
@@ -195,7 +223,7 @@ We welcome feedback from grant reviewers on which part of the integration they'd
 
 ---
 
-## 🚀 Roadmap
+## 🚀 Roadmap (Updated)
 
 | Phase   | Milestone                                   | Target week |
 | ------- | ------------------------------------------- | ----------- |
@@ -205,7 +233,7 @@ We welcome feedback from grant reviewers on which part of the integration they'd
 | **β**   | Scroll vault composer + restake router      | W-7         |
 | **1.0** | Multi-chain SDK (npm) + audited contracts   | Sep 2025    |
 
-Detailed Gantt in `docs/roadmap.pdf`.
+Detailed Gantt in [`docs/roadmap.pdf`](docs/roadmap.pdf)
 
 ---
 
@@ -235,7 +263,3 @@ MIT – see [LICENSE](LICENSE).
 ---
 
 _Made with ♥ in Honduras & deployed on Base, Arbitrum and Scroll._
-
-```
-
-```
