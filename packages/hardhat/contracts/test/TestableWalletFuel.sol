@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 import "../WalletFuel.sol";
 
 contract TestableWalletFuel is WalletFuel {
-    constructor(address ep, address cfg, address treas) WalletFuel(IEntryPoint(ep), cfg, treas) {}
+    constructor(address ep, address cfg, address treas) WalletFuel(IEntryPoint(ep), cfg, treas, environment) {}
 
     /// @notice expone la validación internamente para tests
     function exposedValidate(

@@ -1,38 +1,7 @@
-// import { HardhatRuntimeEnvironment } from "hardhat/types";
-// import { DeployFunction } from "hardhat-deploy/types";
-
-// const ONE_DAY = 24 * 60 * 60; // 86 400 segundos
-
-// const ENTRYPOINT_08 = "0x4337084d9e255ff0702461cf8895ce9e3b5ff108"; // address oficial 0.8:contentReference[oaicite:4]{index=4}:contentReference[oaicite:5]{index=5}
-
-// const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
-//   const { deployments, getNamedAccounts, ethers } = hre;
-//   const { deploy, log } = deployments;
-//   const { deployer } = await getNamedAccounts();
-
-//   const res = await deploy("GaslessPaymaster", {
-//     from: deployer,
-//     args: [ENTRYPOINT_08, ethers.ZeroAddress, deployer],
-//     log: true,
-//   });
-//   log(`Paymaster v0.8 @ ${res.address}`);
-
-//   const paymaster = await ethers.getContractAt("GaslessPaymaster", res.address);
-//   // 0.1 ETH de stake (sólo owner puede llamarlo)
-//   await paymaster.addStake(ONE_DAY, {
-//     value: ethers.parseEther("0.1"),
-//   });
-
-//   // 0.2 ETH de depósito para gas (cualquiera puede mandar ETH)
-//   await paymaster.deposit({
-//     value: ethers.parseEther("0.2"),
-//   });
-// };
-// export default func;
-// func.tags = ["Paymaster"];
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
+import { resolveEnvironment, getEnvironmentName, Environment } from "../helpers/environment";
 
 /*─────────────────────────────────────────────────────────
 │  CONFIGURACIÓN POR RED
@@ -104,20 +73,27 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   log(`↳ Deploying WalletFuel - Gasless Paymaster on chain ${chainId}`);
   log(`   Using EntryPoint at ${entryPointAddress}`);
 
-  /* ── 3. Despliega el Paymaster usando la dirección obtenida ── */
+  /* ── 3. Determina el entorno (Environment enum en Solidity) ── */
+  // Mapea automáticamente la red al entorno adecuado
+  // const environment = resolveEnvironment(network.name);
+  const environment: Environment = resolveEnvironment(network.name);
+  log(`🌐 Environment: ${getEnvironmentName(environment)}`);
+
+  /* ── 4. Despliega el Paymaster con constructor extendido y usando la dirección obtenida ── */
   const res = await deploy("WalletFuel", {
     from: deployer,
     args: [
       entryPointAddress,
-      ethers.ZeroAddress, // config placeholder
-      cfg.paymasterOwner || deployer, // treasury/owner
+      ethers.ZeroAddress, // ← reemplazar luego con configAddress real
+      cfg.paymasterOwner || deployer,
+      environment, // 👈 nuevo argumento
     ],
     log: true,
   });
 
   log(`✅ WalletFuel - Gasless Paymaster @ ${res.address}`);
 
-  /* ── 4. Fondea el Paymaster, Fondea con stake y depósito ── */
+  /* ── 5. Fondea el Paymaster, Fondea con stake y depósito ── */
   const paymaster = await hre.ethers.getContractAt("WalletFuel", res.address);
 
   await paymaster.addStake(24 * 60 * 60, {

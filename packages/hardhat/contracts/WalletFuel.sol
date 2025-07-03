@@ -23,6 +23,9 @@ import {
 } from
     "@account-abstraction/contracts/core/UserOperationLib.sol";
 import "@account-abstraction/contracts/core/BasePaymaster.sol";
+interface IConfig {
+    function oracleSigner() external view returns (address);
+}
 
 using UserOperationLib for PackedUserOperation; // ⇐ exposes unpack*() helpers
 
@@ -46,6 +49,19 @@ contract WalletFuel is BasePaymaster {
     Limits public limits; // gas / USD ceilings
     mapping(bytes4 => bool) public allowedSelectors; // fast O(1) lookup for function selectors ok
 
+    /// @dev If true, disables signature verification (for development and testing only)
+    bool public isDevMode = true;
+
+    /// @dev Deployment environment
+    enum Environment {
+        Dev,
+        Testnet,
+        Production
+    }
+
+    Environment public environment;
+
+
     // Immutable references — keep them for future upgrades even if unused today
     address public immutable config; // parameters / oracle (future upgrade)
     address public immutable treasury; // Multisig that funds stake & deposits
@@ -65,10 +81,12 @@ contract WalletFuel is BasePaymaster {
     constructor(
         IEntryPoint _entryPoint,       // 0.8 Entrypoint
         address     _config,           // futuro contrato de parámetros
-        address     _treasury          // multisig que fondea el paymaster
+        address     _treasury,          // multisig que fondea el paymaster
+        Environment _environment
     ) BasePaymaster(_entryPoint) {
         config   = _config;
         treasury = _treasury;
+        environment = _environment;
         _transferOwnership(msg.sender);
     }
 
@@ -91,11 +109,57 @@ contract WalletFuel is BasePaymaster {
         bytes calldata pData = op.paymasterAndData;
         if (pData.length > 20) { // first 20 bytes hold the paymaster address
             (uint96 expiry, bytes memory sig) = _decodePaymasterData(pData);
-            require(block.timestamp < expiry, "expired!");
+            require(block.timestamp < expiry, "expired!"); // TODO: check if this is the correct timestamp
             // 👉 TODO: verify oracle signature off‑chain publicKey stored in `config`
-            // _verifyOracleSig(op, expiry, sig);
+            _verifyOracleSig(op, expiry, sig);
         }
         return ("", 0); // validationData = 0 means valid , no extra signature time
+    }
+
+    // ----------------------------------------------------------------------
+    // ░░  VERIFY ORACLE SIGNATURE -- verify off‑chain publicKey stored in `config`
+    // ----------------------------------------------------------------------
+    function _verifyOracleSig(
+        PackedUserOperation calldata op,
+        uint96 expiry,
+        bytes memory sig
+    ) private view {
+        // --- DEV BYPASS ---
+        if (isDev()) {
+            return; // Skip signature check in dev mode
+        }
+
+        // --- EXPIRY CHECK ---
+        require(block.timestamp < expiry, "signature expired");
+
+        // --- BUILD MESSAGE HASH ---
+        // ⚠️ NOTE: This uses a placeholder hash for demo purposes.
+        // For real bundler integration, replace with the actual userOpHash.
+        bytes32 opHash = keccak256(abi.encode(op));
+        bytes32 digest = keccak256(abi.encodePacked(opHash, expiry));
+        bytes32 ethSignedMessageHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", digest)
+        );
+
+        // --- PARSE SIGNATURE ---
+        require(sig.length == 65, "invalid sig len");
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly ("memory-safe") {
+            r := mload(add(sig, 0x20))
+            s := mload(add(sig, 0x40))
+            v := byte(0, mload(add(sig, 0x60)))
+        }
+        require(v == 27 || v == 28, "invalid v");
+
+        // --- RECOVER SIGNER ---
+        address recovered = ecrecover(ethSignedMessageHash, v, r, s);
+        require(recovered != address(0), "invalid signature");
+
+        // --- COMPARE TO ORACLE SIGNER ---
+        address signer = IConfig(config).oracleSigner();
+        require(recovered == signer, "unauthorized signer");
     }
 
     // ----------------------------------------------------------------------
@@ -129,6 +193,15 @@ contract WalletFuel is BasePaymaster {
         assembly { sel := calldataload(cd.offset) }
     }
 
+    function isDev() public view returns (bool) {
+        return environment == Environment.Dev;
+    }
+
+    function isProd() public view returns (bool) {
+        return environment == Environment.Production;
+    }
+
+
     // decode (expiry | signature) from paymasterAndData := 20B(addr) + data
     /// @dev Decode `paymasterAndData` body (after the 20‑byte address) into
     ///      `expiry` (uint96, 12 bytes) + oracle `sig` (variable length).
@@ -140,6 +213,10 @@ contract WalletFuel is BasePaymaster {
         bytes calldata data = pData[20:];            // strip paymaster address
         expiry = uint96(bytes12(data[:12]));         // first 12 bytes → uint96 expiry
         sig    = data[12:];                          // rest → oracle signature
+    }
+
+    function setDevMode(bool enabled) external onlyOwner {
+        isDevMode = enabled;
     }
 
     // ----------------------------------------------------------------------
