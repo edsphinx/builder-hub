@@ -92,37 +92,6 @@ yarn start
 
 ---
 
-## 🧱 Local Account-Abstraction (v0.8) integration
-
-This repo uses a local vendor copy of [eth-infinitism/account-abstraction](https://github.com/eth-infinitism/account-abstraction) v0.8  
-to enable isolated testing and full control over interfaces and EntryPoint artifacts.
-
-To set it up:
-
-```bash
-yarn aa:init
-```
-
-This will:
-
-Clone the AA repo into packages/aa-lib/ (if not already present)
-
-Create a symlink at packages/hardhat/contracts/@account-abstraction/contracts/
-
-The symlink is ignored by Git (.gitignore) to keep vendored code isolated from production source.
-
-To clean it up:
-
-```bash
-yarn aa:clean
-```
-
-This will:
-
-Clean all cloned repos and delete the symlink and directories.
-
----
-
 ## 🔁 Continuous Integration
 
 We use GitHub Actions to ensure code quality:
@@ -162,6 +131,67 @@ See [contracts/hardhat/contracts/WalletFuel.sol](packages/hardhat/contracts/Wall
 | MIT licence, CODEOWNERS, SECURITY.md                              |   ✔︎   |
 
 All items bundled in commit `v0.1.0` and immutable on GitHub.
+
+---
+
+## ✅ Test Coverage
+
+The `WalletFuel` contract has been thoroughly tested via Hardhat using a custom harness, covering all critical behaviors expected from a production-grade Paymaster.
+
+| Suite                    | Tests                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------ |
+| **Deployment & config**  | ✔ Deploys with correct EntryPoint<br>✔ Owner-only access for limit/whitelist updates |
+| **Selector whitelist**   | ✔ Accepts whitelisted selector<br>✔ Rejects unlisted selector<br>✔ Toggleable on/off |
+| **Gas enforcement**      | ✔ Accepts calls at limit<br>✔ Rejects just above limit<br>✔ Enforces upper ceiling   |
+| **Oracle expiry**        | ✔ Rejects expired data<br>✔ Accepts valid future expiry                              |
+| **ERC‑4337 integration** | ✔ Validates full `PackedUserOperation`                                               |
+| **PostOp hook**          | ✔ Emits `GasSponsored` analytics event                                               |
+
+> All tests pass on `@account-abstraction/contracts v0.8.0` with TypeChain bindings. CI auto-runs on every commit.
+
+---
+
+## 🟡 Implementation Status
+
+> WalletFuel is a functional MVP designed for real-world USDC-based gas sponsorship.  
+> The core logic is minimal, modular, and ready for progressive enhancement.
+
+### ✅ Implemented
+
+- ✅ **Selector whitelist**: prevents malicious drain vectors.
+- ✅ **Gas ceiling**: enforces max `callGasLimit` per UserOperation.
+- ✅ **Expiry enforcement**: subsidized ops require a future `expiry` timestamp.
+- ✅ **PostOp event**: emits granular `GasSponsored()` for analytics/indexing.
+- ✅ **Upgradeable (UUPS)**: uses 50-slot storage gap + ownership transfer.
+- ✅ **EntryPoint v0.8 compatibility**: fully wired and testable via harness.
+- ✅ **CI + full test coverage**: see [Test Coverage](#-test-coverage)
+
+### ⚠️ To be implemented
+
+| Module / Intention                               | Present? | Detail                                  |
+| ------------------------------------------------ | -------- | --------------------------------------- |
+| Oracle signature validation (`_verifyOracleSig`) | ❌       | Signature not verified against `config` |
+| USD-based subsidy limit (`limits.maxUsd`)        | ❌       | Placeholder exists but not enforced     |
+| External config usage                            | ❌       | `config` address unused so far          |
+| Duplicate subsidy protection                     | ⚠️       | No check for repeat abuse by sender     |
+| `PostOpMode` handling                            | ❌       | Mode not interpreted (e.g. OpReverted)  |
+| Address-level or nonce-level filtering           | ❌       | No rules for trusted users or blacklist |
+
+> These modules are planned for future releases and externalized via a `Config` contract.
+
+---
+
+## 📌 Next Steps for Grants
+
+We're now entering **Week 2–3 deliverables**, focused on demonstrating utility across real checkout flows:
+
+- ✅ **Paymaster MVP logic complete and tested**
+- 🔄 CCTP integration (in progress)
+- 🔄 Push Protocol hooks for real-time buyer feedback
+- 🔄 Frontend: Next.js / Scaffold-ETH checkout using WalletFuel
+- 📦 SDK packaging for dev adoption (planned)
+
+We welcome feedback from grant reviewers on which part of the integration they'd like highlighted in live demos or walkthroughs.
 
 ---
 
@@ -205,3 +235,7 @@ MIT – see [LICENSE](LICENSE).
 ---
 
 _Made with ♥ in Honduras & deployed on Base, Arbitrum and Scroll._
+
+```
+
+```
