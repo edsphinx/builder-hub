@@ -1,13 +1,11 @@
-# Gasless Paymaster (ERC-4337)
-
-<!-- README.md – Gasless Paymaster (ERC-4337) -->
+# WalletFuel - Gasless Paymaster (ERC-4337)
 
 <p align="center">
   <img src="https://github.com/edsphinx/builder-hub/blob/main/.github/banner.svg" alt="Gasless Paymaster" width="640" />
 </p>
 
 <p align="center">
-  <strong>Production-ready ERC-4337 Paymaster that subsidises USDC check-outs across Base, Arbitrum & Scroll</strong>  
+  <strong>Production-ready ERC-4337 Paymaster that subsidises USDC check-outs across Base, Optimism, Arbitrum, zkSync & Scroll</strong>  
   <br />
   <em>Composable, upgrade-safe and 100% open-source</em>
 </p>
@@ -29,7 +27,7 @@
 ## ✨ Why this matters
 
 On-chain commerce stalls when new users must first acquire ETH for gas.  
-Our **Gasless Paymaster** (ERC-4337, EntryPoint v0.8) removes that friction:
+Our **WalletFuel** (ERC-4337, EntryPoint v0.8) removes that friction:
 
 - **No custodial wallets** – users pay in native **USDC** while the Paymaster covers gas.
 - **Bridges built-in** – integrates Circle CCTP for cross-chain liquidity.
@@ -57,7 +55,7 @@ Grant reviewers can assess _at a glance_ how the module meets each programme’s
 packages/
 ├─ hardhat/ # Solidity contracts + Foundry tests
 │ └─ contracts/
-│ ├─ GaslessPaymaster.sol
+│ ├─ WalletFuel.sol
 │ ├─ modifiers/… # guard libraries
 │ └─ mocks/…
 ├─ nextjs/ # demo storefront (Scaffold-ETH 2)
@@ -95,6 +93,37 @@ yarn start
 
 ---
 
+## 🧱 Local Account-Abstraction (v0.8) integration
+
+This repo uses a local vendor copy of [eth-infinitism/account-abstraction](https://github.com/eth-infinitism/account-abstraction) v0.8  
+to enable isolated testing and full control over interfaces and EntryPoint artifacts.
+
+To set it up:
+
+```bash
+yarn aa:init
+```
+
+This will:
+
+Clone the AA repo into packages/aa-lib/ (if not already present)
+
+Create a symlink at packages/hardhat/contracts/@account-abstraction/contracts/
+
+The symlink is ignored by Git (.gitignore) to keep vendored code isolated from production source.
+
+To clean it up:
+
+```bash
+yarn aa:clean
+```
+
+This will:
+
+Clean all cloned repos and delete the symlink and directories.
+
+---
+
 ## 🛠️ Key smart-contract features
 
 | Feature                              | Detail                                                                               |
@@ -106,20 +135,20 @@ yarn start
 | **PostOp analytics hook**            | Emits `GasSponsored(sender, gasUsed, feeWei)` for off-chain dashboards.              |
 | **Oracle-priced subsidies (opt-in)** | `paymasterAndData = abi.encode(expiry, sig…)` enables off-chain USDC price checks.   |
 
-See [contracts/hardhat/contracts/GaslessPaymaster.sol](packages/hardhat/contracts/GaslessPaymaster.sol) for inline NatSpec.
+See [contracts/hardhat/contracts/WalletFuel.sol](packages/hardhat/contracts/WalletFuel.sol) for inline NatSpec.
 
 ---
 
 ## ✅ Grant checklist – Week 1 deliverable
 
-| Item                                                         | Status |
-| ------------------------------------------------------------ | :----: |
-| **EntryPoint 0.8** deployed to Base Sepolia & Scroll Sepolia |   ✔︎   |
-| **GaslessPaymaster** verified on Explorer + Sourcify         |   ✔︎   |
-| **Demo checkout** (Next.js route) showing 0 ETH gas cost     |   ✔︎   |
-| 15 s GIF + Loom walkthrough in `/docs/`                      |   ✔︎   |
-| Unit + integration tests ≥ 90 % line coverage                |   ✔︎   |
-| MIT licence, CODEOWNERS, SECURITY.md                         |   ✔︎   |
+| Item                                                              | Status |
+| ----------------------------------------------------------------- | :----: |
+| **EntryPoint 0.8** deployed to Base Sepolia & Scroll Sepolia      |   ✔︎   |
+| **WalletFuel - GaslessPaymaster** verified on Explorer + Sourcify |   ✔︎   |
+| **Demo checkout** (Next.js route) showing 0 ETH gas cost          |   ✔︎   |
+| 15 s GIF + Loom walkthrough in `/docs/`                           |   ✔︎   |
+| Unit + integration tests ≥ 90 % line coverage                     |   ✔︎   |
+| MIT licence, CODEOWNERS, SECURITY.md                              |   ✔︎   |
 
 All items bundled in commit `v0.1.0` and immutable on GitHub.
 
