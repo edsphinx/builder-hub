@@ -44,7 +44,6 @@ deployments/
 *.sqlite
 *.pid
 *.seed
-.yarn/install-state.gz
 
 # Ignore manually cloned AA lib and symlinks
 aa-lib/
