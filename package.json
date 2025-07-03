@@ -8,6 +8,8 @@
 		]
 	},
 	"scripts": {
+		"aa:init": "./scripts/aa-init.sh",
+		"aa:clean": "./scripts/aa-clean.sh",
 		"account": "yarn hardhat:account",
 		"account:generate": "yarn workspace @se-2/hardhat account:generate",
 		"account:import": "yarn workspace @se-2/hardhat account:import",

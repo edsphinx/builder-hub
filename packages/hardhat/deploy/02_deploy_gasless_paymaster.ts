@@ -101,11 +101,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   log(`📡 Deploying to ${network.name} (chainId ${network.config.chainId})`);
 
-  log(`↳ Deploying GaslessPaymaster on chain ${chainId}`);
+  log(`↳ Deploying WalletFuel - Gasless Paymaster on chain ${chainId}`);
   log(`   Using EntryPoint at ${entryPointAddress}`);
 
   /* ── 3. Despliega el Paymaster usando la dirección obtenida ── */
-  const res = await deploy("GaslessPaymaster", {
+  const res = await deploy("WalletFuel", {
     from: deployer,
     args: [
       entryPointAddress,
@@ -115,10 +115,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     log: true,
   });
 
-  log(`✅ Paymaster @ ${res.address}`);
+  log(`✅ WalletFuel - Gasless Paymaster @ ${res.address}`);
 
   /* ── 4. Fondea el Paymaster, Fondea con stake y depósito ── */
-  const paymaster = await hre.ethers.getContractAt("GaslessPaymaster", res.address);
+  const paymaster = await hre.ethers.getContractAt("WalletFuel", res.address);
 
   await paymaster.addStake(24 * 60 * 60, {
     // 1 día
@@ -129,9 +129,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 
   log(`💰 Stake ${cfg.stakeEth} ETH · Depósito ${cfg.depositEth} ETH añadidos`);
-  log(`✅ GaslessPaymaster deployed @ ${res.address}`);
+  log(`✅ WalletFuel - Gasless Paymaster deployed @ ${res.address}`);
 };
 
 export default func;
-func.tags = ["Paymaster"];
-func.dependencies = ["EntryPoint"]; // ← asegura que 00_entrypoint se ejecute antes
+func.tags = ["WalletFuel"];
+// func.dependencies = ["EntryPoint"]; // ← asegura que 00_entrypoint se ejecute antes
