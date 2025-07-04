@@ -23,7 +23,7 @@ import {
 } from
     "@account-abstraction/contracts/core/UserOperationLib.sol";
 import "@account-abstraction/contracts/core/BasePaymaster.sol";
-interface IConfig {
+interface IWalletFuelConfig {
     function oracleSigner() external view returns (address);
 }
 
@@ -41,17 +41,24 @@ contract WalletFuel is BasePaymaster {
     // ----------------------------------------------------------------------
     // ░░  STORAGE
     // ----------------------------------------------------------------------
+    
+    /// @notice Gas and USD subsidy ceilings
     struct Limits {
         uint256 maxGas; // ⛽ soft ceiling per UserOp (gas units)
         uint256 maxUsd; // 💵 placeholder for future price‑check in USDC (6‑decimals)
     }
 
-    Limits public limits; // gas / USD ceilings
+    /// @notice Gas and price limits applied to each operation
+    Limits public limits;
+
+    /// @notice Whitelist of allowed function selectors for sponsored transactions
     mapping(bytes4 => bool) public allowedSelectors; // fast O(1) lookup for function selectors ok
 
+    /// @notice If true, disables oracle signature checks (dev mode only)
     /// @dev If true, disables signature verification (for development and testing only)
     bool public isDevMode = true;
 
+    /// @notice Current deployment environment
     /// @dev Deployment environment
     enum Environment {
         Dev,
@@ -59,16 +66,24 @@ contract WalletFuel is BasePaymaster {
         Production
     }
 
+    /// @notice Selected deployment environment
     Environment public environment;
 
-
-    // Immutable references — keep them for future upgrades even if unused today
+    // ----------------------------------------------------------------------
+    // ░░  IMMUTABLE REFERENCES - KEEP FOR FUTURE UPGRADES even if unused today
+    // ----------------------------------------------------------------------
+    
+    /// @notice Config contract address containing dynamic parameters and oracle signer
     address public immutable config; // parameters / oracle (future upgrade)
+    
+    /// @notice Treasury address funding the Paymaster (holds stake & deposit)
     address public immutable treasury; // Multisig that funds stake & deposits
 
     // ----------------------------------------------------------------------
     // ░░  EVENTS
     // ----------------------------------------------------------------------
+
+    /// @notice Emitted when a user operation is successfully sponsored
     event GasSponsored(
         address indexed sender,
         uint256 gasUsed,
@@ -78,6 +93,14 @@ contract WalletFuel is BasePaymaster {
     // ----------------------------------------------------------------------
     // ░░  CONSTRUCTOR
     // ----------------------------------------------------------------------
+    
+    /**
+     * @notice Deploys the WalletFuel Paymaster contract
+     * @param _entryPoint ERC-4337 EntryPoint address
+     * @param _config Configuration contract address
+     * @param _treasury Treasury address funding the Paymaster
+     * @param _environment Deployment environment
+     */
     constructor(
         IEntryPoint _entryPoint,       // 0.8 Entrypoint
         address     _config,           // futuro contrato de parámetros
@@ -93,6 +116,15 @@ contract WalletFuel is BasePaymaster {
     // ----------------------------------------------------------------------
     // ░░  VALIDATION HOOK (ERC‑4337)
     // ----------------------------------------------------------------------
+    
+    /**
+     * @notice Validates a UserOperation and optional oracle signature
+     * @dev Reverts on unauthorized selector, gas limit excess, or expired signature.
+     *      Assumes oracle signatures are in 1e18-scale compatible format.
+     * @param op The packed UserOperation
+     * @return context Not used
+     * @return validationData Always 0 (valid)
+     */
     function _validatePaymasterUserOp(
         PackedUserOperation calldata op,
         bytes32 /*opHash*/,
@@ -119,6 +151,14 @@ contract WalletFuel is BasePaymaster {
     // ----------------------------------------------------------------------
     // ░░  VERIFY ORACLE SIGNATURE -- verify off‑chain publicKey stored in `config`
     // ----------------------------------------------------------------------
+    
+    /**
+     * @notice Verifies oracle signature over a UserOperation + expiry
+     * @param op The UserOperation being validated
+     * @param expiry Timestamp until which the signature is valid
+     * @param sig Oracle-provided ECDSA signature
+     * @dev Skipped if in Dev mode. Signature must match oracleSigner from config.
+     */
     function _verifyOracleSig(
         PackedUserOperation calldata op,
         uint96 expiry,
@@ -158,13 +198,19 @@ contract WalletFuel is BasePaymaster {
         require(recovered != address(0), "invalid signature");
 
         // --- COMPARE TO ORACLE SIGNER ---
-        address signer = IConfig(config).oracleSigner();
+        address signer = IWalletFuelConfig(config).oracleSigner();
         require(recovered == signer, "unauthorized signer");
     }
 
     // ----------------------------------------------------------------------
     // ░░  POST‑OP HOOK — emit usage metrics (gas & fee) for indexers
     // ----------------------------------------------------------------------
+    
+    /**
+     * @notice Emits gas usage and fee data for analytics
+     * @param actualGasCost Gas units used
+     * @param actualUserOpFeePerGas Gas price paid
+     */
     function _postOp(
         PostOpMode /*mode*/,
         bytes calldata /*context*/,
@@ -177,11 +223,37 @@ contract WalletFuel is BasePaymaster {
     // ----------------------------------------------------------------------
     // ░░  ADMIN HELPERS (owner = deployer or multisig)
     // ----------------------------------------------------------------------
+    
+    /// @notice Sets gas and USD subsidy ceilings
+    /// @custom:security onlyOwner
     function setLimit(uint256 gas, uint256 usd) external onlyOwner {
         limits = Limits(gas, usd);
     }
+    
+    /// @notice Enables or disables a function selector for subsidy
+    /// @custom:security onlyOwner
     function setSelector(bytes4 sel, bool ok) external onlyOwner {
         allowedSelectors[sel] = ok;
+    }
+
+    /// @notice Enables or disables developer mode
+    /// @custom:security onlyOwner
+    function setDevMode(bool enabled) external onlyOwner {
+        isDevMode = enabled;
+    }
+
+    // ────────────────────────────────────────────────
+    // ░░  READ HELPERS
+    // ────────────────────────────────────────────────
+
+    /// @notice Checks if the environment is Dev
+    function isDev() public view returns (bool) {
+        return isDevMode;
+    }
+
+    /// @notice Checks if the environment is Production
+    function isProd() public view returns (bool) {
+        return environment == Environment.Production;
     }
 
     // ----------------------------------------------------------------------
@@ -193,18 +265,14 @@ contract WalletFuel is BasePaymaster {
         assembly { sel := calldataload(cd.offset) }
     }
 
-    function isDev() public view returns (bool) {
-        return environment == Environment.Dev;
-    }
-
-    function isProd() public view returns (bool) {
-        return environment == Environment.Production;
-    }
-
-
-    // decode (expiry | signature) from paymasterAndData := 20B(addr) + data
-    /// @dev Decode `paymasterAndData` body (after the 20‑byte address) into
-    ///      `expiry` (uint96, 12 bytes) + oracle `sig` (variable length).
+    /**
+     * @notice (expiry | signature) from paymasterAndData := 20B(addr) + data
+     * @param pData Encoded paymasterAndData field
+     * @return expiry Expiration timestamp
+     * @return sig Oracle signature
+     * @dev Decode `paymasterAndData` body (after the 20‑byte address) into
+     *      `expiry` (uint96, 12 bytes) + oracle `sig` (variable length).
+     */
     function _decodePaymasterData(bytes calldata pData)
         private
         pure
@@ -215,12 +283,8 @@ contract WalletFuel is BasePaymaster {
         sig    = data[12:];                          // rest → oracle signature
     }
 
-    function setDevMode(bool enabled) external onlyOwner {
-        isDevMode = enabled;
-    }
-
     // ----------------------------------------------------------------------
-    // ░░  STORAGE GAP
+    // ░░  STORAGE GAP FOR UPGRADEABILITY
     // ----------------------------------------------------------------------
     // OZ recommends reserving 50 slots for future upgrades.
     // Currently used slots: 5 (limits, mapping pointer, config, treasury, __gap).
