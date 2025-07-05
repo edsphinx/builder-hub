@@ -29,6 +29,7 @@
     "@uniswap/v3-periphery": "^1.4.4",
     "dotenv": "~16.4.5",
     "envfile": "~7.1.0",
+    "euler-price-oracle": "https://github.com/euler-xyz/euler-price-oracle.git",
     "next-themes": "^0.4.6",
     "qrcode": "~1.5.4"
   },

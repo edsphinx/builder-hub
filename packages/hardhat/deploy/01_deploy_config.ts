@@ -31,25 +31,32 @@ const CONFIGS: Record<number, ConfigParams> = {
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployments, getNamedAccounts, network } = hre;
-  const { deploy, log } = deployments;
+  const { deploy, getOrNull, log } = deployments;
   const { deployer } = await getNamedAccounts();
+
+  // Verifica si ya existe una EntryPoint desplegada
+  const existing = await getOrNull("WalletFuelConfig");
+  if (existing) {
+    log(`⚠️  WalletFuelConfig already deployed at ${existing.address}, skipping...`);
+    return;
+  }
 
   const chainId = network.config.chainId ?? Number(await hre.ethers.provider.send("eth_chainId", []));
   const cfg = CONFIGS[chainId!];
-  if (!cfg) throw new Error(`❌ Config.sol params not defined for chainId ${chainId}`);
+  if (!cfg) throw new Error(`❌ WalletFuelConfig.sol params not defined for chainId ${chainId}`);
 
   const env: Environment = resolveEnvironment(network.name);
   log(`🌐 Environment: ${getEnvironmentName(env)} (chainId: ${chainId})`);
   log(`🔐 Oracle signer: ${cfg.oracleSigner}`);
 
-  const res = await deploy("Config", {
+  const res = await deploy("WalletFuelConfig", {
     from: deployer,
     args: [cfg.oracleSigner],
     log: true,
   });
 
-  log(`✅ Config.sol deployed @ ${res.address}`);
+  log(`✅ WalletFuelConfig.sol deployed @ ${res.address}`);
 };
 
 export default func;
-func.tags = ["Config"];
+func.tags = ["WalletFuelConfig"];

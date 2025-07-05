@@ -2,7 +2,7 @@ import { task } from "hardhat/config";
 import { DEPLOYED_ADDRESSES } from "../helpers/addresses";
 
 task("show-address", "Muestra la dirección desplegada de un contrato")
-  .addParam("contract", "Nombre del contrato (WalletFuel | Config)")
+  .addParam("contract", "Nombre del contrato (WalletFuel | WalletFuelConfig)")
   .setAction(async (args, hre) => {
     const { contract } = args;
     const chainId = hre.network.config.chainId;

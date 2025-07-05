@@ -1568,7 +1568,7 @@ const deployedContracts = {
       },
     },
     WalletFuel: {
-      address: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+      address: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
       abi: [
         {
           inputs: [
@@ -1586,6 +1586,11 @@ const deployedContracts = {
               internalType: "address",
               name: "_treasury",
               type: "address",
+            },
+            {
+              internalType: "enum WalletFuel.Environment",
+              name: "_environment",
+              type: "uint8",
             },
           ],
           stateMutability: "nonpayable",
@@ -1750,12 +1755,64 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "environment",
+          outputs: [
+            {
+              internalType: "enum WalletFuel.Environment",
+              name: "",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "getDeposit",
           outputs: [
             {
               internalType: "uint256",
               name: "",
               type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "isDev",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "isDevMode",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "isProd",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
             },
           ],
           stateMutability: "view",
@@ -1836,6 +1893,19 @@ const deployedContracts = {
         {
           inputs: [],
           name: "renounceOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bool",
+              name: "enabled",
+              type: "bool",
+            },
+          ],
+          name: "setDevMode",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
@@ -2038,6 +2108,187 @@ const deployedContracts = {
         withdrawStake: "@account-abstraction/contracts/core/BasePaymaster.sol",
         withdrawTo: "@account-abstraction/contracts/core/BasePaymaster.sol",
       },
+    },
+    WalletFuelConfig: {
+      address: "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_oracleSigner",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "bytes4",
+              name: "selector",
+              type: "bytes4",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "maxUsd",
+              type: "uint256",
+            },
+          ],
+          name: "MaxUsdSet",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "address",
+              name: "newSigner",
+              type: "address",
+            },
+          ],
+          name: "OracleUpdated",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4[]",
+              name: "selectors",
+              type: "bytes4[]",
+            },
+            {
+              internalType: "uint256[]",
+              name: "maxUsds",
+              type: "uint256[]",
+            },
+          ],
+          name: "bulkSetMaxUsd",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4[]",
+              name: "selectors",
+              type: "bytes4[]",
+            },
+          ],
+          name: "getAllLimits",
+          outputs: [
+            {
+              internalType: "uint256[]",
+              name: "",
+              type: "uint256[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4",
+              name: "selector",
+              type: "bytes4",
+            },
+          ],
+          name: "getMaxUsd",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4",
+              name: "",
+              type: "bytes4",
+            },
+          ],
+          name: "maxUsdPerSelector",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "oracleSigner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4",
+              name: "selector",
+              type: "bytes4",
+            },
+            {
+              internalType: "uint256",
+              name: "maxUsd",
+              type: "uint256",
+            },
+          ],
+          name: "setMaxUsd",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "newSigner",
+              type: "address",
+            },
+          ],
+          name: "setOracleSigner",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
     },
   },
 } as const;

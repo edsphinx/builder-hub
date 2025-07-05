@@ -5,7 +5,7 @@ export const DEPLOYED_ADDRESSES = {
     "421614": "0x...", // Arbitrum Sepolia
     "1": "0x...", // Mainnet
   },
-  Config: {
+  WalletFuelConfig: {
     "31337": "0x...",
     "84532": "0x...",
     "421614": "0x...",

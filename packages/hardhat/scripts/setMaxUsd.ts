@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { Config } from "../typechain-types";
+import { WalletFuelConfig } from "../typechain-types";
 
 async function main() {
   const [signer] = await ethers.getSigners();
@@ -9,7 +9,7 @@ async function main() {
 
   // === Reemplaza con la dirección del contrato Config desplegado en tu red
   const CONFIG_ADDRESS = "0xYourDeployedConfigAddressHere";
-  const config = (await ethers.getContractAt("Config", CONFIG_ADDRESS)) as Config;
+  const config = (await ethers.getContractAt("Config", CONFIG_ADDRESS)) as WalletFuelConfig;
 
   // === Define aquí los selectores y límites en USD (6 decimales)
   const entries: { selector: string; maxUsd: string }[] = [
