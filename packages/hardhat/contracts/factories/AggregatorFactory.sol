@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { MultiOracleAggregator } from "../oracles/MultiOracleAggregator.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
@@ -14,6 +15,9 @@ import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 contract AggregatorFactory {
     /// @notice Owner address with permissions to create and remove aggregators
     address public owner;
+
+    /// @notice Dirección del contrato lógico previamente desplegado
+    address public aggregatorImplementation;
 
     /// @notice Mapping from base token ⇒ quote token ⇒ aggregator address
     mapping(address => mapping(address => address)) private _aggregators;
@@ -68,6 +72,22 @@ contract AggregatorFactory {
      */
     event AggregatorCreationSkipped(address indexed base, address indexed quote, string reason);
 
+    /**
+     * @notice Emitted when a quote request is made
+     * @param caller Address of the caller
+     * @param base Address of the base token
+     * @param quote Address of the quote token
+     * @param inAmount Amount of base token being priced
+     * @param method Method used to make the request
+     */
+    event QuoteRequested(
+        address indexed caller,
+        address indexed base,
+        address indexed quote,
+        uint256 inAmount,
+        string method
+    );
+
     // ────────────────────────────────────────────────
     // ░░  MODIFIERS
     // ────────────────────────────────────────────────
@@ -82,7 +102,9 @@ contract AggregatorFactory {
      * @notice Deploys the factory contract
      * @dev Sets the deployer as the immutable owner
      */
-    constructor() {
+    constructor(address _implementation) {
+        require(_implementation != address(0), "impl required");
+        aggregatorImplementation = _implementation;
         owner = msg.sender;
         emit OwnershipTransferred(address(0), msg.sender);
     }
@@ -132,7 +154,14 @@ contract AggregatorFactory {
         }
         require(oracles.length > 0, "no oracles");
 
-        MultiOracleAggregator agg = new MultiOracleAggregator();
+        bytes memory initData = abi.encodeWithSelector(
+            MultiOracleAggregator.initialize.selector,
+            address(this), // el factory será el owner inicial
+            maxDeviationBps
+        );
+
+        ERC1967Proxy proxy = new ERC1967Proxy(aggregatorImplementation, initData);
+        MultiOracleAggregator agg = MultiOracleAggregator(address(proxy));
         for (uint256 i = 0; i < oracles.length; i++) {
             agg.addOracle(base, quote, oracles[i]);
         }
