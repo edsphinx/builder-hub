@@ -195,6 +195,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@chainlink/contracts@npm:^0.6.1":
+  version: 0.6.1
+  resolution: "@chainlink/contracts@npm:0.6.1"
+  dependencies:
+    "@eth-optimism/contracts": ^0.5.21
+    "@openzeppelin/contracts": ~4.3.3
+    "@openzeppelin/contracts-upgradeable": ^4.7.3
+    "@openzeppelin/contracts-v0.7": "npm:@openzeppelin/contracts@v3.4.2"
+  checksum: 90d6b0c0ffbcf87b1a2fed2faedd72202de3ed9b746316a91152cc89aeb5814d053dd8fd5dab5ddc803f9063e0deb3ed4325e142b64aa3c172fee4b4943d9a47
+  languageName: node
+  linkType: hard
+
 "@chainsafe/is-ip@npm:^2.0.1":
   version: 2.1.0
   resolution: "@chainsafe/is-ip@npm:2.1.0"
@@ -412,6 +424,43 @@ __metadata:
     "@eslint/core": ^0.13.0
     levn: ^0.4.1
   checksum: b5bd769f3f96cb3bdc4051d9ebd973b30d1cd00a02953ded1eeb74fb5b2af73cf38c20cc76acddc8e74828f0dbf92ba9d725414b3026177935fc4b48784a7fba
+  languageName: node
+  linkType: hard
+
+"@eth-optimism/contracts@npm:^0.5.21":
+  version: 0.5.40
+  resolution: "@eth-optimism/contracts@npm:0.5.40"
+  dependencies:
+    "@eth-optimism/core-utils": 0.12.0
+    "@ethersproject/abstract-provider": ^5.7.0
+    "@ethersproject/abstract-signer": ^5.7.0
+  peerDependencies:
+    ethers: ^5
+  checksum: 11dde466c90b886efe8b5fd123fa5893187a4ff84839213d417f90ae4e45bf00b2f62d56e4ebe23ba5dd7ec33beed22c4c41e206add35fce0db073fe2dbae6ba
+  languageName: node
+  linkType: hard
+
+"@eth-optimism/core-utils@npm:0.12.0":
+  version: 0.12.0
+  resolution: "@eth-optimism/core-utils@npm:0.12.0"
+  dependencies:
+    "@ethersproject/abi": ^5.7.0
+    "@ethersproject/abstract-provider": ^5.7.0
+    "@ethersproject/address": ^5.7.0
+    "@ethersproject/bignumber": ^5.7.0
+    "@ethersproject/bytes": ^5.7.0
+    "@ethersproject/constants": ^5.7.0
+    "@ethersproject/contracts": ^5.7.0
+    "@ethersproject/hash": ^5.7.0
+    "@ethersproject/keccak256": ^5.7.0
+    "@ethersproject/properties": ^5.7.0
+    "@ethersproject/providers": ^5.7.0
+    "@ethersproject/rlp": ^5.7.0
+    "@ethersproject/transactions": ^5.7.0
+    "@ethersproject/web": ^5.7.0
+    bufio: ^1.0.7
+    chai: ^4.3.4
+  checksum: 1c820107c44bdbb46becb1b00fd0dabb44f3ac8f54e6da7872a5a134411fad26f53b193225da55e79d6a8d7f0d01cc16a123db5d41ebaf02ca78360249a4b52a
   languageName: node
   linkType: hard
 
@@ -971,7 +1020,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ethersproject/providers@npm:5.8.0, @ethersproject/providers@npm:^5.7.2":
+"@ethersproject/providers@npm:5.8.0, @ethersproject/providers@npm:^5.7.0, @ethersproject/providers@npm:^5.7.2":
   version: 5.8.0
   resolution: "@ethersproject/providers@npm:5.8.0"
   dependencies:
@@ -3043,6 +3092,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openzeppelin/contracts-upgradeable@npm:^4.7.3":
+  version: 4.9.6
+  resolution: "@openzeppelin/contracts-upgradeable@npm:4.9.6"
+  checksum: 481075e7222cab025ae55304263fca69a2d04305521957bc16d2aece9fa2b86b6914711724822493e3d04df7e793469cd0bcb1e09f0ddd10cb4e360ac7eed12a
+  languageName: node
+  linkType: hard
+
+"@openzeppelin/contracts-v0.7@npm:@openzeppelin/contracts@v3.4.2":
+  version: 3.4.2
+  resolution: "@openzeppelin/contracts@npm:3.4.2"
+  checksum: 0c90f029fe50a49643588e4c8670dae3bbf31795133a6ddce9bdcbc258486332700bb732287baabf7bf807f39182fe8ea2ffa19aa5caf359b1b9c0f083280748
+  languageName: node
+  linkType: hard
+
 "@openzeppelin/contracts@npm:3.4.2-solc-0.7":
   version: 3.4.2-solc-0.7
   resolution: "@openzeppelin/contracts@npm:3.4.2-solc-0.7"
@@ -3050,10 +3113,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openzeppelin/contracts@npm:^4.8.1":
+  version: 4.9.6
+  resolution: "@openzeppelin/contracts@npm:4.9.6"
+  checksum: 274b6e968268294f12d5ca4f0278f6e6357792c8bb4d76664f83dbdc325f780541538a127e6a6e97e4f018088b42f65952014dec9c745c0fa25081f43ef9c4bf
+  languageName: node
+  linkType: hard
+
 "@openzeppelin/contracts@npm:^5.1.0, @openzeppelin/contracts@npm:^5.1.1":
   version: 5.3.0
   resolution: "@openzeppelin/contracts@npm:5.3.0"
   checksum: 1d1629c42d170e070c112779c33b3b81c133995695271bc62a696160b598b56455a3c56d1f976a42ee3dd426c4ad984451b1752139f2b7897c9e1ba56c1947da
+  languageName: node
+  linkType: hard
+
+"@openzeppelin/contracts@npm:~4.3.3":
+  version: 4.3.3
+  resolution: "@openzeppelin/contracts@npm:4.3.3"
+  checksum: 73eb23e7acc8531931076d11251629bdc8579c99ef921a3facbd8abf7b860bc214c97a4bd56cd67db7c9d1db837765132640f24987aac8097a13960bb41ca6d1
   languageName: node
   linkType: hard
 
@@ -3179,6 +3256,61 @@ __metadata:
     viem: 2.x
     wagmi: ^2.9.0
   checksum: 169227e36ae0fd9224d6fec6234410a023633b06e43b1f8fdf89ddb0a414936372e022e34f3eddaee4b954fe56f60210b50a4273181403445436e5063a2cfc43
+  languageName: node
+  linkType: hard
+
+"@redstone-finance/evm-connector@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@redstone-finance/evm-connector@npm:0.4.0"
+  dependencies:
+    "@chainlink/contracts": ^0.6.1
+    "@openzeppelin/contracts": ^4.8.1
+    "@redstone-finance/protocol": ^0.4.0
+    "@redstone-finance/sdk": ^0.4.0
+    axios: ^1.6.2
+    ethers: ^5.7.2
+  checksum: b793e09b31da5f84d0dc105c5a9822b16d7bffd96ac14344b7d470da391124a9b59d1fd297ab41170b61d4a702faf2733e10e9dd9e358cac38c0893531065d2f
+  languageName: node
+  linkType: hard
+
+"@redstone-finance/oracles-smartweave-contracts@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@redstone-finance/oracles-smartweave-contracts@npm:0.4.0"
+  checksum: 95d60949ae5f71b0fcd659fc08372cdcacbb672216a455b879d5bcc49f6cb9b9eb80fcad5d2da655be3c9cdc046f8e9869745f0561e306eabc5694d497bea17b
+  languageName: node
+  linkType: hard
+
+"@redstone-finance/protocol@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@redstone-finance/protocol@npm:0.4.0"
+  dependencies:
+    ethers: ^5.7.2
+  checksum: 683427ed5aef13b4d3c2ff375d9fe15277c3bb1813a8f7aabe318110216e27e00621003aa2142bfefc7e2106b02cfa86148c7f861e13eee63ec82deabe26219e
+  languageName: node
+  linkType: hard
+
+"@redstone-finance/sdk@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@redstone-finance/sdk@npm:0.4.0"
+  dependencies:
+    "@redstone-finance/oracles-smartweave-contracts": ^0.4.0
+    "@redstone-finance/protocol": ^0.4.0
+    "@redstone-finance/utils": ^0.4.0
+    axios: ^1.6.2
+    ethers: ^5.7.2
+  checksum: 0081d25e8e5462c4eda8aa427a2724a039d745aaa0918f878adece4fbc7f0e82c9293c8a384dd4e559cb6961674d14707a4da2d25283ac9d1bca8d25b9dffd24
+  languageName: node
+  linkType: hard
+
+"@redstone-finance/utils@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@redstone-finance/utils@npm:0.4.0"
+  dependencies:
+    axios: ^1.6.2
+    decimal.js: ^10.4.3
+    ethers: ^5.7.2
+    zod: ^3.22.4
+  checksum: 8c7f9bc4b0503e7f259259bba9148940e1d577b8c7a633845ca218d7d5d80ab10536bfce76d257cb93b8cc98f263f4da041584e88a11715fbabeb2fe5d913e68
   languageName: node
   linkType: hard
 
@@ -3491,6 +3623,7 @@ __metadata:
     eslint-config-prettier: ~10.1.1
     eslint-plugin-prettier: ~5.2.4
     ethers: ^6.14.0
+    euler-price-oracle: "https://github.com/euler-xyz/euler-price-oracle.git"
     hardhat: ^2.22.0
     hardhat-deploy: ~0.12.4
     hardhat-deploy-ethers: ~0.4.2
@@ -6117,7 +6250,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.6.7":
+"axios@npm:^1.6.2, axios@npm:^1.6.7":
   version: 1.10.0
   resolution: "axios@npm:1.10.0"
   dependencies:
@@ -6464,6 +6597,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bufio@npm:^1.0.7":
+  version: 1.2.3
+  resolution: "bufio@npm:1.2.3"
+  checksum: 0421b23de6a4255ffccc1e68653f88275c10c8e07e84900dfafc87dec2d9b2c4fd58783db9f1ea1e5ec6d8c47f82c1f4685d52f7c0f8004d3effc0eaef801790
+  languageName: node
+  linkType: hard
+
 "burner-connector@npm:0.0.16":
   version: 0.0.16
   resolution: "burner-connector@npm:0.0.16"
@@ -6655,7 +6795,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chai@npm:~4.5.0":
+"chai@npm:^4.3.4, chai@npm:~4.5.0":
   version: 4.5.0
   resolution: "chai@npm:4.5.0"
   dependencies:
@@ -7429,6 +7569,13 @@ __metadata:
   version: 2.5.1
   resolution: "decimal.js-light@npm:2.5.1"
   checksum: f5a2c7eac1c4541c8ab8a5c8abea64fc1761cefc7794bd5f8afd57a8a78d1b51785e0c4e4f85f4895a043eaa90ddca1edc3981d1263eb6ddce60f32bf5fe66c9
+  languageName: node
+  linkType: hard
+
+"decimal.js@npm:^10.4.3":
+  version: 10.5.0
+  resolution: "decimal.js@npm:10.5.0"
+  checksum: 91c6b53b5dd2f39a05535349ced6840f591d1f914e3c025c6dcec6ffada6e3cfc8dc3f560d304b716be9a9aece3567a7f80f6aff8f38d11ab6f78541c3a91a01
   languageName: node
   linkType: hard
 
@@ -8781,7 +8928,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:^5.7.0, ethers@npm:^5.8.0":
+"ethers@npm:^5.7.0, ethers@npm:^5.7.2, ethers@npm:^5.8.0":
   version: 5.8.0
   resolution: "ethers@npm:5.8.0"
   dependencies:
@@ -8879,6 +9026,15 @@ __metadata:
     bn.js: 4.11.6
     number-to-bn: 1.7.0
   checksum: df6b4752ff7461a59a20219f4b1684c631ea601241c39660e3f6c6bd63c950189723841c22b3c6c0ebeb3c9fc99e0e803e3c613101206132603705fcbcf4def5
+  languageName: node
+  linkType: hard
+
+"euler-price-oracle@https://github.com/euler-xyz/euler-price-oracle.git":
+  version: 1.0.0
+  resolution: "euler-price-oracle@https://github.com/euler-xyz/euler-price-oracle.git#commit=ffc3cb82615fc7d003a7f431175bd1eaf0bf41c5"
+  dependencies:
+    "@redstone-finance/evm-connector": ^0.4.0
+  checksum: 09189e6f5401dca6391f37f84f6dcca2aabdfe731470db55d6fa43ded92f2c56e4cb5c53ae5f917b98869804a9fae2fc1c3cce70062160fd536a12b4381f48bc
   languageName: node
   linkType: hard
 
