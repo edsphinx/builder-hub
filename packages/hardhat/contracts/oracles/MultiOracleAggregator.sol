@@ -14,14 +14,17 @@ import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Co
  * @notice Aggregates multiple oracle feeds and provides average/median pricing with full traceability.
  * @dev Ensure all adapters return 1e18-scaled quotes. Emits events for tracing and deviation validation.
  */
-contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgradeable, ERC2771ContextUpgradeable {
+contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     // ────────────────────────────────────────────────
     // ░░ DATA STRUCTURES
     // ────────────────────────────────────────────────
 
+    /// @notice Address of the trusted forwarder contract
+    address private _trustedForwarder;
+
     /// @notice Structure holding oracle configuration
     struct OracleInfo {
-        address oracle;
+        address oracleAddress;
         bool enabled;
     }
 
@@ -80,21 +83,22 @@ contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgrade
     // ────────────────────────────────────────────────
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor(address trustedForwarder) ERC2771ContextUpgradeable(trustedForwarder) {
-        _disableInitializers();
-    }
+    // constructor(address trustedForwarder) ERC2771ContextUpgradeable(trustedForwarder) {
+    //     _disableInitializers();
+    // }
 
     /**
      * @notice Initializes the contract with the owner and deviation settings
      * @param initialOwner The owner to set
      * @param deviationBps Max allowed deviation in basis points
      */
-    function initialize(address initialOwner, uint256 deviationBps) external initializer {
-        __Ownable_init();
+    function initialize(address initialOwner, uint256 deviationBps, address trustedForwarder) external initializer {
+        require(deviationBps <= 10_000, "too high");
+        __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
-        maxDeviationBps = deviationBps;
         _transferOwnership(initialOwner);
-        emit OwnershipTransferred(address(0), initialOwner);
+        maxDeviationBps = deviationBps;
+        _trustedForwarder = trustedForwarder;
     }
 
     /// @notice Required by UUPS pattern
@@ -121,7 +125,7 @@ contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgrade
     function addOracle(address base, address quote, address oracle) external onlyOwner onlyValidPair(base, quote) {
         require(oracle != address(0), "zero oracle");
         OracleInfo[] storage list = _oracles[base][quote];
-        for (uint256 i; i < list.length; i++) require(list[i].oracle != oracle, "duplicate");
+        for (uint256 i; i < list.length; i++) require(list[i].oracleAddress != oracle, "duplicate");
         list.push(OracleInfo(oracle, true));
         emit OracleAdded(base, quote, oracle);
     }
@@ -153,9 +157,9 @@ contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgrade
         require(newOracle != address(0), "zero oracle");
         OracleInfo[] storage list = _oracles[base][quote];
         require(index < list.length, "invalid idx");
-        for (uint256 i; i < list.length; i++) require(list[i].oracle != newOracle, "duplicate");
-        address old = list[index].oracle;
-        list[index].oracle = newOracle;
+        for (uint256 i; i < list.length; i++) require(list[i].oracleAddress != newOracle, "duplicate");
+        address old = list[index].oracleAddress;
+        list[index].oracleAddress = newOracle;
         emit OracleUpdated(base, quote, index, old, newOracle);
     }
 
@@ -203,11 +207,11 @@ contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 count;
 
         for (uint256 i; i < list.length; i++) {
-            if (!list[i].enabled) continue;
-            try IPriceOracle(list[i].oracle).getQuote(amount, base, quote) returns (uint256 q) {
-                require(q > 0, "zero quote");
-                quotes[count++] = q;
-                emit QuoteUsed(base, quote, list[i].oracle, amount, q);
+            if (!list[i].enabled) continue; // Corrected: Access 'enabled' directly from OracleInfo
+            try IPriceOracle(list[i].oracleAddress).getQuote(amount, base, quote) returns (uint256 q) {
+                require(q > 0, "zero quote"); // Check for zero quote
+                quotes[count++] = q; // Corrected: Access 'oracleAddress' from OracleInfo
+                emit QuoteUsed(base, quote, list[i].oracleAddress, amount, q);
             } catch {}
         }
 
@@ -219,10 +223,44 @@ contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgrade
         for (uint256 i; i < count; i++) {
             uint256 diff = quotes[i] > avg ? quotes[i] - avg : avg - quotes[i];
             if ((diff * 10_000) / avg > maxDeviationBps) {
-                emit QuoteDeviationRejected(base, quote, list[i].oracle, amount, quotes[i], avg);
-                revert("dev too high");
+                emit QuoteDeviationRejected(base, quote, list[i].oracleAddress, amount, quotes[i], avg);
+                revert("deviation too high");
             }
         }
+        return avg;
+    }
+
+    /** @notice Returns average quote after filtering as view
+     *  @param amount Input amount
+     *  @param base Token being priced
+     *  @param quote Reference token
+     *  @return Quote in reference token
+     */
+    function computeQuoteAverage(uint256 amount, address base, address quote) public view returns (uint256) {
+        OracleInfo[] storage list = _oracles[base][quote];
+        require(list.length > 0, "no oracles");
+
+        uint256[] memory quotes = new uint256[](list.length);
+        uint256 count;
+
+        for (uint256 i; i < list.length; i++) {
+            if (!list[i].enabled) continue;
+            try IPriceOracle(list[i].oracleAddress).getQuote(amount, base, quote) returns (uint256 q) {
+                require(q > 0, "zero quote");
+                quotes[count++] = q;
+            } catch {}
+        }
+
+        require(count > 0, "no data");
+        uint256 sum;
+        for (uint256 i; i < count; i++) sum += quotes[i];
+        uint256 avg = sum / count;
+
+        for (uint256 i; i < count; i++) {
+            uint256 diff = quotes[i] > avg ? quotes[i] - avg : avg - quotes[i];
+            if ((diff * 10_000) / avg > maxDeviationBps) revert("deviation too high");
+        }
+
         return avg;
     }
 
@@ -240,11 +278,11 @@ contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 count;
 
         for (uint256 i; i < list.length; i++) {
-            if (!list[i].enabled) continue;
-            try IPriceOracle(list[i].oracle).getQuote(amount, base, quote) returns (uint256 q) {
-                require(q > 0, "zero quote");
-                quotes[count++] = q;
-                emit QuoteUsed(base, quote, list[i].oracle, amount, q);
+            if (!list[i].enabled) continue; // Corrected: Access 'enabled' directly from OracleInfo
+            try IPriceOracle(list[i].oracleAddress).getQuote(amount, base, quote) returns (uint256 q) {
+                require(q > 0, "zero quote"); // Check for zero quote
+                quotes[count++] = q; // Corrected: Access 'oracleAddress' from OracleInfo
+                emit QuoteUsed(base, quote, list[i].oracleAddress, amount, q);
             } catch {}
         }
 
@@ -256,8 +294,43 @@ contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgrade
         for (uint256 i; i < count; i++) {
             uint256 diff = quotes[i] > med ? quotes[i] - med : med - quotes[i];
             if ((diff * 10_000) / med > maxDeviationBps) {
-                emit QuoteDeviationRejected(base, quote, list[i].oracle, amount, quotes[i], med);
-                revert("dev too high");
+                emit QuoteDeviationRejected(base, quote, list[i].oracleAddress, amount, quotes[i], med);
+                revert("deviation too high");
+            }
+        }
+        return med;
+    }
+
+    /**
+     * @notice Returns median quote after filtering as view
+     * @param amount Input amount
+     * @param base Token being priced
+     * @param quote Reference token
+     * @return Quote in reference token
+     */
+    function computeQuoteMedian(uint256 amount, address base, address quote) public view returns (uint256) {
+        OracleInfo[] storage list = _oracles[base][quote];
+        require(list.length > 0, "no oracles");
+        uint256[] memory quotes = new uint256[](list.length);
+        uint256 count;
+
+        for (uint256 i; i < list.length; i++) {
+            if (!list[i].enabled) continue; // Corrected: Access 'enabled' directly from OracleInfo
+            try IPriceOracle(list[i].oracleAddress).getQuote(amount, base, quote) returns (uint256 q) {
+                require(q > 0, "zero quote"); // Check for zero quote
+                quotes[count++] = q; // Corrected: Access 'oracleAddress' from OracleInfo
+            } catch {}
+        }
+
+        require(count > 0, "no data");
+        uint256[] memory valid = new uint256[](count);
+        for (uint256 i; i < count; i++) valid[i] = quotes[i];
+        uint256 med = _median(valid);
+
+        for (uint256 i; i < count; i++) {
+            uint256 diff = quotes[i] > med ? quotes[i] - med : med - quotes[i];
+            if ((diff * 10_000) / med > maxDeviationBps) {
+                revert("deviation too high");
             }
         }
         return med;
@@ -305,28 +378,28 @@ contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgrade
     // ░░ ERC2771ContextUpgradeable: METATRANSACTIONS
     // ────────────────────────────────────────────────
 
-    /// @inheritdoc ERC2771ContextUpgradeable
-    function _msgSender()
-        internal
-        view
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (address sender)
-    {
-        return ERC2771ContextUpgradeable._msgSender();
+    /// @custom:security ERC2771ContextUpgradeable
+    function _msgSender() internal view override returns (address sender) {
+        if (isTrustedForwarder(msg.sender)) {
+            assembly {
+                sender := shr(96, calldataload(sub(calldatasize(), 20)))
+            }
+        } else {
+            sender = msg.sender;
+        }
     }
 
-    /// @inheritdoc ERC2771ContextUpgradeable
-    function _msgData() internal view override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
-        return ERC2771ContextUpgradeable._msgData();
+    /// @custom:security ERC2771ContextUpgradeable
+    function _msgData() internal view override returns (bytes calldata) {
+        if (isTrustedForwarder(msg.sender)) {
+            return msg.data[:msg.data.length - 20];
+        } else {
+            return msg.data;
+        }
     }
 
-    /// @inheritdoc ERC2771ContextUpgradeable
-    function _contextSuffixLength()
-        internal
-        view
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (uint256)
-    {
-        return ERC2771ContextUpgradeable._contextSuffixLength();
+    /// @custom:security ERC2771ContextUpgradeable
+    function isTrustedForwarder(address forwarder) public view returns (bool) {
+        return forwarder == _trustedForwarder;
     }
 }
