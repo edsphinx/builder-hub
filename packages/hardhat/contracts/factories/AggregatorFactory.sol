@@ -16,7 +16,7 @@ contract AggregatorFactory {
     address public owner;
 
     /// @notice Mapping from base token ⇒ quote token ⇒ aggregator address
-    mapping(address => mapping(address => address)) public aggregators;
+    mapping(address => mapping(address => address)) private _aggregators;
 
     // ────────────────────────────────────────────────
     // ░░  EVENTS
@@ -60,6 +60,14 @@ contract AggregatorFactory {
      */
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
+    /**
+     * @notice Emitted when an aggregator creation is skipped
+     * @param base Address of the base token
+     * @param quote Address of the quote token
+     * @param reason Reason for skipping
+     */
+    event AggregatorCreationSkipped(address indexed base, address indexed quote, string reason);
+
     // ────────────────────────────────────────────────
     // ░░  MODIFIERS
     // ────────────────────────────────────────────────
@@ -76,6 +84,7 @@ contract AggregatorFactory {
      */
     constructor() {
         owner = msg.sender;
+        emit OwnershipTransferred(address(0), msg.sender);
     }
 
     /**
@@ -113,8 +122,14 @@ contract AggregatorFactory {
     ) external onlyOwner returns (address aggregator) {
         require(base != address(0) && quote != address(0), "zero address");
         require(base != quote, "identical tokens");
-        require(aggregators[base][quote] == address(0), "already exists");
-        require(aggregators[quote][base] == address(0), "reverse pair exists");
+        if (_aggregators[base][quote] != address(0)) {
+            emit AggregatorCreationSkipped(base, quote, "already exists");
+            revert("already exists");
+        }
+        if (_aggregators[quote][base] != address(0)) {
+            emit AggregatorCreationSkipped(base, quote, "reverse pair exists");
+            revert("reverse pair exists");
+        }
         require(oracles.length > 0, "no oracles");
 
         MultiOracleAggregator agg = new MultiOracleAggregator();
@@ -124,7 +139,7 @@ contract AggregatorFactory {
         agg.setMaxDeviationBps(maxDeviationBps);
         emit MaxDeviationUpdated(base, quote, maxDeviationBps);
 
-        aggregators[base][quote] = address(agg);
+        _aggregators[base][quote] = address(agg);
         emit AggregatorCreated(base, quote, address(agg));
         return address(agg);
     }
@@ -137,9 +152,9 @@ contract AggregatorFactory {
      * @dev Reverts if no aggregator is found
      */
     function removeAggregator(address base, address quote) external onlyOwner {
-        address aggregator = aggregators[base][quote];
+        address aggregator = _aggregators[base][quote];
         require(aggregator != address(0), "not found");
-        delete aggregators[base][quote];
+        delete _aggregators[base][quote];
         emit AggregatorRemoved(base, quote);
     }
 
@@ -152,7 +167,7 @@ contract AggregatorFactory {
      * @dev Reverts if no aggregator is found or if the new owner is zero
      */
     function transferAggregatorOwnership(address base, address quote, address newOwner) external onlyOwner {
-        address aggregator = aggregators[base][quote];
+        address aggregator = _aggregators[base][quote];
         require(aggregator != address(0), "not found");
         require(newOwner != address(0), "zero address");
 
@@ -167,6 +182,17 @@ contract AggregatorFactory {
      * @return Address of the registered aggregator, or zero if none exists
      */
     function getAggregator(address base, address quote) external view returns (address) {
-        return aggregators[base][quote];
+        return _aggregators[base][quote];
+    }
+
+    /**
+     * @notice Returns true if an aggregator exists for a given asset pair
+     *         and false otherwise
+     * @param base Address of the base token
+     * @param quote Address of the quote token
+     * @return True if an aggregator exists, false otherwise
+     */
+    function existsAggregator(address base, address quote) external view returns (bool) {
+        return _aggregators[base][quote] != address(0);
     }
 }
