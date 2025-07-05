@@ -3,8 +3,8 @@ import { getAddress } from "../helpers/addresses";
 
 async function main() {
   const chainId = hre.network.config.chainId!;
-  const configAddress = getAddress("Config", chainId);
-  const config = await hre.ethers.getContractAt("Config", configAddress);
+  const configAddress = getAddress("WalletFuelConfig", chainId);
+  const config = await hre.ethers.getContractAt("WalletFuelConfig", configAddress);
 
   const signer = await config.oracleSigner();
   console.log(`🔍 Oracle signer is: ${signer}`);
