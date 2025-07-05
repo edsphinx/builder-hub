@@ -34,7 +34,7 @@ contract MultiOracleAggregator {
     uint256 public maxDeviationBps = 500;
 
     /// @notice Owner of the contract with full admin rights
-    address public immutable owner;
+    address public owner;
 
     // ────────────────────────────────────────────────
     // ░░  EVENTS
@@ -121,6 +121,17 @@ contract MultiOracleAggregator {
         require(bps <= 10_000, "bps too high");
         maxDeviationBps = bps;
         emit MaxDeviationUpdated(bps);
+    }
+
+    /**
+     * @notice Transfers the ownership of the contract to a new address
+     * @param newOwner New owner address
+     * @custom:security onlyOwner
+     */
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "zero address");
+        require(newOwner != owner, "same owner");
+        owner = newOwner;
     }
 
     // ────────────────────────────────────────────────
