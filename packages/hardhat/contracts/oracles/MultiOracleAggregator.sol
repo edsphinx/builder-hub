@@ -15,16 +15,7 @@ pragma solidity ^0.8.24;
  *      Ensure all adapters (e.g. EulerOracleAdapter, ChainlinkOracleAdapter) conform to this requirement.
  */
 
-interface IPriceOracle {
-    /**
-     * @notice Converts `inAmount` of `base` token to `quote` token units.
-     * @param inAmount Input token amount to convert
-     * @param base Address of base token
-     * @param quote Address of quote token
-     * @return outAmount Converted amount in quote token units
-     */
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256 outAmount);
-}
+import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 contract MultiOracleAggregator {
     // ────────────────────────────────────────────────
