@@ -1,247 +1,332 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/**
- * @title MultiOracleAggregator
- * @author blocketh
- * @notice Aggregates multiple oracle price feeds (Euler, DIA, etc.) and returns validated price quotes.
- *         - Supports both average and median quote calculation methods.
- *         - Owner can add, remove, or toggle oracles per asset pair.
- *         - Enforces a maximum deviation between quotes to filter outliers.
- * @dev Designed for modular integration with ERC-4337-based Paymasters or other on-chain consumers.
- *      All oracle adapters MUST return quote values scaled to 1e18.
- *      No normalization is performed in this contract.
- *      Mixing oracles with inconsistent decimal scales will produce incorrect results.
- *      Ensure all adapters (e.g. EulerOracleAdapter, ChainlinkOracleAdapter) conform to this requirement.
- */
-
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 
-contract MultiOracleAggregator {
+/**
+ * @title MultiOracleAggregator (UUPS Upgradeable + Trusted Forwarder Compatible)
+ * @author blocketh
+ * @notice Aggregates multiple oracle feeds and provides average/median pricing with full traceability.
+ * @dev Ensure all adapters return 1e18-scaled quotes. Emits events for tracing and deviation validation.
+ */
+contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgradeable, ERC2771ContextUpgradeable {
     // ────────────────────────────────────────────────
-    // ░░  DATA STRUCTURES
+    // ░░ DATA STRUCTURES
     // ────────────────────────────────────────────────
 
+    /// @notice Structure holding oracle configuration
     struct OracleInfo {
         address oracle;
         bool enabled;
     }
 
-    /// @notice Mapping of oracles by asset pair: base ⇒ quote ⇒ list
+    /// @notice Mapping of base ⇒ quote ⇒ list of oracles
     mapping(address => mapping(address => OracleInfo[])) private _oracles;
 
-    /// @notice Max deviation allowed from computed reference (in basis points, e.g. 500 = 5%)
-    uint256 public maxDeviationBps = 500;
-
-    /// @notice Owner of the contract with full admin rights
-    address public owner;
+    /// @notice Allowed maximum deviation (in basis points)
+    uint256 public maxDeviationBps;
 
     // ────────────────────────────────────────────────
-    // ░░  EVENTS
+    // ░░ EVENTS
     // ────────────────────────────────────────────────
 
+    /// @notice Emitted when a new oracle is added to a pair
     event OracleAdded(address indexed base, address indexed quote, address oracle);
+
+    /// @notice Emitted when an oracle is removed by index
     event OracleRemoved(address indexed base, address indexed quote, uint256 index);
+
+    /// @notice Emitted when an oracle is toggled (enabled/disabled)
     event OracleToggled(address indexed base, address indexed quote, uint256 index, bool enabled);
+
+    /// @notice Emitted when an oracle is updated
+    event OracleUpdated(
+        address indexed base,
+        address indexed quote,
+        uint256 index,
+        address oldOracle,
+        address newOracle
+    );
+
+    /// @notice Emitted when the maximum deviation is updated
     event MaxDeviationUpdated(uint256 bps);
 
+    /// @notice Emitted when a quote is successfully used
+    event QuoteUsed(
+        address indexed base,
+        address indexed quote,
+        address oracle,
+        uint256 inputAmount, // This parameter is not used in the event.
+        uint256 outputQuote
+    );
+
+    /// @notice Emitted when a quote is rejected due to deviation
+    event QuoteDeviationRejected(
+        address indexed base,
+        address indexed quote,
+        address oracle,
+        uint256 inputAmount,
+        uint256 quoteValue,
+        uint256 referenceQuote
+    );
+
     // ────────────────────────────────────────────────
-    // ░░  MODIFIERS
+    // ░░ CONSTRUCTOR / INITIALIZER
     // ────────────────────────────────────────────────
 
-    /// @dev Restricts function to the contract owner
-    modifier onlyOwner() {
-        require(msg.sender == owner, "not owner");
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor(address trustedForwarder) ERC2771ContextUpgradeable(trustedForwarder) {
+        _disableInitializers();
+    }
+
+    /**
+     * @notice Initializes the contract with the owner and deviation settings
+     * @param initialOwner The owner to set
+     * @param deviationBps Max allowed deviation in basis points
+     */
+    function initialize(address initialOwner, uint256 deviationBps) external initializer {
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+        maxDeviationBps = deviationBps;
+        _transferOwnership(initialOwner);
+        emit OwnershipTransferred(address(0), initialOwner);
+    }
+
+    /// @notice Required by UUPS pattern
+    function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {}
+
+    /// @dev Ensures both tokens are valid and not equal
+    modifier onlyValidPair(address base, address quote) {
+        require(base != address(0) && quote != address(0), "zero address");
+        require(base != quote, "base = quote");
         _;
     }
 
     // ────────────────────────────────────────────────
-    // ░░  CONSTRUCTOR
+    // ░░ ADMIN: ORACLE CONFIGURATION
     // ────────────────────────────────────────────────
 
     /**
-     * @notice Deploys the aggregator and sets the owner
-     */
-    constructor() {
-        owner = msg.sender;
-    }
-
-    // ────────────────────────────────────────────────
-    // ░░  ADMIN FUNCTIONS
-    // ────────────────────────────────────────────────
-
-    /**
-     * @notice Registers a new oracle for a base/quote pair
+     * @notice Adds an oracle for a base/quote pair
      * @param base Token being priced
-     * @param quote Token used as reference
-     * @param oracle Address of the oracle implementing IPriceOracle
+     * @param quote Reference token
+     * @param oracle Oracle address
      * @custom:security onlyOwner
      */
-    function addOracle(address base, address quote, address oracle) external onlyOwner {
-        _oracles[base][quote].push(OracleInfo({ oracle: oracle, enabled: true }));
+    function addOracle(address base, address quote, address oracle) external onlyOwner onlyValidPair(base, quote) {
+        require(oracle != address(0), "zero oracle");
+        OracleInfo[] storage list = _oracles[base][quote];
+        for (uint256 i; i < list.length; i++) require(list[i].oracle != oracle, "duplicate");
+        list.push(OracleInfo(oracle, true));
         emit OracleAdded(base, quote, oracle);
     }
 
     /**
-     * @notice Removes an oracle by index from a base/quote pair
+     * @notice Removes an oracle from a pair by index
      * @param base Token being priced
-     * @param quote Token used as reference
-     * @param index Index of oracle in array
+     * @param quote Reference token
+     * @param index Oracle index
      * @custom:security onlyOwner
      */
     function removeOracle(address base, address quote, uint256 index) external onlyOwner {
         OracleInfo[] storage list = _oracles[base][quote];
-        require(index < list.length, "invalid index");
+        require(index < list.length, "invalid idx");
         emit OracleRemoved(base, quote, index);
         list[index] = list[list.length - 1];
         list.pop();
     }
 
     /**
-     * @notice Enables or disables an oracle by index
+     * @notice Replaces an existing oracle
      * @param base Token being priced
-     * @param quote Token used as reference
-     * @param index Index of oracle in array
-     * @param enabled New enabled status
+     * @param quote Reference token
+     * @param index Oracle index
+     * @param newOracle New oracle address
+     * @custom:security onlyOwner
+     */
+    function updateOracle(address base, address quote, uint256 index, address newOracle) external onlyOwner {
+        require(newOracle != address(0), "zero oracle");
+        OracleInfo[] storage list = _oracles[base][quote];
+        require(index < list.length, "invalid idx");
+        for (uint256 i; i < list.length; i++) require(list[i].oracle != newOracle, "duplicate");
+        address old = list[index].oracle;
+        list[index].oracle = newOracle;
+        emit OracleUpdated(base, quote, index, old, newOracle);
+    }
+
+    /**
+     * @notice Enables or disables an oracle
+     * @param base Token being priced
+     * @param quote Reference token
+     * @param index Oracle index
+     * @param enabled True to enable, false to disable
      * @custom:security onlyOwner
      */
     function toggleOracle(address base, address quote, uint256 index, bool enabled) external onlyOwner {
         OracleInfo[] storage list = _oracles[base][quote];
-        require(index < list.length, "invalid index");
+        require(index < list.length, "invalid idx");
         list[index].enabled = enabled;
         emit OracleToggled(base, quote, index, enabled);
     }
 
     /**
-     * @notice Sets the maximum deviation allowed from the reference value
-     * @param bps Deviation in basis points (max 10000)
+     * @notice Sets the maximum deviation allowed between quotes
+     * @param bps Deviation in basis points
      * @custom:security onlyOwner
      */
     function setMaxDeviationBps(uint256 bps) external onlyOwner {
-        require(bps <= 10_000, "bps too high");
+        require(bps <= 10_000, "too high");
         maxDeviationBps = bps;
         emit MaxDeviationUpdated(bps);
     }
 
-    /**
-     * @notice Transfers the ownership of the contract to a new address
-     * @param newOwner New owner address
-     * @custom:security onlyOwner
-     */
-    function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "zero address");
-        require(newOwner != owner, "same owner");
-        owner = newOwner;
-    }
-
     // ────────────────────────────────────────────────
-    // ░░  READ FUNCTIONS
+    // ░░ READ: QUOTE RETRIEVAL
     // ────────────────────────────────────────────────
 
     /**
-     * @notice Returns the average quote after deviation filtering
-     * @param inAmount Amount of base token
+     * @notice Returns average quote after filtering
+     * @param amount Input amount
      * @param base Token being priced
-     * @param quote Token used as unit
-     * @return outAmount Quote in quote token units (average)
-     * @dev Reverts if no valid oracles or if deviation threshold is violated
-     *      Assumes all oracle adapters return values scaled to 1e18.
+     * @param quote Reference token
+     * @return Quote in reference token
      */
-    function getQuoteAverage(uint256 inAmount, address base, address quote) external view returns (uint256 outAmount) {
+    function getQuoteAverage(uint256 amount, address base, address quote) external returns (uint256) {
         OracleInfo[] storage list = _oracles[base][quote];
-        uint256 len = list.length;
-        require(len > 0, "no oracles");
+        require(list.length > 0, "no oracles");
+        uint256[] memory quotes = new uint256[](list.length);
+        uint256 count;
 
-        uint256[] memory quotes = new uint256[](len);
-        uint256 active;
-
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < list.length; i++) {
             if (!list[i].enabled) continue;
-            try IPriceOracle(list[i].oracle).getQuote(inAmount, base, quote) returns (uint256 q) {
+            try IPriceOracle(list[i].oracle).getQuote(amount, base, quote) returns (uint256 q) {
                 require(q > 0, "zero quote");
-                quotes[active++] = q;
+                quotes[count++] = q;
+                emit QuoteUsed(base, quote, list[i].oracle, amount, q);
             } catch {}
         }
 
-        require(active > 0, "no data");
-
+        require(count > 0, "no data");
         uint256 sum;
-        for (uint256 i; i < active; i++) sum += quotes[i];
-        uint256 avg = sum / active;
+        for (uint256 i; i < count; i++) sum += quotes[i];
+        uint256 avg = sum / count;
 
-        for (uint256 i; i < active; i++) {
+        for (uint256 i; i < count; i++) {
             uint256 diff = quotes[i] > avg ? quotes[i] - avg : avg - quotes[i];
-            require((diff * 10_000) / avg <= maxDeviationBps, "deviation too high");
+            if ((diff * 10_000) / avg > maxDeviationBps) {
+                emit QuoteDeviationRejected(base, quote, list[i].oracle, amount, quotes[i], avg);
+                revert("dev too high");
+            }
         }
-
         return avg;
     }
 
     /**
-     * @notice Returns the median quote after deviation filtering
-     * @param inAmount Amount of base token
+     * @notice Returns median quote after filtering
+     * @param amount Input amount
      * @param base Token being priced
-     * @param quote Token used as unit
-     * @return outAmount Quote in quote token units (median)
-     * @dev Reverts if no valid oracles or if deviation threshold is violated
-     *      Assumes all oracle adapters return values scaled to 1e18.
+     * @param quote Reference token
+     * @return Quote in reference token
      */
-    function getQuoteMedian(uint256 inAmount, address base, address quote) external view returns (uint256 outAmount) {
+    function getQuoteMedian(uint256 amount, address base, address quote) external returns (uint256) {
         OracleInfo[] storage list = _oracles[base][quote];
-        uint256 len = list.length;
-        require(len > 0, "no oracles");
+        require(list.length > 0, "no oracles");
+        uint256[] memory quotes = new uint256[](list.length);
+        uint256 count;
 
-        uint256[] memory quotes = new uint256[](len);
-        uint256 active;
-
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < list.length; i++) {
             if (!list[i].enabled) continue;
-            try IPriceOracle(list[i].oracle).getQuote(inAmount, base, quote) returns (uint256 q) {
+            try IPriceOracle(list[i].oracle).getQuote(amount, base, quote) returns (uint256 q) {
                 require(q > 0, "zero quote");
-                quotes[active++] = q;
+                quotes[count++] = q;
+                emit QuoteUsed(base, quote, list[i].oracle, amount, q);
             } catch {}
         }
 
-        require(active > 0, "no data");
+        require(count > 0, "no data");
+        uint256[] memory valid = new uint256[](count);
+        for (uint256 i; i < count; i++) valid[i] = quotes[i];
+        uint256 med = _median(valid);
 
-        uint256[] memory activeQuotes = new uint256[](active);
-        for (uint256 i; i < active; i++) activeQuotes[i] = quotes[i];
-
-        uint256 median = _median(activeQuotes);
-
-        for (uint256 i; i < active; i++) {
-            uint256 diff = quotes[i] > median ? quotes[i] - median : median - quotes[i];
-            require((diff * 10_000) / median <= maxDeviationBps, "deviation too high");
+        for (uint256 i; i < count; i++) {
+            uint256 diff = quotes[i] > med ? quotes[i] - med : med - quotes[i];
+            if ((diff * 10_000) / med > maxDeviationBps) {
+                emit QuoteDeviationRejected(base, quote, list[i].oracle, amount, quotes[i], med);
+                revert("dev too high");
+            }
         }
-
-        return median;
+        return med;
     }
 
     /**
-     * @notice Returns the number of registered oracles for a base/quote pair
-     * @param base Base token
-     * @param quote Quote token
-     * @return count Number of oracles
+     * @dev Internal method to compute the median value
+     * @param arr Array of quote values
+     * @return Median value
      */
-    function oracleCount(address base, address quote) external view returns (uint256 count) {
+    function _median(uint256[] memory arr) internal pure returns (uint256) {
+        for (uint256 i; i < arr.length; i++) {
+            for (uint256 j = i + 1; j < arr.length; j++) {
+                if (arr[j] < arr[i]) (arr[i], arr[j]) = (arr[j], arr[i]);
+            }
+        }
+        return arr[arr.length / 2];
+    }
+
+    // ────────────────────────────────────────────────
+    // ░░ VIEW: ORACLE INSPECTION
+    // ────────────────────────────────────────────────
+
+    /**
+     * @notice Returns list of registered oracles for a pair
+     * @param base Token being priced
+     * @param quote Reference token
+     * @return Array of OracleInfo structs
+     */
+    function getOracles(address base, address quote) external view returns (OracleInfo[] memory) {
+        return _oracles[base][quote];
+    }
+
+    /**
+     * @notice Returns the number of oracles for a pair
+     * @param base Token being priced
+     * @param quote Reference token
+     * @return Number of registered oracles
+     */
+    function oracleCount(address base, address quote) external view returns (uint256) {
         return _oracles[base][quote].length;
     }
 
-    /**
-     * @dev Returns the median of an array (bubble sort used for small arrays).
-     *      For large sets, this should be replaced by a more gas-efficient sort.
-     * @param arr Array of values
-     * @return median The median value in the array
-     */
-    function _median(uint256[] memory arr) internal pure returns (uint256 median) {
-        uint256 n = arr.length;
-        for (uint256 i = 0; i < n; i++) {
-            for (uint256 j = i + 1; j < n; j++) {
-                if (arr[j] < arr[i]) {
-                    (arr[i], arr[j]) = (arr[j], arr[i]);
-                }
-            }
-        }
-        return arr[n / 2];
+    // ────────────────────────────────────────────────
+    // ░░ ERC2771ContextUpgradeable: METATRANSACTIONS
+    // ────────────────────────────────────────────────
+
+    /// @inheritdoc ERC2771ContextUpgradeable
+    function _msgSender()
+        internal
+        view
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
+        return ERC2771ContextUpgradeable._msgSender();
+    }
+
+    /// @inheritdoc ERC2771ContextUpgradeable
+    function _msgData() internal view override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
+    }
+
+    /// @inheritdoc ERC2771ContextUpgradeable
+    function _contextSuffixLength()
+        internal
+        view
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (uint256)
+    {
+        return ERC2771ContextUpgradeable._contextSuffixLength();
     }
 }
