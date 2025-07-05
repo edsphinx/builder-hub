@@ -2,6 +2,8 @@
 pragma solidity ^0.8.24;
 import "../WalletFuel.sol";
 
+/// @title TestableWalletFuel
+/// @notice Exposes internal WalletFuel functions for unit testing purposes.
 contract TestableWalletFuel is WalletFuel {
     constructor(address ep, address cfg, address treas) WalletFuel(IEntryPoint(ep), cfg, treas, environment) {}
 
