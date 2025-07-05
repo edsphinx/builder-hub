@@ -13,7 +13,7 @@ import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
  */
 contract AggregatorFactory {
     /// @notice Owner address with permissions to create and remove aggregators
-    address public immutable owner;
+    address public owner;
 
     /// @notice Mapping from base token ⇒ quote token ⇒ aggregator address
     mapping(address => mapping(address => address)) public aggregators;
@@ -53,6 +53,13 @@ contract AggregatorFactory {
      */
     event MaxDeviationUpdated(address indexed base, address indexed quote, uint256 maxDeviationBps);
 
+    /**
+     * @notice Emitted when the ownership of the contract is transferred to a new address
+     * @param previousOwner Previous owner address
+     * @param newOwner New owner address
+     */
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
     // ────────────────────────────────────────────────
     // ░░  MODIFIERS
     // ────────────────────────────────────────────────
@@ -72,6 +79,23 @@ contract AggregatorFactory {
     }
 
     /**
+     * @notice Transfers the ownership of the contract to a new address
+     * @param newOwner New owner address
+     * @custom:access Only callable by owner
+     * @dev Reverts if the new owner is zero
+     */
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "zero address");
+        require(newOwner != owner, "same owner");
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+    }
+
+    // ────────────────────────────────────────────────
+    // ░░  FUNCTIONS
+    // ────────────────────────────────────────────────
+
+    /**
      * @notice Deploys and initializes a MultiOracleAggregator for a given asset pair
      * @param base Address of the base token (e.g., ETH)
      * @param quote Address of the quote token (e.g., USDC)
@@ -87,7 +111,11 @@ contract AggregatorFactory {
         address[] calldata oracles,
         uint256 maxDeviationBps
     ) external onlyOwner returns (address aggregator) {
+        require(base != address(0) && quote != address(0), "zero address");
+        require(base != quote, "identical tokens");
         require(aggregators[base][quote] == address(0), "already exists");
+        require(aggregators[quote][base] == address(0), "reverse pair exists");
+        require(oracles.length > 0, "no oracles");
 
         MultiOracleAggregator agg = new MultiOracleAggregator();
         for (uint256 i = 0; i < oracles.length; i++) {
