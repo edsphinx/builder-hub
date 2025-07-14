@@ -7,7 +7,11 @@ export enum Environment {
 export function resolveEnvironment(networkName: string): Environment {
   if (networkName === "hardhat" || networkName === "localhost") return Environment.Dev;
 
-  if (["sepolia", "base-sepolia", "scroll-sepolia", "zksync-testnet", "arbitrum-sepolia"].includes(networkName))
+  if (
+    ["sepolia", "base-sepolia", "scroll-sepolia", "scrollSepolia", "zksync-testnet", "arbitrum-sepolia"].includes(
+      networkName,
+    )
+  )
     return Environment.Testnet;
 
   return Environment.Production;

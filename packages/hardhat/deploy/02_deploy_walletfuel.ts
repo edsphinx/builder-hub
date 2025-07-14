@@ -37,12 +37,18 @@ const CONFIG: Record<number, NetworkConfig> = {
     depositEth: "0.2",
   },
   // Agrega más redes aquí ⬇
+  534351: {
+    // scroll sepolia
+    entryPoint: "0x4337084d9e255ff0702461cf8895ce9e3b5ff108",
+    stakeEth: "0.1",
+    depositEth: "0.2",
+  },
   1: {
     // mainnet
     entryPoint: "0x4337084d9e255ff0702461cf8895ce9e3b5ff108",
     stakeEth: "1",
     depositEth: "2",
-    paymasterOwner: process.env.PAYMASTER_OWNER ?? "", // multisig
+    paymasterOwner: process.env.PAYMASTER_OWNER || undefined, // multisig
   },
 };
 
@@ -54,60 +60,101 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployments, getNamedAccounts, network } = hre;
   const { deploy, log, get } = deployments;
   const { deployer } = await getNamedAccounts();
+  const forceRedeploy = process.env.REDEPLOY_WALLETFUEL === "true";
 
-  /* ── 1. Recupera la dirección del EntryPoint recién desplegado ── */
-  //    Si la carpeta deployments ya la tiene (porque se ejecutó 00_entrypoint.ts),
-  //    `get()` la lee sin volver a compilar.
-  const epDeployment = await get("EntryPoint");
-  const entryPointAddress = epDeployment.address;
+  if (!forceRedeploy) {
+    const existing = await hre.deployments.getOrNull("WalletFuel");
+    if (existing) {
+      log(`⚠️ WalletFuel ya desplegado en ${existing.address}`);
+      log(`ℹ️ Para forzar el redeploy, seteá REDEPLOY_WALLETFUEL=true en tu .env o en el comando CLI`);
+      return;
+    }
+  }
 
-  /* ── 2. Elige la config por chainId (con fallback al RPC) ── */
   const chainId = network.config.chainId ?? Number(await hre.ethers.provider.send("eth_chainId", []));
   const cfg = CONFIG[chainId!];
   if (!cfg) {
     throw new Error(`❌ Configuración no definida para chainId ${chainId}`);
   }
 
-  log(`📡 Deploying to ${network.name} (chainId ${network.config.chainId})`);
+  const configAddress = (await get("WalletFuelConfig")).address;
+  let entryPointAddress: string;
 
-  log(`↳ Deploying WalletFuel - Gasless Paymaster on chain ${chainId}`);
-  log(`   Using EntryPoint at ${entryPointAddress}`);
+  if (network.name === "hardhat" || network.name === "localhost") {
+    // En local, dependemos del despliegue de 00_deploy_entrypoint.ts
+    entryPointAddress = (await get("EntryPoint")).address;
+  } else {
+    // En redes públicas, usamos la dirección hardcodeada y verificada de la config.
+    entryPointAddress = cfg.entryPoint;
+  }
 
-  /* ── 3. Determina el entorno (Environment enum en Solidity) ── */
-  // Mapea automáticamente la red al entorno adecuado
-  // const environment = resolveEnvironment(network.name);
+  // Verificación de seguridad: Asegurarnos de que la dirección es válida antes de continuar.
+  if (!ethers.isAddress(entryPointAddress) || entryPointAddress === ethers.ZeroAddress) {
+    throw new Error(`❌ EntryPoint inválido o no configurado para la red ${network.name}`);
+  }
+
+  if (!ethers.isAddress(configAddress) || configAddress === ethers.ZeroAddress) {
+    throw new Error("❌ WalletFuelConfig inválido");
+  }
+
   const environment: Environment = resolveEnvironment(network.name);
-  log(`🌐 Environment: ${getEnvironmentName(environment)}`);
+  const isLocal = chainId === 31337 || network.name.includes("hardhat");
+  const isTestnet = [84532, 421614].includes(chainId); // o usá un helper si tenés uno
+  const isMainnet = chainId === 1;
+  const doStake = !!cfg.stakeEth && Number(cfg.stakeEth) > 0;
+  const doDeposit = !!cfg.depositEth && Number(cfg.depositEth) > 0;
 
-  /* ── 4. Despliega el Paymaster con constructor extendido y usando la dirección obtenida ── */
+  log(`🌐 Entorno: ${getEnvironmentName(environment)} (${network.name}, chainId ${chainId})`);
+  log(`⛽ EntryPoint: ${entryPointAddress}`);
+  log(`🧩 WalletFuelConfig: ${configAddress}`);
+
   const res = await deploy("WalletFuel", {
     from: deployer,
     args: [
       entryPointAddress,
-      ethers.ZeroAddress, // ← reemplazar luego con configAddress real
+      configAddress, // ← WalletFuelConfig address
       cfg.paymasterOwner || deployer,
       environment, // 👈 nuevo argumento
     ],
     log: true,
   });
 
-  log(`✅ WalletFuel - Gasless Paymaster @ ${res.address}`);
+  log(`✅ WalletFuel desplegado en: ${res.address}`);
+  if (cfg.paymasterOwner) {
+    log(`⚠️  Owner: ${cfg.paymasterOwner}`);
+  }
 
-  /* ── 5. Fondea el Paymaster, Fondea con stake y depósito ── */
-  const paymaster = await hre.ethers.getContractAt("WalletFuel", res.address);
+  if (isLocal || isTestnet) {
+    if (isLocal && (doStake || doDeposit)) {
+      const paymaster = await hre.ethers.getContractAt("WalletFuel", res.address);
 
-  await paymaster.addStake(24 * 60 * 60, {
-    // 1 día
-    value: ethers.parseEther(cfg.stakeEth),
-  });
-  await paymaster.deposit({
-    value: ethers.parseEther(cfg.depositEth),
-  });
+      if (doStake) {
+        await paymaster.addStake(24 * 60 * 60, {
+          value: ethers.parseEther(cfg.stakeEth),
+        });
+        log(`💰 Stake: ${cfg.stakeEth} ETH`);
+      }
 
-  log(`💰 Stake ${cfg.stakeEth} ETH · Depósito ${cfg.depositEth} ETH añadidos`);
-  log(`✅ WalletFuel - Gasless Paymaster deployed @ ${res.address}`);
+      if (doDeposit) {
+        await paymaster.deposit({
+          value: ethers.parseEther(cfg.depositEth),
+        });
+        log(`💰 Depósito: ${cfg.depositEth} ETH`);
+      }
+    } else if (isTestnet) {
+      log(`⚠️  Stake y depósito omitidos temporalmente en testnet por seguridad.`);
+    }
+  } else if (isMainnet) {
+    log(`⚠️  Stake y depósito omitidos en mainnet por seguridad. Ejecuta manualmente si es necesario.`);
+    if (isMainnet && !cfg.paymasterOwner) {
+      //asegurarse de no hacer un deploy inseguro en mainnet:
+      log(`⚠️  Paymaster owner no definido en mainnet. Ejecuta manualmente si es necesario.`);
+    }
+  }
+
+  await verifyContract(hre, "WalletFuel", res.address, res.args || []);
 };
 
 export default func;
 func.tags = ["WalletFuel"];
-func.dependencies = ["EntryPoint"]; // ← asegura que 00_entrypoint se ejecute antes
+func.dependencies = ["EntryPoint", "WalletFuelConfig"]; // ← asegura que 00_entrypoint y 01_deploy_config se ejecuten antes
