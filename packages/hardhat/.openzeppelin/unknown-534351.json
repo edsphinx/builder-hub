@@ -1,0 +1,158 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0x7E4cf1a463d501a7A25374e8b995A439CC8B11fA",
+      "txHash": "0x105ad98d43f21fc2188871ea9e16dd14530625b1ba8e4578f1c5113cdca9e536",
+      "kind": "uups"
+    },
+    {
+      "address": "0x954F33832c6C444ab9888aD62DacA25Ad1CBA6cB",
+      "txHash": "0x0a8d8cdf27934487c6d85f7570d9365a412f6bb731375cd5f366279895dbd49b",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "584aab5715710dc336a4f8482364df8160dcf6c88e775b243e7e33da545fa864": {
+      "address": "0xd727bF5378bCE9cF9Ad4562b72712c4f353C923F",
+      "txHash": "0xa30f735ec0b94414698bd2293aa5a81cf85042b0e71c3aa755e524e1586118c1",
+      "layout": {
+        "solcVersion": "0.8.28",
+        "storage": [
+          {
+            "label": "_trustedForwarder",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "MultiOracleAggregator",
+            "src": "contracts/oracles/MultiOracleAggregator.sol:31"
+          },
+          {
+            "label": "_oracles",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_array(t_struct(OracleInfo)5817_storage)dyn_storage))",
+            "contract": "MultiOracleAggregator",
+            "src": "contracts/oracles/MultiOracleAggregator.sol:37"
+          },
+          {
+            "label": "maxDeviationBps",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "MultiOracleAggregator",
+            "src": "contracts/oracles/MultiOracleAggregator.sol:41"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)118_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)13_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_struct(OracleInfo)5817_storage)dyn_storage": {
+            "label": "struct MultiOracleAggregator.OracleInfo[]",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_array(t_struct(OracleInfo)5817_storage)dyn_storage)": {
+            "label": "mapping(address => struct MultiOracleAggregator.OracleInfo[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_array(t_struct(OracleInfo)5817_storage)dyn_storage))": {
+            "label": "mapping(address => mapping(address => struct MultiOracleAggregator.OracleInfo[]))",
+            "numberOfBytes": "32"
+          },
+          "t_struct(OracleInfo)5817_storage": {
+            "label": "struct MultiOracleAggregator.OracleInfo",
+            "members": [
+              {
+                "label": "oracleAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "enabled",
+                "type": "t_bool",
+                "offset": 20,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
