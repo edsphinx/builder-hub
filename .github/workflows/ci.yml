@@ -25,6 +25,9 @@ jobs:
       - name: Initialize vendor libs
         run: yarn aa:init
 
+      - name: Load fallback .env
+        run: cp packages/hardhat/.env.example packages/hardhat/.env
+
       - name: Compile contracts
         run: |
           cd packages/hardhat
