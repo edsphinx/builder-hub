@@ -168,6 +168,12 @@ Modular technical documentation is under `docs/` and ready to be imported into G
 
 ---
 
+## 🏛️ Architecture Overview
+
+For a detailed explanation of the project's smart contract architecture, including core components, interaction flows, and design principles, please refer to the [Architecture Overview](ARCHITECTURE.md).
+
+---
+
 ## 📜 Deployment History
 
 For a detailed log of all contract deployments to testnets and mainnet, including network details, contract addresses, and verification links, please see the [Deployment History](deployHistory.md).
