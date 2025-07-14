@@ -1,18 +1,19 @@
-# WalletFuel - Gasless Paymaster (ERC-4337)
+# Builder-Hub - Modular Web3 Onboarding Infrastructure
 
 <p align="center">
-  <img src="https://github.com/edsphinx/builder-hub/blob/main/.github/assets/walletFuel.png" alt="WalletFuel Gasless Paymaster" width="640" />
+  <img src="https://github.com/edsphinx/builder-hub/blob/main/.github/assets/walletFuel.png" alt="Builder-Hub Logo" width="640" />
 </p>
 
 <p align="center">
-  <strong>Production-ready ERC-4337 Paymaster that subsidises USDC check-outs across Base, Optimism, Arbitrum, zkSync & Scroll</strong>  
+  <strong>Builder-Hub is a modular infrastructure stack for onboarding, grants, and gasless experiences – starting with LATAM.</strong>
   <br />
-  <em>Composable, upgrade-safe and 100% open-source</em>
+  <em>Includes plug-and-play modules like GasX, SybilQF, Push Notifier, CCTP Widget, Restake Tracker and more.</em>
 </p>
 
 <p align="center">
   <a href="https://github.com/edsphinx/builder-hub/actions">
     <img src="https://github.com/edsphinx/builder-hub/workflows/CI/badge.svg" alt="CI" />
+  </a>
   <a href="https://t.me/edsphinx">
     <img src="https://img.shields.io/badge/chat-Telegram-blue?logo=telegram" alt="Telegram" />
   </a>
@@ -22,6 +23,56 @@
 </p>
 
 ---
+
+## 🧱 What is Builder-Hub?
+
+**Builder-Hub** is a modular Web3 infra suite to streamline onboarding and participation for new users in dApps, DAOs, grants and more.
+
+It is designed to:
+
+- Subsidize gas fees dynamically via Paymasters
+- Enable quadratic funding rounds with Sybil protection
+- Integrate real-time Push notifications
+- Sponsor actions like voting, minting or staking
+- Track restaking yields across networks
+- Simplify dApp flows for Web3 entrants
+
+Builder-Hub focuses on **LATAM** as an initial region for rollout and validation.
+
+## ⚙️ What is GasX?
+
+**GasX** is the first Builder-Hub module: an ERC-4337 Paymaster that enables **USDC-based** gasless transactions across Base, Optimism, Arbitrum, zkSync, and Scroll.
+
+### Key Features:
+
+- **Non-custodial gas abstraction**
+- **Oracle modularity** via adapters (e.g., Euler, DIA)
+- **Spending caps per user/address**
+- **Push Protocol integration** for checkout UX
+- **Composability with ZK identity, CCTP, etc.**
+
+---
+
+## 🧩 Modular Architecture
+
+Each Builder-Hub module is:
+
+- 🔌 Plug-and-play
+- 📦 ERC-4337 & metaTx compatible
+- 🧱 Decoupled for reusability
+- 🔄 Targeted at onboarding and incentive flows
+
+Modules include:
+
+- `GasX`: Paymaster + Oracle adapters
+- `SybilQF`: Quadratic funding w/ Sybil resistance
+- `Push Notifier`: User feedback layer
+- `Restake Tracker`: APY tracking for EigenLayer
+- `CCTP Widget`: Bridge onboarding UX
+
+_This README is scoped to **GasX**, the first deployed module inside Builder-Hub._
+
+[Original WalletFuel → GasX content continues below, renamed and adapted accordingly.]
 
 ## ✨ Why this matters
 
@@ -52,7 +103,28 @@ Grant reviewers can assess _at a glance_ how the module meets each programme’s
 ```bash
 packages/
 ├─ hardhat/ # Solidity contracts + scripts + helpers + tasks
-│  ├─ contracts/
+│  ├─ contracts
+│  ├── SimpleAccount.sol
+│  ├── EntryPoint.sol
+│  ├── SimpleAccountFactory.sol
+│  ├── WalletFuelConfig.sol
+│  ├── WalletFuel.sol
+│  ├── factories
+│  │   ├── AggregatorFactory.sol
+│  │   └── DIAAdapterFactory.sol
+│  ├── interfaces
+│  │   ├── IDIAOracleV2.sol
+│  │   ├── IOracleAggregator.sol
+│  │   └── IPriceOracle.sol
+│  ├── mocks
+│  │   └── MockOracle.sol
+│  ├── oracles
+│  │   ├── DIAOracleAdapter.sol
+│  │   ├── EulerOracleAdapter.sol
+│  │   └── MultiOracleAggregator.sol
+│  └── testutils
+│      └── TestableWalletFuel.sol
+├─ scripts/
 │  │  ├─ WalletFuel.sol
 │  │  ├─ Config.sol
 │  ├─ deploy/
@@ -93,6 +165,12 @@ Modular technical documentation is under `docs/` and ready to be imported into G
 - [`docs/dev-vs-prod.md`](docs/dev-vs-prod.md): runtime environment behavior
 - [`docs/walletfuel.md`](docs/walletfuel.md): main WalletFuel contract logic
 - [`docs/config.md`](docs/config.md): external config contract details
+
+---
+
+## 📜 Deployment History
+
+For a detailed log of all contract deployments to testnets and mainnet, including network details, contract addresses, and verification links, please see the [Deployment History](deployHistory.md).
 
 ---
 
@@ -250,6 +328,12 @@ Detailed Gantt in [`docs/roadmap.pdf`](docs/roadmap.pdf)
 - Slither, Echidna and Foundry invariants run in GitHub Actions (`.github/workflows/ci.yml`).
 - **0 high-severity** issues per Slither on commit `v0.1.0`.
 - External audit scheduled with **Statemind** (slot confirmed: 12 Aug 2025).
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions from the community. If you're interested in improving Builder-Hub, please read our [**Contributing Guide**](CONTRIBUTING.md) to learn about our development process, coding conventions, and deployment procedures.
 
 ---
 
