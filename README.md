@@ -174,6 +174,12 @@ For a detailed explanation of the project's smart contract architecture, includi
 
 ---
 
+## 🚀 Future Features
+
+Explore our vision for the evolution of the GasX Paymaster, including advanced user eligibility strategies and dApp adaptability, in the [Future Features and Architectural Considerations](FUTURE_FEATURES.md) document.
+
+---
+
 ## 📜 Deployment History
 
 For a detailed log of all contract deployments to testnets and mainnet, including network details, contract addresses, and verification links, please see the [Deployment History](deployHistory.md).

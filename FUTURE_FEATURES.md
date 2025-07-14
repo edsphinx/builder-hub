@@ -1,0 +1,72 @@
+# Future Features and Architectural Considerations
+
+This document outlines potential future features and architectural considerations for the Builder-Hub project, particularly focusing on enhancing the GasX Paymaster module to support flexible user identification strategies and broader dApp adaptability.
+
+## 1. Vision for the GasX Paymaster
+
+The ultimate goal is to evolve the GasX Paymaster into a highly adaptable module that can sponsor gas for users of any dApp, with eligibility determined by various on-chain and off-chain strategies. These strategies could include:
+
+-   **Token/NFT Holders:** Sponsoring gas for users holding specific ERC-20 tokens or NFTs.
+-   **Attestations:** Leveraging on-chain attestations (e.g., from EAS) to identify eligible users.
+-   **Protocol Usage History:** Identifying users based on their past interactions with specific protocols (e.g., used a DeFi protocol X times, or within a certain timeframe).
+-   **Whitelisting/Blacklisting:** More granular control over user eligibility.
+
+## 2. Current Architecture Limitations for Future Vision
+
+While the current architecture provides a solid foundation, certain aspects limit its immediate support for the advanced strategies outlined above:
+
+-   **Hardcoded Validation Logic:** The `WalletFuel.sol` contract's `_validatePaymasterUserOp` function primarily focuses on `allowedSelectors` and gas limits. It lacks built-in mechanisms to query complex user eligibility criteria.
+-   **Limited `WalletFuelConfig` Scope:** The `WalletFuelConfig.sol` currently stores only `oracleSigner` and `maxUsdPerSelector`. It would need to be extended to store references to eligibility rules or external validation contracts.
+-   **Off-chain Data Integration:** Strategies relying on off-chain data (e.g., protocol usage history from subgraphs, attestations from external services) require a secure and verifiable bridge to on-chain validation.
+-   **Static `allowedSelectors`:** The current `allowedSelectors` mechanism is manual. For broad dApp adaptability, a more dynamic or permissionless approach might be desired.
+
+## 3. Proposed Future Features and Architectural Changes
+
+To achieve the vision, the following features and architectural modifications are proposed:
+
+### 3.1. User Eligibility Module (High Priority)
+
+-   **Concept:** Introduce a new, pluggable module responsible for determining user eligibility based on various criteria.
+-   **Architectural Impact:**
+    -   **New Contract:** A dedicated `UserEligibilityModule.sol` (or similar) contract that `WalletFuel` can query.
+    -   **Interfaces:** Define interfaces (e.g., `IEligibilityProvider`) for different types of eligibility checks (e.g., `isTokenHolder(address user, address token, uint256 minAmount)`).
+    -   **`WalletFuel` Integration:** `WalletFuel`'s `_validatePaymasterUserOp` would be modified to call this module, passing relevant user and context data.
+    -   **`WalletFuelConfig` Extension:** `WalletFuelConfig` would store mappings from `selector` or `dAppId` to `EligibilityProvider` addresses and associated rule parameters.
+-   **Examples of Eligibility Providers:**
+    -   `ERC20HolderEligibility`: Checks if a user holds a minimum amount of a specific ERC-20 token.
+    -   `NFTHolderEligibility`: Checks if a user holds a specific NFT or belongs to an NFT collection.
+    -   `AttestationEligibility`: Verifies on-chain attestations for a user.
+    -   `ProtocolUsageEligibility`: (Requires off-chain data integration) Checks user's past interactions with a protocol.
+
+### 3.2. Dynamic Selector Whitelisting
+
+-   **Concept:** Allow dApps to dynamically register their function selectors for sponsorship, potentially through a governance mechanism or a fee-based system.
+-   **Architectural Impact:**
+    -   **Registry Contract:** A new `SelectorRegistry.sol` contract where dApps can register/unregister selectors.
+    -   **`WalletFuel` Integration:** `WalletFuel` would query this registry instead of its internal `allowedSelectors` mapping.
+
+### 3.3. Off-chain Data Integration for Eligibility
+
+-   **Concept:** Securely integrate off-chain data (e.g., from subgraphs, data providers) into on-chain eligibility checks.
+-   **Architectural Impact:**
+    -   **Oracle for Off-chain Data:** Similar to price oracles, a new type of oracle (`IOffchainDataProvider`) that can provide verifiable proofs of off-chain data on-chain.
+    -   **Proof Verification:** Eligibility modules would include logic to verify these proofs.
+
+### 3.4. Multi-dApp / Shared Paymaster Model
+
+-   **Concept:** Allow multiple dApps to share a single Paymaster instance, with each dApp having its own set of rules and configurations.
+-   **Architectural Impact:**
+    -   **dApp Registry:** A `dAppRegistry.sol` to map dApp addresses to their specific configurations.
+    -   **Contextual Validation:** `WalletFuel` would need to interpret the `UserOperation` to determine the dApp context and apply the correct eligibility rules.
+
+## 4. Prioritization
+
+-   **High Priority:** User Eligibility Module (3.1) is foundational for the vision.
+-   **Medium Priority:** Dynamic Selector Whitelisting (3.2) and Off-chain Data Integration (3.3) are critical for scalability and advanced eligibility.
+-   **Lower Priority:** Multi-dApp / Shared Paymaster Model (3.4) can be built upon the other features.
+
+## 5. Next Steps
+
+-   Define clear interfaces for eligibility providers.
+-   Develop a proof-of-concept for a simple `ERC20HolderEligibility` provider.
+-   Refactor `WalletFuel` to accept a configurable eligibility module.
