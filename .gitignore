@@ -49,3 +49,6 @@ deployments/
 aa-lib/
 packages/aa-lib/
 packages/hardhat/contracts/@account-abstraction/
+
+# OpenZeppelin state files
+packages/hardhat/.openzeppelin/

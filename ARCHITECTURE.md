@@ -17,7 +17,7 @@ The Builder-Hub project aims to provide modular Web3 infrastructure. The core of
     - Implements `validatePaymasterUserOp` to determine if a UserOperation should be sponsored.
     - Uses `WalletFuelConfig` for dynamic parameters (limits, oracle signer).
     - Supports whitelisting of function selectors for sponsored transactions.
-    - Upgradeable (UUPS pattern).
+    - **Note:** Paymasters are generally designed to be immutable for security and trust reasons, as their logic should not change after deployment.
 - **Dependencies:** `IEntryPoint`, `WalletFuelConfig`.
 
 ### 2.2. Paymaster Configuration (`WalletFuelConfig.sol`)
