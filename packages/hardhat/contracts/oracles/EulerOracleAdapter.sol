@@ -12,7 +12,7 @@ pragma solidity ^0.8.24;
  */
 
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import "euler-price-oracle/src/interfaces/IPriceOracle.sol";
+import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 
 /// @notice Interface for Euler's price oracle
 interface IEulerOracle {
@@ -29,35 +29,39 @@ interface IEulerOracle {
  * @notice Adapter that wraps a deployed Euler oracle into a standard IPriceOracle interface
  * @dev Fixed scale of 1e18. Reverts if price is zero. Uses full-precision mulDiv for safety.
  */
-abstract contract EulerOracleAdapter is IPriceOracle {
+contract EulerOracleAdapter is IPriceOracle {
     /// @notice Address of the underlying Euler oracle contract
     IEulerOracle public immutable euler;
+
+    address public immutable base;
+    address public immutable quote;
 
     /**
      * @param _euler Address of the deployed Euler oracle
      */
-    constructor(address _euler) {
+    constructor(address _euler, address _base, address _quote) {
         require(_euler.code.length > 0, "euler: not contract");
         euler = IEulerOracle(_euler);
+        base = _base;
+        quote = _quote;
     }
 
     /**
      * @inheritdoc IPriceOracle
      * @notice Converts an amount of `base` token into `quote` token units using Euler price feed.
      * @param inAmount Amount of base token to convert
-     * @param base Address of token being priced
-     * @param quote Address of token used as unit of value
+     * @param _base Address of token being priced
+     * @param _quote Address of token used as unit of value
      * @return outAmount Converted output value in quote tokens (scaled to 1e18)
      */
     function getQuote(
         uint256 inAmount,
-        address base,
-        address quote
+        address _base,
+        address _quote
     ) external view override returns (uint256 outAmount) {
+        require(base == _base && quote == _quote, "invalid pair");
         uint256 price = euler.getPrice(base, quote);
         require(price > 0, "euler: zero price");
-
-        // Safe full-precision multiplication and division
         outAmount = Math.mulDiv(inAmount, price, 1e18);
     }
 }

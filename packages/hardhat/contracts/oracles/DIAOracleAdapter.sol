@@ -35,9 +35,10 @@ contract DIAOracleAdapter is IPriceOracle {
      * @notice Deploys the DIAOracleAdapter
      * @param _diaOracle Address of the DIA oracle contract
      */
-    constructor(address _diaOracle) {
+    constructor(address _diaOracle, address _base, address _quote, string memory _key) {
         dia = IDIAOracleV2(_diaOracle);
         owner = msg.sender;
+        pairKeys[_base][_quote] = _key;
     }
 
     /**
