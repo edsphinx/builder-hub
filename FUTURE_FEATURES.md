@@ -70,3 +70,30 @@ To achieve the vision, the following features and architectural modifications ar
 -   Define clear interfaces for eligibility providers.
 -   Develop a proof-of-concept for a simple `ERC20HolderEligibility` provider.
 -   Refactor `WalletFuel` to accept a configurable eligibility module.
+
+---
+
+## 6. Known Issues
+
+### 6.1. `permissionless` Library Integration in Hardhat Tests
+
+**Problem:** Persistent `TypeError: createPimlicoPaymasterClient is not a function` when attempting to run integration tests or standalone scripts using the `permissionless` library (specifically version `0.2.49`) within the Hardhat environment.
+
+**Symptoms:**
+-   `TypeError: (0 , pimlico_1.createPimlicoPaymasterClient) is not a function`
+-   `ReferenceError: pimlicoActions is not defined` (when using wildcard imports)
+-   `No matching export` errors during `esbuild` compilation.
+
+**Attempted Solutions (and their outcomes):**
+1.  **Correcting import paths:** Tried `permissionless/clients/pimlico` and `permissionless/actions/pimlico`. Neither resolved the issue.
+2.  **Fixing `permissionless` version:** Ensured `0.2.49` was explicitly installed. No change.
+3.  **Configuring `ts-node` for ESM:** Modified `tsconfig.json` and `package.json` to enable ESM support for `ts-node`. This led to new module resolution errors or did not resolve the original `TypeError`.
+4.  **Using wildcard imports (`import * as ...`):** Attempted to import the entire module and access the function as a property. This resulted in `ReferenceError: pimlicoActions is not defined`, indicating a fundamental issue with module resolution/transpilation.
+5.  **Creating a standalone ESM package (`paymaster-client`) with `esbuild`:** Even with a dedicated ESM package and `esbuild` for bundling, the `No matching export` errors persisted, suggesting the issue lies in how `permissionless@0.2.49` exports its functions or how it's interpreted by modern bundlers/transpilers.
+
+**Current Understanding:** The problem appears to be a deep incompatibility or a specific packaging issue with `permissionless@0.2.49` when used in a TypeScript/ESM context within a Hardhat/Node.js environment. The library's exports might not be correctly interpreted by `ts-node` or `esbuild` for this version.
+
+**Recommendation:**
+-   Further investigation into `permissionless` library's internal structure for version `0.2.49` or consulting the `permissionless` community for known compatibility issues with Hardhat/ESM setups.
+-   Consider using a different version of `permissionless` if available, or exploring alternative libraries for Paymaster client interactions if this issue remains a blocker.
+-   For now, manual validation of the Paymaster MVP can be performed using the `packages/hardhat/scripts/sponsorship_standalone.ts` script.
