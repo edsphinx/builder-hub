@@ -25,6 +25,7 @@ const deployerPrivateKey =
 const etherscanApiKey = process.env.ETHERSCAN_MAINNET_API_KEY || "DNXJA8RX2Q3VZ4URQIWP7Z68CJXQZSC6AW";
 const etherscanOptimisticApiKey = process.env.ETHERSCAN_OPTIMISTIC_API_KEY || "RM62RDISS1RH448ZY379NX625ASG1N633R";
 const basescanApiKey = process.env.BASESCAN_API_KEY || "ZZZEIPMT1MNJ8526VV2Y744CA7TNZR64G6";
+const scrollscanApiKey = process.env.SCROLLSCAN_API_KEY || "4Y6TGMHMXEKRJ3FWP16K921FN7JRA88U63";
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -173,6 +174,12 @@ const config: HardhatUserConfig = {
     scrollSepolia: {
       url: "https://sepolia-rpc.scroll.io",
       accounts: [deployerPrivateKey],
+      verify: {
+        etherscan: {
+          apiUrl: "https://api-sepolia.scrollscan.com",
+          apiKey: `${etherscanApiKey}`,
+        },
+      },
     },
     scroll: {
       url: "https://rpc.scroll.io",
@@ -189,7 +196,25 @@ const config: HardhatUserConfig = {
   },
   // Configuration for harhdat-verify plugin
   etherscan: {
-    apiKey: `${etherscanApiKey}`,
+    apiKey: {
+      mainnet: `${etherscanApiKey}`,
+      sepolia: `${etherscanApiKey}`,
+      optimisticEthereum: `${etherscanOptimisticApiKey}`,
+      arbitrumOne: `${etherscanApiKey}`,
+      base: `${basescanApiKey}`,
+      scroll: `${etherscanApiKey}`,
+      scrollSepolia: `${scrollscanApiKey}`,
+    },
+    customChains: [
+      {
+        network: "scrollSepolia",
+        chainId: 534351,
+        urls: {
+          apiURL: "https://api-sepolia.scrollscan.com/api",
+          browserURL: "https://sepolia.scrollscan.com/",
+        },
+      },
+    ],
   },
   // Configuration for etherscan-verify from hardhat-deploy plugin
   verify: {

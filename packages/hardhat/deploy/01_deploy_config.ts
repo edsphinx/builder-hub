@@ -20,6 +20,9 @@ const CONFIGS: Record<number, ConfigParams> = {
   421614: {
     oracleSigner: "0x...", // arbitrum-sepolia signer
   },
+  534351: {
+    oracleSigner: "0x19d400d79AC12eBa630fC1fa998f8bD0f08cc5f6", // scroll-sepolia signer
+  },
   1: {
     oracleSigner: process.env.ORACLE_SIGNER ?? "", // mainnet key (from env)
   },
@@ -56,6 +59,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 
   log(`✅ WalletFuelConfig.sol deployed @ ${res.address}`);
+
+  await verifyContract(hre, "WalletFuelConfig", res.address, [cfg.oracleSigner]);
 };
 
 export default func;
