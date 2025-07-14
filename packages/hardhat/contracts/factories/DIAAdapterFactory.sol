@@ -55,9 +55,7 @@ contract DIAAdapterFactory {
      * @return Address of the newly deployed DIAOracleAdapter
      */
     function deployAdapter(address base, address quote, string calldata key) external onlyOwner returns (address) {
-        DIAOracleAdapter adapter = new DIAOracleAdapter(dia);
-        adapter.setPairKey(base, quote, key);
-
+        DIAOracleAdapter adapter = new DIAOracleAdapter(dia, base, quote, key);
         IOracleAggregator(aggregator).addOracle(base, quote, address(adapter));
 
         emit AdapterCreated(address(adapter), base, quote, key);

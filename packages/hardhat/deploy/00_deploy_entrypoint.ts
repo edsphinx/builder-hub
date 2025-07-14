@@ -3,13 +3,11 @@ import { DeployFunction } from "hardhat-deploy/types";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deployments, getNamedAccounts, ethers } = hre;
-  const { deploy, getOrNull, log } = deployments;
+  const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  // Verifica si ya existe una EntryPoint desplegada
-  const existing = await getOrNull("EntryPoint");
-  if (existing) {
-    log(`⚠️  EntryPoint already deployed at ${existing.address}, skipping...`);
+  if (network.name !== "hardhat" && network.name !== "localhost") {
+    log("Not on a local network, skipping EntryPoint deployment");
     return;
   }
 

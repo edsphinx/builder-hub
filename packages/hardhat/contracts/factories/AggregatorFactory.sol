@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { MultiOracleAggregator } from "../oracles/MultiOracleAggregator.sol";
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
+import { EulerOracleAdapter } from "../oracles/EulerOracleAdapter.sol";
 
 /**
  * @title AggregatorFactory
@@ -223,5 +224,36 @@ contract AggregatorFactory {
      */
     function existsAggregator(address base, address quote) external view returns (bool) {
         return _aggregators[base][quote] != address(0);
+    }
+
+    // ────────────────────────────────────────────────
+    // ░░ READ: QUOTE RETRIEVAL
+    // ────────────────────────────────────────────────
+
+    /**
+     * @notice Returns a quote from the registered aggregator using selected method.
+     * @param base Address of the base token
+     * @param quote Address of the quote token
+     * @param inAmount Amount of base token to quote
+     * @param useMedian If true, uses median; otherwise, uses average
+     * @return quoteAmount Estimated amount of quote token
+     */
+    function quoteViaFactory(
+        address base,
+        address quote,
+        uint256 inAmount,
+        bool useMedian
+    ) external returns (uint256 quoteAmount) {
+        address aggregator = _aggregators[base][quote];
+        require(aggregator != address(0), "not found");
+
+        string memory method = useMedian ? "median" : "average";
+        emit QuoteRequested(msg.sender, base, quote, inAmount, method);
+
+        if (useMedian) {
+            quoteAmount = MultiOracleAggregator(aggregator).getQuoteMedian(inAmount, base, quote);
+        } else {
+            quoteAmount = MultiOracleAggregator(aggregator).getQuoteAverage(inAmount, base, quote);
+        }
     }
 }
