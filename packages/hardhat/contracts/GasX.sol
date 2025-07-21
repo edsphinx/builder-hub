@@ -137,12 +137,11 @@ contract GasX is BasePaymaster {
         require(op.unpackCallGasLimit() <= limits.maxGas, "gas!");
 
         // (3) optional oracle signature & expiry packed as:
-        // paymasterAndData = abi.encodePacked(paymaster, expiry,uint8 v,bytes32 r,bytes32 s)
+        // paymasterAndData = abi.encodePacked(paymaster, validationGas, postOpGas, expiry, sig)
         bytes calldata pData = op.paymasterAndData;
-        if (pData.length > 20) { // first 20 bytes hold the paymaster address
+        if (pData.length > 52) { // Addr (20) + Gas (32) = 52 bytes for static fields
             (uint96 expiry, bytes memory sig) = _decodePaymasterData(pData);
-            require(block.timestamp < expiry, "expired!"); // TODO: check if this is the correct timestamp
-            // 👉 TODO: verify oracle signature off‑chain publicKey stored in `config`
+            require(block.timestamp < expiry, "expired!");
             _verifyOracleSig(op, expiry, sig);
         }
         return ("", 0); // validationData = 0 means valid , no extra signature time
@@ -278,9 +277,10 @@ contract GasX is BasePaymaster {
         pure
         returns (uint96 expiry, bytes memory sig)
     {
-        bytes calldata data = pData[20:];            // strip paymaster address
-        expiry = uint96(bytes12(data[:12]));         // first 12 bytes → uint96 expiry
-        sig    = data[12:];                          // rest → oracle signature
+        // Skip the static fields: address (20) + validationGas (16) + postOpGas (16) = 52 bytes
+        bytes calldata data = pData[52:];
+        expiry = uint96(bytes12(data[:12]));
+        sig = data[12:];
     }
 
     // ----------------------------------------------------------------------
