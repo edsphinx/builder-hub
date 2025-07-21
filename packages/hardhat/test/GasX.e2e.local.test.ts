@@ -76,25 +76,35 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
   it("Should execute a sponsored UserOperation", async function () {
     console.log("\n🚀 Executing sponsored UserOperation...");
 
-    // 1. Get contracts and interfaces
+    // -------------------------------------------------------------------------------------
+    // [1] GET CONTRACTS AND INTERFACES
+    // We need the interfaces for encoding the function calls that will be part of the UserOp.
+    // -------------------------------------------------------------------------------------
     const factoryDeployment = await deployments.get("SimpleAccountFactory");
     const factory = await ethers.getContractAt("SimpleAccountFactory", factoryDeployment.address);
     const simpleAccountArtifact = await deployments.getArtifact("SimpleAccount");
     const simpleAccountInterface = new ethers.Interface(simpleAccountArtifact.abi);
     const mockTargetInterface = new ethers.Interface(mockTargetDeployment.abi);
 
-    // 2. Prepare initCode
+    // -------------------------------------------------------------------------------------
+    // [2] PREPARE INITCODE
+    // The initCode is the code that will be used to create the smart account if it does not exist yet.
+    // It's a concatenation of the factory address and the calldata for the factory's `createAccount` function.
+    // -------------------------------------------------------------------------------------
     const createAccountCall = factory.interface.encodeFunctionData("createAccount", [deployerAccount.address, 0n]);
     const initCode = ethers.concat([factory.target, createAccountCall]);
 
-    // 3. Get sender address
+    // -------------------------------------------------------------------------------------
+    // [3] GET SENDER ADDRESS
+    // The sender of the UserOperation is the smart account itself. Since the account may not exist yet,
+    // we calculate its future address by calling `getSenderAddress` on the EntryPoint.
+    // This function is designed to revert with the calculated address in the error data.
+    // -------------------------------------------------------------------------------------
     let senderAddress: Address;
     try {
       await entryPoint.getSenderAddress(initCode);
-      // This should not be reached, as getSenderAddress should revert.
       throw new Error("getSenderAddress should have reverted");
     } catch (e: any) {
-      // We expect a revert, and the address is in the error data.
       const errorData = e.data?.data || e.data;
       const decodedError = entryPoint.interface.parseError(errorData);
       if (decodedError?.name !== "SenderAddressResult") {
@@ -104,13 +114,14 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
     }
     console.log(`  > Calculated sender (Smart Account) address: ${senderAddress}`);
 
-    // Fund the sender address so it can pay for gas if sponsorship fails during debug
-    await ethers.provider.send("hardhat_setBalance", [
-      senderAddress,
-      "0x1000000000000000000", // 1 ETH
-    ]);
+    // Fund the sender address for debugging. If sponsorship fails, it can pay for its own gas.
+    await ethers.provider.send("hardhat_setBalance", [senderAddress, "0x1000000000000000000"]); // 1 ETH
 
-    // 4. Prepare callData for the Smart Account
+    // -------------------------------------------------------------------------------------
+    // [4] PREPARE CALLDATA
+    // This is the actual operation the smart account will execute. We want our smart account
+    // to call the `execute` function on the `MockTarget` contract.
+    // -------------------------------------------------------------------------------------
     const targetCallData = mockTargetInterface.encodeFunctionData("execute");
     const accountCallData = simpleAccountInterface.encodeFunctionData("execute", [
       mockTargetDeployment.address,
@@ -118,16 +129,24 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
       targetCallData,
     ]);
 
-    // 5. Get nonce
+    // -------------------------------------------------------------------------------------
+    // [5] GET NONCE
+    // The nonce for a UserOperation is managed by the EntryPoint for each smart account.
+    // -------------------------------------------------------------------------------------
     const nonce = await entryPoint.getNonce(senderAddress, 0);
 
-    // 6. Assemble the UserOperation
+    // -------------------------------------------------------------------------------------
+    // [6] ASSEMBLE THE USEROPERATION
+    // This is the core of the test. We construct the UserOperation object according to the
+    // `PackedUserOperation` struct expected by EntryPoint v0.8.0.
+    // -------------------------------------------------------------------------------------
     const callGasLimit = 1_000_000;
     const verificationGasLimit = 2_000_000;
     const preVerificationGas = 500_000;
     const maxFeePerGas = ethers.parseUnits("10", "gwei");
     const maxPriorityFeePerGas = ethers.parseUnits("5", "gwei");
 
+    // These gas limits are for the paymaster's validation and post-op phases.
     const paymasterVerificationGasLimit = 500_000;
     const paymasterPostOpGasLimit = 100_000;
 
@@ -136,24 +155,34 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
       nonce: nonce,
       initCode: initCode,
       callData: accountCallData,
+      // EPv0.8 packs gas limits into a single bytes32 field.
       accountGasLimits: ethers.concat([
         ethers.zeroPadValue(ethers.toBeHex(verificationGasLimit), 16),
         ethers.zeroPadValue(ethers.toBeHex(callGasLimit), 16),
       ]),
       preVerificationGas: preVerificationGas,
+      // EPv0.8 also packs gas fees into a single bytes32 field.
       gasFees: ethers.concat([
         ethers.zeroPadValue(ethers.toBeHex(maxPriorityFeePerGas), 16),
         ethers.zeroPadValue(ethers.toBeHex(maxFeePerGas), 16),
       ]),
+      // The paymasterAndData field must be at least 52 bytes long for EPv0.8.
+      // It consists of the paymaster address (20 bytes), followed by gas limits (32 bytes).
+      // Our GasX contract was updated to handle this structure correctly.
       paymasterAndData: ethers.concat([
         gasXDeployment.address as Address,
         ethers.zeroPadValue(ethers.toBeHex(paymasterVerificationGasLimit), 16),
         ethers.zeroPadValue(ethers.toBeHex(paymasterPostOpGasLimit), 16),
       ]),
-      signature: "0x", // Placeholder
+      signature: "0x", // Placeholder, will be replaced after signing.
     };
 
-    // 7. Sign the UserOperation
+    // -------------------------------------------------------------------------------------
+    // [7] SIGN THE USEROPERATION
+    // The signature is the most critical part. We must sign the EIP-712 typed data hash of the
+    // UserOperation, not the simple message hash. `signTypedData` handles this correctly.
+    // Using `signMessage` would produce an invalid signature (AA24 error).
+    // -------------------------------------------------------------------------------------
     const signature = await deployerAccount.signTypedData({
       domain: {
         name: "ERC4337",
@@ -178,16 +207,22 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
     });
     userOp.signature = signature;
 
-    // 9. Send the UserOperation
+    // -------------------------------------------------------------------------------------
+    // [8] SEND THE USEROPERATION
+    // We send the complete, signed UserOperation to the EntryPoint to be executed.
+    // -------------------------------------------------------------------------------------
     console.log("  > Sending UserOperation to EntryPoint...");
     const tx = await entryPoint.handleOps([userOp], deployerAccount.address);
     const receipt = await tx.wait();
 
-    // 10. Assert
+    // -------------------------------------------------------------------------------------
+    // [9] ASSERT THE OUTCOME
+    // The transaction should be successful, and we verify that the `counter` on our
+    // MockTarget contract was incremented, proving the call was executed.
+    // -------------------------------------------------------------------------------------
     expect(receipt.status).to.equal(1);
     console.log("  ✅ Transaction successfully mined!");
 
-    // Optional: Verify that the target contract was actually called
     const mockTarget = await ethers.getContractAt("MockTarget", mockTargetDeployment.address);
     const counter = await mockTarget.counter();
     expect(counter).to.equal(1n);

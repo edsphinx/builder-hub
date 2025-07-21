@@ -1,26 +1,15 @@
 # Builder-Hub - Modular Web3 Onboarding Infrastructure
 
-<p align="center">
-  <img src="https://github.com/edsphinx/builder-hub/blob/main/.github/assets/walletFuel.png" alt="Builder-Hub Logo" width="640" />
-</p>
+<!-- Or, simply use Markdown image syntax (not centered, but compliant): -->
 
-<p align="center">
-  <strong>Builder-Hub is a modular infrastructure stack for onboarding, grants, and gasless experiences – starting with LATAM.</strong>
-  <br />
-  <em>Includes plug-and-play modules like GasX, SybilQF, Push Notifier, CCTP Widget, Restake Tracker and more.</em>
-</p>
+![Builder-Hub Logo](https://github.com/edsphinx/builder-hub/blob/main/.github/assets/walletFuel.png)
 
-<p align="center">
-  <a href="https://github.com/edsphinx/builder-hub/actions">
-    <img src="https://github.com/edsphinx/builder-hub/workflows/CI/badge.svg" alt="CI" />
-  </a>
-  <a href="https://t.me/edsphinx">
-    <img src="https://img.shields.io/badge/chat-Telegram-blue?logo=telegram" alt="Telegram" />
-  </a>
-  <a href="LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-success" alt="MIT License" />
-  </a>
-</p>
+**Builder-Hub is a modular infrastructure stack for onboarding, grants, and gasless experiences – starting with LATAM.**
+_Includes plug-and-play modules like GasX, SybilQF, Push Notifier, CCTP Widget, Restake Tracker and more._
+
+[![CI](https://github.com/edsphinx/builder-hub/workflows/CI/badge.svg)](https://github.com/edsphinx/builder-hub/actions)
+[![Telegram](https://img.shields.io/badge/chat-Telegram-blue?logo=telegram)](https://t.me/edsphinx)
+[![MIT License](https://img.shields.io/badge/License-MIT-success)](LICENSE)
 
 ---
 
@@ -43,7 +32,7 @@ Builder-Hub focuses on **LATAM** as an initial region for rollout and validation
 
 **GasX** is the first Builder-Hub module: an ERC-4337 Paymaster that enables **USDC-based** gasless transactions across Base, Optimism, Arbitrum, zkSync, and Scroll.
 
-### Key Features:
+### Key Features
 
 - **Non-custodial gas abstraction**
 - **Oracle modularity** via adapters (e.g., Euler, DIA)
@@ -163,7 +152,7 @@ Modular technical documentation is under `docs/` and ready to be imported into G
 
 - [`docs/index.md`](docs/index.md): index / outline
 - [`docs/dev-vs-prod.md`](docs/dev-vs-prod.md): runtime environment behavior
-- [`docs/walletfuel.md`](docs/walletfuel.md): main WalletFuel contract logic
+- [`docs/gasx.md`](docs/gasx.md): main GasX contract logic
 - [`docs/config.md`](docs/config.md): external config contract details
 
 ---
@@ -226,7 +215,7 @@ Compiles contracts and runs Hardhat tests in packages/hardhat
 
 | Feature                              | Detail                                                                               |
 | ------------------------------------ | ------------------------------------------------------------------------------------ |
-| **EntryPoint v0.8**                  | Cancun-ready, supports EIP-1153 TransientStorage.                                    |
+| **EntryPoint v0.8**                  | Cancun-ready, supports EIP-1153 TransientStorage. Verified compatible.       |
 | **Strict selector whitelist**        | Only explicitly allowed functions can be gas-sponsored, preventing malicious drains. |
 | **Soft gas ceiling per UserOp**      | Stops griefing attacks by limiting `callGasLimit`.                                   |
 | **Upgradeable (UUPS)**               | 50-slot storage gap, `_disableInitializers` guard, OZ 5.1 patterns.                  |
@@ -256,14 +245,21 @@ All items bundled in commit `v0.1.0` and immutable on GitHub.
 
 The `WalletFuel` contract has been thoroughly tested via Hardhat using a custom harness, covering all critical behaviors expected from a production-grade Paymaster.
 
-| Suite                    | Tests                                                                                |
-| ------------------------ | ------------------------------------------------------------------------------------ |
-| **Deployment & config**  | ✔ Deploys with correct EntryPoint<br>✔ Owner-only access for limit/whitelist updates |
-| **Selector whitelist**   | ✔ Accepts whitelisted selector<br>✔ Rejects unlisted selector<br>✔ Toggleable on/off |
-| **Gas enforcement**      | ✔ Accepts calls at limit<br>✔ Rejects just above limit<br>✔ Enforces upper ceiling   |
-| **Oracle expiry**        | ✔ Rejects expired data<br>✔ Accepts valid future expiry                              |
-| **ERC‑4337 integration** | ✔ Validates full `PackedUserOperation`                                               |
-| **PostOp hook**          | ✔ Emits `GasSponsored` analytics event                                               |
+| Suite                                           | Tests                             |
+| ----------------------------------------------- | --------------------------------- |
+| **Deployment & config**                         | ✔ Deploys with correct EntryPoint |
+| ✔ Owner-only access for limit/whitelist updates |                                   |
+| **Selector whitelist**                          | ✔ Accepts whitelisted selector    |
+
+✔ Rejects unlisted selector  
+✔ Toggleable on/off |
+| **Gas enforcement** | ✔ Accepts calls at limit  
+✔ Rejects just above limit  
+✔ Enforces upper ceiling |
+| **Oracle expiry** | ✔ Rejects expired data  
+✔ Accepts valid future expiry |
+| **ERC‑4337 integration** | ✔ Validates full `PackedUserOperation` |
+| **PostOp hook** | ✔ Emits `GasSponsored` analytics event |
 
 > All tests pass on `@account-abstraction/contracts v0.8.0` with TypeChain bindings. CI auto-runs on every commit.
 
@@ -314,7 +310,7 @@ We're now entering **Week 2–3 deliverables**, focused on demonstrating utility
 - ✅ **Paymaster MVP logic complete and tested**
 - 🔄 CCTP integration (in progress)
 - 🔄 Push Protocol hooks for real-time buyer feedback
-- 🔄 Frontend: Next.js / Scaffold-ETH checkout using WalletFuel
+- 🔄 Frontend: Next.js / Scaffold-ETH checkout using GasX
 - 📦 SDK packaging for dev adoption (planned)
 
 We welcome feedback from grant reviewers on which part of the integration they'd like highlighted in live demos or walkthroughs.
