@@ -1,14 +1,15 @@
-import { ethers } from "hardhat";
+import { ethers, deployments } from "hardhat";
 import fs from "fs";
 import path from "path";
-
+import { GasXConfig } from "../typechain-types";
 async function main() {
   const [signer] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
   console.log(`📡 Network: ${network.name} (${network.chainId})`);
   console.log(`🔑 Signer: ${signer.address}`);
 
-  const CONFIG_ADDRESS = "0xYourDeployedConfigAddressHere"; // ← actualizá esto
+  const configDeployment = await deployments.get("GasXConfig");
+  const CONFIG_ADDRESS = configDeployment.address;
   const config = (await ethers.getContractAt("GasXConfig", CONFIG_ADDRESS)) as GasXConfig;
 
   // === Carga JSON de selectors

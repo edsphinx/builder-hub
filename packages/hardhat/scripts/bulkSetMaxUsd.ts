@@ -1,5 +1,5 @@
-import { ethers } from "hardhat";
-
+import { ethers, deployments } from "hardhat";
+import { GasXConfig } from "../typechain-types";
 async function main() {
   const [signer] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
@@ -7,7 +7,8 @@ async function main() {
   console.log(`🔑 Signer: ${signer.address}`);
 
   // === Dirección de Config.sol desplegado
-  const CONFIG_ADDRESS = "0xYourDeployedConfigAddressHere"; // ← reemplazar
+  const configDeployment = await deployments.get("GasXConfig");
+  const CONFIG_ADDRESS = configDeployment.address;
   const config = (await ethers.getContractAt("GasXConfig", CONFIG_ADDRESS)) as GasXConfig;
 
   // === Lista de funciones a configurar
