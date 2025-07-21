@@ -5,6 +5,4694 @@
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 const deployedContracts = {
+  31337: {
+    AggregatorFactory: {
+      address: "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_implementation",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "aggregator",
+              type: "address",
+            },
+          ],
+          name: "AggregatorCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "reason",
+              type: "string",
+            },
+          ],
+          name: "AggregatorCreationSkipped",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "AggregatorOwnershipTransferred",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "AggregatorRemoved",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "maxDeviationBps",
+              type: "uint256",
+            },
+          ],
+          name: "MaxDeviationUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousOwner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferred",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "caller",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "inAmount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "method",
+              type: "string",
+            },
+          ],
+          name: "QuoteRequested",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "aggregatorImplementation",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              internalType: "address[]",
+              name: "oracles",
+              type: "address[]",
+            },
+            {
+              internalType: "uint256",
+              name: "maxDeviationBps",
+              type: "uint256",
+            },
+          ],
+          name: "createAggregator",
+          outputs: [
+            {
+              internalType: "address",
+              name: "aggregator",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "existsAggregator",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "getAggregator",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "inAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "useMedian",
+              type: "bool",
+            },
+          ],
+          name: "quoteViaFactory",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "quoteAmount",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "removeAggregator",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "transferAggregatorOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+    },
+    EntryPoint: {
+      address: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
+      abi: [
+        {
+          inputs: [],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bool",
+              name: "success",
+              type: "bool",
+            },
+            {
+              internalType: "bytes",
+              name: "ret",
+              type: "bytes",
+            },
+          ],
+          name: "DelegateAndRevert",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "opIndex",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "reason",
+              type: "string",
+            },
+          ],
+          name: "FailedOp",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "opIndex",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "reason",
+              type: "string",
+            },
+            {
+              internalType: "bytes",
+              name: "inner",
+              type: "bytes",
+            },
+          ],
+          name: "FailedOpWithRevert",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "InvalidShortString",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes",
+              name: "returnData",
+              type: "bytes",
+            },
+          ],
+          name: "PostOpReverted",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "ReentrancyGuardReentrantCall",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+          ],
+          name: "SenderAddressResult",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "aggregator",
+              type: "address",
+            },
+          ],
+          name: "SignatureValidationFailed",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "str",
+              type: "string",
+            },
+          ],
+          name: "StringTooLong",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "userOpHash",
+              type: "bytes32",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "factory",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "paymaster",
+              type: "address",
+            },
+          ],
+          name: "AccountDeployed",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [],
+          name: "BeforeExecution",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "totalDeposit",
+              type: "uint256",
+            },
+          ],
+          name: "Deposited",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [],
+          name: "EIP712DomainChanged",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "userOpHash",
+              type: "bytes32",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "nonce",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "bytes",
+              name: "revertReason",
+              type: "bytes",
+            },
+          ],
+          name: "PostOpRevertReason",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "aggregator",
+              type: "address",
+            },
+          ],
+          name: "SignatureAggregatorChanged",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "totalStaked",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "unstakeDelaySec",
+              type: "uint256",
+            },
+          ],
+          name: "StakeLocked",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "withdrawTime",
+              type: "uint256",
+            },
+          ],
+          name: "StakeUnlocked",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "withdrawAddress",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "StakeWithdrawn",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "userOpHash",
+              type: "bytes32",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "paymaster",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "nonce",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "success",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "actualGasCost",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "actualGasUsed",
+              type: "uint256",
+            },
+          ],
+          name: "UserOperationEvent",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "userOpHash",
+              type: "bytes32",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "nonce",
+              type: "uint256",
+            },
+          ],
+          name: "UserOperationPrefundTooLow",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "userOpHash",
+              type: "bytes32",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "nonce",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "bytes",
+              name: "revertReason",
+              type: "bytes",
+            },
+          ],
+          name: "UserOperationRevertReason",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "withdrawAddress",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "Withdrawn",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint32",
+              name: "unstakeDelaySec",
+              type: "uint32",
+            },
+          ],
+          name: "addStake",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "balanceOf",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "target",
+              type: "address",
+            },
+            {
+              internalType: "bytes",
+              name: "data",
+              type: "bytes",
+            },
+          ],
+          name: "delegateAndRevert",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "depositTo",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "eip712Domain",
+          outputs: [
+            {
+              internalType: "bytes1",
+              name: "fields",
+              type: "bytes1",
+            },
+            {
+              internalType: "string",
+              name: "name",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "version",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "chainId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "verifyingContract",
+              type: "address",
+            },
+            {
+              internalType: "bytes32",
+              name: "salt",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint256[]",
+              name: "extensions",
+              type: "uint256[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "getDepositInfo",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "uint256",
+                  name: "deposit",
+                  type: "uint256",
+                },
+                {
+                  internalType: "bool",
+                  name: "staked",
+                  type: "bool",
+                },
+                {
+                  internalType: "uint112",
+                  name: "stake",
+                  type: "uint112",
+                },
+                {
+                  internalType: "uint32",
+                  name: "unstakeDelaySec",
+                  type: "uint32",
+                },
+                {
+                  internalType: "uint48",
+                  name: "withdrawTime",
+                  type: "uint48",
+                },
+              ],
+              internalType: "struct IStakeManager.DepositInfo",
+              name: "info",
+              type: "tuple",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getDomainSeparatorV4",
+          outputs: [
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+            {
+              internalType: "uint192",
+              name: "key",
+              type: "uint192",
+            },
+          ],
+          name: "getNonce",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "nonce",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getPackedUserOpTypeHash",
+          outputs: [
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes",
+              name: "initCode",
+              type: "bytes",
+            },
+          ],
+          name: "getSenderAddress",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              components: [
+                {
+                  internalType: "address",
+                  name: "sender",
+                  type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "nonce",
+                  type: "uint256",
+                },
+                {
+                  internalType: "bytes",
+                  name: "initCode",
+                  type: "bytes",
+                },
+                {
+                  internalType: "bytes",
+                  name: "callData",
+                  type: "bytes",
+                },
+                {
+                  internalType: "bytes32",
+                  name: "accountGasLimits",
+                  type: "bytes32",
+                },
+                {
+                  internalType: "uint256",
+                  name: "preVerificationGas",
+                  type: "uint256",
+                },
+                {
+                  internalType: "bytes32",
+                  name: "gasFees",
+                  type: "bytes32",
+                },
+                {
+                  internalType: "bytes",
+                  name: "paymasterAndData",
+                  type: "bytes",
+                },
+                {
+                  internalType: "bytes",
+                  name: "signature",
+                  type: "bytes",
+                },
+              ],
+              internalType: "struct PackedUserOperation",
+              name: "userOp",
+              type: "tuple",
+            },
+          ],
+          name: "getUserOpHash",
+          outputs: [
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              components: [
+                {
+                  components: [
+                    {
+                      internalType: "address",
+                      name: "sender",
+                      type: "address",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "nonce",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "bytes",
+                      name: "initCode",
+                      type: "bytes",
+                    },
+                    {
+                      internalType: "bytes",
+                      name: "callData",
+                      type: "bytes",
+                    },
+                    {
+                      internalType: "bytes32",
+                      name: "accountGasLimits",
+                      type: "bytes32",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "preVerificationGas",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "bytes32",
+                      name: "gasFees",
+                      type: "bytes32",
+                    },
+                    {
+                      internalType: "bytes",
+                      name: "paymasterAndData",
+                      type: "bytes",
+                    },
+                    {
+                      internalType: "bytes",
+                      name: "signature",
+                      type: "bytes",
+                    },
+                  ],
+                  internalType: "struct PackedUserOperation[]",
+                  name: "userOps",
+                  type: "tuple[]",
+                },
+                {
+                  internalType: "contract IAggregator",
+                  name: "aggregator",
+                  type: "address",
+                },
+                {
+                  internalType: "bytes",
+                  name: "signature",
+                  type: "bytes",
+                },
+              ],
+              internalType: "struct IEntryPoint.UserOpsPerAggregator[]",
+              name: "opsPerAggregator",
+              type: "tuple[]",
+            },
+            {
+              internalType: "address payable",
+              name: "beneficiary",
+              type: "address",
+            },
+          ],
+          name: "handleAggregatedOps",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              components: [
+                {
+                  internalType: "address",
+                  name: "sender",
+                  type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "nonce",
+                  type: "uint256",
+                },
+                {
+                  internalType: "bytes",
+                  name: "initCode",
+                  type: "bytes",
+                },
+                {
+                  internalType: "bytes",
+                  name: "callData",
+                  type: "bytes",
+                },
+                {
+                  internalType: "bytes32",
+                  name: "accountGasLimits",
+                  type: "bytes32",
+                },
+                {
+                  internalType: "uint256",
+                  name: "preVerificationGas",
+                  type: "uint256",
+                },
+                {
+                  internalType: "bytes32",
+                  name: "gasFees",
+                  type: "bytes32",
+                },
+                {
+                  internalType: "bytes",
+                  name: "paymasterAndData",
+                  type: "bytes",
+                },
+                {
+                  internalType: "bytes",
+                  name: "signature",
+                  type: "bytes",
+                },
+              ],
+              internalType: "struct PackedUserOperation[]",
+              name: "ops",
+              type: "tuple[]",
+            },
+            {
+              internalType: "address payable",
+              name: "beneficiary",
+              type: "address",
+            },
+          ],
+          name: "handleOps",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint192",
+              name: "key",
+              type: "uint192",
+            },
+          ],
+          name: "incrementNonce",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes",
+              name: "callData",
+              type: "bytes",
+            },
+            {
+              components: [
+                {
+                  components: [
+                    {
+                      internalType: "address",
+                      name: "sender",
+                      type: "address",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "nonce",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "verificationGasLimit",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "callGasLimit",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "paymasterVerificationGasLimit",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "paymasterPostOpGasLimit",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "preVerificationGas",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "address",
+                      name: "paymaster",
+                      type: "address",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "maxFeePerGas",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "maxPriorityFeePerGas",
+                      type: "uint256",
+                    },
+                  ],
+                  internalType: "struct EntryPoint.MemoryUserOp",
+                  name: "mUserOp",
+                  type: "tuple",
+                },
+                {
+                  internalType: "bytes32",
+                  name: "userOpHash",
+                  type: "bytes32",
+                },
+                {
+                  internalType: "uint256",
+                  name: "prefund",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "contextOffset",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "preOpGas",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct EntryPoint.UserOpInfo",
+              name: "opInfo",
+              type: "tuple",
+            },
+            {
+              internalType: "bytes",
+              name: "context",
+              type: "bytes",
+            },
+          ],
+          name: "innerHandleOp",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "actualGasCost",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+            {
+              internalType: "uint192",
+              name: "",
+              type: "uint192",
+            },
+          ],
+          name: "nonceSequenceNumber",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "senderCreator",
+          outputs: [
+            {
+              internalType: "contract ISenderCreator",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4",
+              name: "interfaceId",
+              type: "bytes4",
+            },
+          ],
+          name: "supportsInterface",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "unlockStake",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address payable",
+              name: "withdrawAddress",
+              type: "address",
+            },
+          ],
+          name: "withdrawStake",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address payable",
+              name: "withdrawAddress",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "withdrawAmount",
+              type: "uint256",
+            },
+          ],
+          name: "withdrawTo",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          stateMutability: "payable",
+          type: "receive",
+        },
+      ],
+      inheritedFunctions: {
+        addStake: "@account-abstraction/contracts/core/StakeManager.sol",
+        balanceOf: "@account-abstraction/contracts/core/StakeManager.sol",
+        delegateAndRevert: "@account-abstraction/contracts/interfaces/IEntryPoint.sol",
+        depositTo: "@account-abstraction/contracts/core/StakeManager.sol",
+        getDepositInfo: "@account-abstraction/contracts/core/StakeManager.sol",
+        getNonce: "@account-abstraction/contracts/core/NonceManager.sol",
+        getSenderAddress: "@account-abstraction/contracts/interfaces/IEntryPoint.sol",
+        getUserOpHash: "@account-abstraction/contracts/interfaces/IEntryPoint.sol",
+        handleAggregatedOps: "@account-abstraction/contracts/interfaces/IEntryPoint.sol",
+        handleOps: "@account-abstraction/contracts/interfaces/IEntryPoint.sol",
+        incrementNonce: "@account-abstraction/contracts/core/NonceManager.sol",
+        senderCreator: "@account-abstraction/contracts/interfaces/IEntryPoint.sol",
+        unlockStake: "@account-abstraction/contracts/core/StakeManager.sol",
+        withdrawStake: "@account-abstraction/contracts/core/StakeManager.sol",
+        withdrawTo: "@account-abstraction/contracts/core/StakeManager.sol",
+        nonceSequenceNumber: "@account-abstraction/contracts/core/NonceManager.sol",
+        supportsInterface: "@openzeppelin/contracts/utils/introspection/ERC165.sol",
+        eip712Domain: "@openzeppelin/contracts/utils/cryptography/EIP712.sol",
+      },
+    },
+    EulerOracleAdapterInstance: {
+      address: "0x7a2088a1bFc9d81c55368AE168C2C02570cB814F",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_euler",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_quote",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "base",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "euler",
+          outputs: [
+            {
+              internalType: "contract IEulerOracle",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "inAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "_base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_quote",
+              type: "address",
+            },
+          ],
+          name: "getQuote",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "outAmount",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "quote",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+    },
+    GasX: {
+      address: "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "contract IEntryPoint",
+              name: "_entryPoint",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_config",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_treasury",
+              type: "address",
+            },
+            {
+              internalType: "enum GasX.Environment",
+              name: "_environment",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+          ],
+          name: "OwnableInvalidOwner",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "OwnableUnauthorizedAccount",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "gasUsed",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "feeWei",
+              type: "uint256",
+            },
+          ],
+          name: "GasSponsored",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousOwner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferStarted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousOwner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferred",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "acceptOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint32",
+              name: "unstakeDelaySec",
+              type: "uint32",
+            },
+          ],
+          name: "addStake",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4",
+              name: "",
+              type: "bytes4",
+            },
+          ],
+          name: "allowedSelectors",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "config",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "deposit",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "entryPoint",
+          outputs: [
+            {
+              internalType: "contract IEntryPoint",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "environment",
+          outputs: [
+            {
+              internalType: "enum GasX.Environment",
+              name: "",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getDeposit",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "isDev",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "isDevMode",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "isProd",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "limits",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "maxGas",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "maxUsd",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "pendingOwner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "enum IPaymaster.PostOpMode",
+              name: "mode",
+              type: "uint8",
+            },
+            {
+              internalType: "bytes",
+              name: "context",
+              type: "bytes",
+            },
+            {
+              internalType: "uint256",
+              name: "actualGasCost",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "actualUserOpFeePerGas",
+              type: "uint256",
+            },
+          ],
+          name: "postOp",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "renounceOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bool",
+              name: "enabled",
+              type: "bool",
+            },
+          ],
+          name: "setDevMode",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "gas",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "usd",
+              type: "uint256",
+            },
+          ],
+          name: "setLimit",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4",
+              name: "sel",
+              type: "bytes4",
+            },
+            {
+              internalType: "bool",
+              name: "ok",
+              type: "bool",
+            },
+          ],
+          name: "setSelector",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "treasury",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "unlockStake",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              components: [
+                {
+                  internalType: "address",
+                  name: "sender",
+                  type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "nonce",
+                  type: "uint256",
+                },
+                {
+                  internalType: "bytes",
+                  name: "initCode",
+                  type: "bytes",
+                },
+                {
+                  internalType: "bytes",
+                  name: "callData",
+                  type: "bytes",
+                },
+                {
+                  internalType: "bytes32",
+                  name: "accountGasLimits",
+                  type: "bytes32",
+                },
+                {
+                  internalType: "uint256",
+                  name: "preVerificationGas",
+                  type: "uint256",
+                },
+                {
+                  internalType: "bytes32",
+                  name: "gasFees",
+                  type: "bytes32",
+                },
+                {
+                  internalType: "bytes",
+                  name: "paymasterAndData",
+                  type: "bytes",
+                },
+                {
+                  internalType: "bytes",
+                  name: "signature",
+                  type: "bytes",
+                },
+              ],
+              internalType: "struct PackedUserOperation",
+              name: "userOp",
+              type: "tuple",
+            },
+            {
+              internalType: "bytes32",
+              name: "userOpHash",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint256",
+              name: "maxCost",
+              type: "uint256",
+            },
+          ],
+          name: "validatePaymasterUserOp",
+          outputs: [
+            {
+              internalType: "bytes",
+              name: "context",
+              type: "bytes",
+            },
+            {
+              internalType: "uint256",
+              name: "validationData",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address payable",
+              name: "withdrawAddress",
+              type: "address",
+            },
+          ],
+          name: "withdrawStake",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address payable",
+              name: "withdrawAddress",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "withdrawTo",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {
+        acceptOwnership: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        addStake: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        deposit: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        entryPoint: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        getDeposit: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        owner: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        pendingOwner: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        postOp: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        renounceOwnership: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        transferOwnership: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        unlockStake: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        validatePaymasterUserOp: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        withdrawStake: "@account-abstraction/contracts/core/BasePaymaster.sol",
+        withdrawTo: "@account-abstraction/contracts/core/BasePaymaster.sol",
+      },
+    },
+    GasXConfig: {
+      address: "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_oracleSigner",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "bytes4",
+              name: "selector",
+              type: "bytes4",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "maxUsd",
+              type: "uint256",
+            },
+          ],
+          name: "MaxUsdSet",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "address",
+              name: "newSigner",
+              type: "address",
+            },
+          ],
+          name: "OracleUpdated",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4[]",
+              name: "selectors",
+              type: "bytes4[]",
+            },
+            {
+              internalType: "uint256[]",
+              name: "maxUsds",
+              type: "uint256[]",
+            },
+          ],
+          name: "bulkSetMaxUsd",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4[]",
+              name: "selectors",
+              type: "bytes4[]",
+            },
+          ],
+          name: "getAllLimits",
+          outputs: [
+            {
+              internalType: "uint256[]",
+              name: "results",
+              type: "uint256[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4",
+              name: "selector",
+              type: "bytes4",
+            },
+          ],
+          name: "getMaxUsd",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "maxUsd",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4",
+              name: "",
+              type: "bytes4",
+            },
+          ],
+          name: "maxUsdPerSelector",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "oracleSigner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes4",
+              name: "selector",
+              type: "bytes4",
+            },
+            {
+              internalType: "uint256",
+              name: "maxUsd",
+              type: "uint256",
+            },
+          ],
+          name: "setMaxUsd",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "newSigner",
+              type: "address",
+            },
+          ],
+          name: "setOracleSigner",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+    },
+    MockERC20_USDC: {
+      address: "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "name",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "symbol",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "initialSupply",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "allowance",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "needed",
+              type: "uint256",
+            },
+          ],
+          name: "ERC20InsufficientAllowance",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "balance",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "needed",
+              type: "uint256",
+            },
+          ],
+          name: "ERC20InsufficientBalance",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "approver",
+              type: "address",
+            },
+          ],
+          name: "ERC20InvalidApprover",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "receiver",
+              type: "address",
+            },
+          ],
+          name: "ERC20InvalidReceiver",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+          ],
+          name: "ERC20InvalidSender",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+          ],
+          name: "ERC20InvalidSpender",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "Approval",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "Transfer",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+          ],
+          name: "allowance",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "approve",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "balanceOf",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "decimals",
+          outputs: [
+            {
+              internalType: "uint8",
+              name: "",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "name",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "symbol",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "totalSupply",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "transfer",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "transferFrom",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+    },
+    MockERC20_WETH: {
+      address: "0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "name",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "symbol",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "initialSupply",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "allowance",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "needed",
+              type: "uint256",
+            },
+          ],
+          name: "ERC20InsufficientAllowance",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "balance",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "needed",
+              type: "uint256",
+            },
+          ],
+          name: "ERC20InsufficientBalance",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "approver",
+              type: "address",
+            },
+          ],
+          name: "ERC20InvalidApprover",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "receiver",
+              type: "address",
+            },
+          ],
+          name: "ERC20InvalidReceiver",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+          ],
+          name: "ERC20InvalidSender",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+          ],
+          name: "ERC20InvalidSpender",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "Approval",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "Transfer",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+          ],
+          name: "allowance",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "spender",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "approve",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "balanceOf",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "decimals",
+          outputs: [
+            {
+              internalType: "uint8",
+              name: "",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "name",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "symbol",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "totalSupply",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "transfer",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "value",
+              type: "uint256",
+            },
+          ],
+          name: "transferFrom",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+    },
+    MockEulerOracle: {
+      address: "0x4A679253410272dd5232B3Ff7cF5dbB88f295319",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_mockPrice",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "getPrice",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "mockPrice",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_price",
+              type: "uint256",
+            },
+          ],
+          name: "setMockPrice",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+    },
+    MockTarget: {
+      address: "0x67d269191c92Caf3cD7723F116c85e6E9bf55933",
+      abi: [
+        {
+          inputs: [],
+          name: "counter",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "execute",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+    },
+    MultiOracleAggregator: {
+      address: "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "target",
+              type: "address",
+            },
+          ],
+          name: "AddressEmptyCode",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "implementation",
+              type: "address",
+            },
+          ],
+          name: "ERC1967InvalidImplementation",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "ERC1967NonPayable",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "FailedCall",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "InvalidInitialization",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "NotInitializing",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+          ],
+          name: "OwnableInvalidOwner",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "OwnableUnauthorizedAccount",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "UUPSUnauthorizedCallContext",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "slot",
+              type: "bytes32",
+            },
+          ],
+          name: "UUPSUnsupportedProxiableUUID",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "uint64",
+              name: "version",
+              type: "uint64",
+            },
+          ],
+          name: "Initialized",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "bps",
+              type: "uint256",
+            },
+          ],
+          name: "MaxDeviationUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "oracle",
+              type: "address",
+            },
+          ],
+          name: "OracleAdded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "index",
+              type: "uint256",
+            },
+          ],
+          name: "OracleRemoved",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "index",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "enabled",
+              type: "bool",
+            },
+          ],
+          name: "OracleToggled",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "index",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "oldOracle",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "newOracle",
+              type: "address",
+            },
+          ],
+          name: "OracleUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousOwner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferred",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "oracle",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "inputAmount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "quoteValue",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "referenceQuote",
+              type: "uint256",
+            },
+          ],
+          name: "QuoteDeviationRejected",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "oracle",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "inputAmount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "outputQuote",
+              type: "uint256",
+            },
+          ],
+          name: "QuoteUsed",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "implementation",
+              type: "address",
+            },
+          ],
+          name: "Upgraded",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "UPGRADE_INTERFACE_VERSION",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "oracle",
+              type: "address",
+            },
+          ],
+          name: "addOracle",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "computeQuoteAverage",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "computeQuoteMedian",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "getOracles",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "address",
+                  name: "oracleAddress",
+                  type: "address",
+                },
+                {
+                  internalType: "bool",
+                  name: "enabled",
+                  type: "bool",
+                },
+              ],
+              internalType: "struct MultiOracleAggregator.OracleInfo[]",
+              name: "",
+              type: "tuple[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "getQuoteAverage",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "getQuoteMedian",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "initialOwner",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "deviationBps",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "trustedForwarder",
+              type: "address",
+            },
+          ],
+          name: "initialize",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "forwarder",
+              type: "address",
+            },
+          ],
+          name: "isTrustedForwarder",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "maxDeviationBps",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "oracleCount",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "proxiableUUID",
+          outputs: [
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "index",
+              type: "uint256",
+            },
+          ],
+          name: "removeOracle",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "renounceOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "bps",
+              type: "uint256",
+            },
+          ],
+          name: "setMaxDeviationBps",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "index",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "enabled",
+              type: "bool",
+            },
+          ],
+          name: "toggleOracle",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "index",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "newOracle",
+              type: "address",
+            },
+          ],
+          name: "updateOracle",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "newImplementation",
+              type: "address",
+            },
+            {
+              internalType: "bytes",
+              name: "data",
+              type: "bytes",
+            },
+          ],
+          name: "upgradeToAndCall",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {
+        owner: "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        renounceOwnership: "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        transferOwnership: "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol",
+        UPGRADE_INTERFACE_VERSION: "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol",
+        proxiableUUID: "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol",
+        upgradeToAndCall: "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol",
+      },
+    },
+    MultiOracleAggregatorInstance: {
+      address: "0x59b670e9fA9D0A427751Af201D676719a970857b",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "target",
+              type: "address",
+            },
+          ],
+          name: "AddressEmptyCode",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "implementation",
+              type: "address",
+            },
+          ],
+          name: "ERC1967InvalidImplementation",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "ERC1967NonPayable",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "FailedCall",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "InvalidInitialization",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "NotInitializing",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+          ],
+          name: "OwnableInvalidOwner",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "OwnableUnauthorizedAccount",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "UUPSUnauthorizedCallContext",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "slot",
+              type: "bytes32",
+            },
+          ],
+          name: "UUPSUnsupportedProxiableUUID",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "uint64",
+              name: "version",
+              type: "uint64",
+            },
+          ],
+          name: "Initialized",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "bps",
+              type: "uint256",
+            },
+          ],
+          name: "MaxDeviationUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "oracle",
+              type: "address",
+            },
+          ],
+          name: "OracleAdded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "index",
+              type: "uint256",
+            },
+          ],
+          name: "OracleRemoved",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "index",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "enabled",
+              type: "bool",
+            },
+          ],
+          name: "OracleToggled",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "index",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "oldOracle",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "newOracle",
+              type: "address",
+            },
+          ],
+          name: "OracleUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousOwner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferred",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "oracle",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "inputAmount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "quoteValue",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "referenceQuote",
+              type: "uint256",
+            },
+          ],
+          name: "QuoteDeviationRejected",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "oracle",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "inputAmount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "outputQuote",
+              type: "uint256",
+            },
+          ],
+          name: "QuoteUsed",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "implementation",
+              type: "address",
+            },
+          ],
+          name: "Upgraded",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "UPGRADE_INTERFACE_VERSION",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "oracle",
+              type: "address",
+            },
+          ],
+          name: "addOracle",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "computeQuoteAverage",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "computeQuoteMedian",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "getOracles",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "address",
+                  name: "oracleAddress",
+                  type: "address",
+                },
+                {
+                  internalType: "bool",
+                  name: "enabled",
+                  type: "bool",
+                },
+              ],
+              internalType: "struct MultiOracleAggregator.OracleInfo[]",
+              name: "",
+              type: "tuple[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "getQuoteAverage",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "getQuoteMedian",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "initialOwner",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "deviationBps",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "trustedForwarder",
+              type: "address",
+            },
+          ],
+          name: "initialize",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "forwarder",
+              type: "address",
+            },
+          ],
+          name: "isTrustedForwarder",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "maxDeviationBps",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+          ],
+          name: "oracleCount",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "proxiableUUID",
+          outputs: [
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "index",
+              type: "uint256",
+            },
+          ],
+          name: "removeOracle",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "renounceOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "bps",
+              type: "uint256",
+            },
+          ],
+          name: "setMaxDeviationBps",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "index",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "enabled",
+              type: "bool",
+            },
+          ],
+          name: "toggleOracle",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "base",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "quote",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "index",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "newOracle",
+              type: "address",
+            },
+          ],
+          name: "updateOracle",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "newImplementation",
+              type: "address",
+            },
+            {
+              internalType: "bytes",
+              name: "data",
+              type: "bytes",
+            },
+          ],
+          name: "upgradeToAndCall",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+    },
+    SimpleAccountFactory: {
+      address: "0xc5a5C42992dECbae36851359345FE25997F5C42d",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "contract IEntryPoint",
+              name: "_entryPoint",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "accountImplementation",
+          outputs: [
+            {
+              internalType: "contract SimpleAccount",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "salt",
+              type: "uint256",
+            },
+          ],
+          name: "createAccount",
+          outputs: [
+            {
+              internalType: "contract SimpleAccount",
+              name: "ret",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "salt",
+              type: "uint256",
+            },
+          ],
+          name: "getAddress",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "senderCreator",
+          outputs: [
+            {
+              internalType: "contract ISenderCreator",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+    },
+  },
   534351: {
     AggregatorFactory: {
       address: "0x022747b7F3C4278Dc47775fAfDC715458E64CDaF",
