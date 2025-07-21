@@ -3,5 +3,9 @@
 pragma solidity ^0.8.24;
 
 contract MockTarget {
-    function execute() external {}
+    uint256 public counter;
+
+    function execute() external {
+        counter++;
+    }
 }
