@@ -2,7 +2,7 @@
 
 <!-- Or, simply use Markdown image syntax (not centered, but compliant): -->
 
-![Builder-Hub Logo](https://github.com/edsphinx/builder-hub/blob/main/.github/assets/walletFuel.png)
+![Builder-Hub Logo](https://github.com/edsphinx/builder-hub/blob/main/.github/assets/gasx.png)
 
 **Builder-Hub is a modular infrastructure stack for onboarding, grants, and gasless experiences – starting with LATAM.**
 _Includes plug-and-play modules like GasX, SybilQF, Push Notifier, CCTP Widget, Restake Tracker and more._
@@ -215,7 +215,7 @@ Compiles contracts and runs Hardhat tests in packages/hardhat
 
 | Feature                              | Detail                                                                               |
 | ------------------------------------ | ------------------------------------------------------------------------------------ |
-| **EntryPoint v0.8**                  | Cancun-ready, supports EIP-1153 TransientStorage. Verified compatible.       |
+| **EntryPoint v0.8**                  | Cancun-ready, supports EIP-1153 TransientStorage. Verified compatible.               |
 | **Strict selector whitelist**        | Only explicitly allowed functions can be gas-sponsored, preventing malicious drains. |
 | **Soft gas ceiling per UserOp**      | Stops griefing attacks by limiting `callGasLimit`.                                   |
 | **Upgradeable (UUPS)**               | 50-slot storage gap, `_disableInitializers` guard, OZ 5.1 patterns.                  |
