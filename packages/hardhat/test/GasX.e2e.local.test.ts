@@ -61,7 +61,11 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
     });
 
     const simpleAccountInterface = new ethers.Interface((await deployments.getArtifact("SimpleAccount")).abi);
-    const selector = simpleAccountInterface.getFunction("execute").selector;
+    const executeFunction = simpleAccountInterface.getFunction("execute");
+    if (!executeFunction) {
+      throw new Error("Function 'execute' not found in SimpleAccount ABI");
+    }
+    const selector = executeFunction.selector;
 
     await walletClient.writeContract({
       address: gasXDeployment.address as Address,
@@ -92,7 +96,7 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
     // It's a concatenation of the factory address and the calldata for the factory's `createAccount` function.
     // -------------------------------------------------------------------------------------
     const createAccountCall = factory.interface.encodeFunctionData("createAccount", [deployerAccount.address, 0n]);
-    const initCode = ethers.concat([factory.target, createAccountCall]);
+    const initCode = ethers.concat([ethers.getBytes(ethers.getAddress(factory.target as string)), createAccountCall]);
 
     // -------------------------------------------------------------------------------------
     // [3] GET SENDER ADDRESS
@@ -152,28 +156,34 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
 
     const userOp = {
       sender: senderAddress,
-      nonce: nonce,
-      initCode: initCode,
-      callData: accountCallData,
+      nonce: BigInt(nonce),
+      initCode: ethers.hexlify(initCode) as `0x${string}`,
+      callData: ethers.hexlify(accountCallData) as `0x${string}`,
       // EPv0.8 packs gas limits into a single bytes32 field.
-      accountGasLimits: ethers.concat([
-        ethers.zeroPadValue(ethers.toBeHex(verificationGasLimit), 16),
-        ethers.zeroPadValue(ethers.toBeHex(callGasLimit), 16),
-      ]),
-      preVerificationGas: preVerificationGas,
+      accountGasLimits: ethers.hexlify(
+        ethers.concat([
+          ethers.zeroPadValue(ethers.toBeHex(verificationGasLimit), 16),
+          ethers.zeroPadValue(ethers.toBeHex(callGasLimit), 16),
+        ]),
+      ) as `0x${string}`,
+      preVerificationGas: BigInt(preVerificationGas),
       // EPv0.8 also packs gas fees into a single bytes32 field.
-      gasFees: ethers.concat([
-        ethers.zeroPadValue(ethers.toBeHex(maxPriorityFeePerGas), 16),
-        ethers.zeroPadValue(ethers.toBeHex(maxFeePerGas), 16),
-      ]),
+      gasFees: ethers.hexlify(
+        ethers.concat([
+          ethers.zeroPadValue(ethers.toBeHex(maxPriorityFeePerGas), 16),
+          ethers.zeroPadValue(ethers.toBeHex(maxFeePerGas), 16),
+        ]),
+      ) as `0x${string}`,
       // The paymasterAndData field must be at least 52 bytes long for EPv0.8.
       // It consists of the paymaster address (20 bytes), followed by gas limits (32 bytes).
       // Our GasX contract was updated to handle this structure correctly.
-      paymasterAndData: ethers.concat([
-        gasXDeployment.address as Address,
-        ethers.zeroPadValue(ethers.toBeHex(paymasterVerificationGasLimit), 16),
-        ethers.zeroPadValue(ethers.toBeHex(paymasterPostOpGasLimit), 16),
-      ]),
+      paymasterAndData: ethers.hexlify(
+        ethers.concat([
+          gasXDeployment.address as Address,
+          ethers.zeroPadValue(ethers.toBeHex(paymasterVerificationGasLimit), 16),
+          ethers.zeroPadValue(ethers.toBeHex(paymasterPostOpGasLimit), 16),
+        ]),
+      ) as `0x${string}`,
       signature: "0x", // Placeholder, will be replaced after signing.
     };
 
