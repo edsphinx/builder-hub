@@ -149,7 +149,7 @@ export function getAddress(contract: ContractName, chainId: number): string {
 Mediante `tasks/showAddress.ts`:
 
 ```bash
-yarn hardhat show-address --contract WalletFuel --network localhost
+yarn hardhat show-address --contract GasX --network localhost
 ```
 
 Esto imprime la dirección directamente desde el mapa de helpers.

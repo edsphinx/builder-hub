@@ -178,7 +178,7 @@ console.log(`1 ETH ≈ ${quote} USDC`);
 - ✅ Fully integrated with `MultiOracleAggregator`
 - ✅ Supports both `average` and `median` quoting methods
 - ✅ Emits detailed events
-- ✅ Compatible with `WalletFuel` and other oracle consumers
+- ✅ Compatible with `GasX` and other oracle consumers
 
 ---
 

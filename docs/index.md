@@ -74,7 +74,7 @@ packages/hardhat
 - Cloná este repo con `--recursive` si se usa submodules.
 - Revisá `README.md` para los comandos básicos de testing y deploy.
 - Usá `NODE_ENV=production` para activar la lógica de entorno productivo.
-- Verificá las direcciones usando `npx hardhat show-address --contract WalletFuel --network base_sepolia`
+- Verificá las direcciones usando `npx hardhat show-address --contract GasX --network base_sepolia`
 
 ---
 

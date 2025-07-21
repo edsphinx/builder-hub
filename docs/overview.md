@@ -74,6 +74,6 @@ Esto permite aplicaciones como:
 
 Consulta los siguientes archivos para más detalles:
 
-- [`walletfuel.md`](./walletfuel.md)
+- [`gasx.md`](./gasx.md)
 - [`config.md`](./config.md)
 - [`testing.md`](./testing.md)
