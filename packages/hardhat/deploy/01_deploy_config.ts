@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { Environment, resolveEnvironment, getEnvironmentName } from "../helpers/environment";
+import { verifyContract } from "../helpers/verify";
 
 /*─────────────────────────────────────────────────────────
 │  CONFIG POR RED
@@ -52,16 +53,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   log(`🌐 Environment: ${getEnvironmentName(env)} (chainId: ${chainId})`);
   log(`🔐 Oracle signer: ${cfg.oracleSigner}`);
 
-  const res = await deploy("WalletFuelConfig", {
+  const res = await deploy("GasXConfig", {
     from: deployer,
     args: [cfg.oracleSigner],
     log: true,
   });
 
-  log(`✅ WalletFuelConfig.sol deployed @ ${res.address}`);
+  log(`✅ GasXConfig.sol deployed @ ${res.address}`);
 
-  await verifyContract(hre, "WalletFuelConfig", res.address, [cfg.oracleSigner]);
+  await verifyContract(hre, "GasXConfig", res.address, [cfg.oracleSigner]);
 };
 
 export default func;
-func.tags = ["WalletFuelConfig"];
+func.tags = ["GasXConfig"];

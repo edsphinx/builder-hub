@@ -1,5 +1,4 @@
 import { ethers } from "hardhat";
-import { WalletFuelConfig } from "../typechain-types";
 
 async function main() {
   const [signer] = await ethers.getSigners();
@@ -9,7 +8,7 @@ async function main() {
 
   // === Dirección de Config.sol desplegado
   const CONFIG_ADDRESS = "0xYourDeployedConfigAddressHere"; // ← reemplazar
-  const config = (await ethers.getContractAt("Config", CONFIG_ADDRESS)) as WalletFuelConfig;
+  const config = (await ethers.getContractAt("GasXConfig", CONFIG_ADDRESS)) as GasXConfig;
 
   // === Lista de funciones a configurar
   const selectorMap: Record<string, string> = {

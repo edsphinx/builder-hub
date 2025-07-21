@@ -7,7 +7,8 @@
 	"workspaces": {
 		"packages": [
 			"packages/*",
-			"!packages/aa-lib"
+			"!packages/aa-lib",
+			"packages/paymaster-client"
 		]
 	},
 	"scripts": {

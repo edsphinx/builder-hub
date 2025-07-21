@@ -14,7 +14,7 @@ function load(name: string) {
 }
 
 async function main() {
-  const [walletFuel, factoryAddr, target] = ["WalletFuel", "SimpleAccountFactory", "MockTarget"].map(load);
+  const [factoryAddr, target] = ["SimpleAccountFactory", "MockTarget"].map(load);
   const ENTRY = getEntryPoint(baseSepolia, { addressOverride: process.env.ENTRYPOINT_ADDRESS! as `0x${string}` });
   const RPC = process.env.RPC_URL!;
   const PIN = process.env.PIMLICO_API_KEY!;
@@ -56,7 +56,7 @@ async function main() {
     paymaster: {
       type: "custom",
       rpcUrl: "",
-      getPaymasterAndData: async () => walletFuel,
+      getPaymasterAndData: async () => gasX,
     },
   });
 

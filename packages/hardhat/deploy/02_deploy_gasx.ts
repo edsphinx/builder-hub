@@ -2,6 +2,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
 import { resolveEnvironment, getEnvironmentName, Environment } from "../helpers/environment";
+import { verifyContract } from "../helpers/verify";
 
 /*─────────────────────────────────────────────────────────
 │  CONFIGURACIÓN POR RED
@@ -77,7 +78,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     throw new Error(`❌ Configuración no definida para chainId ${chainId}`);
   }
 
-  const configAddress = (await get("WalletFuelConfig")).address;
+  const configAddress = (await get("GasXConfig")).address;
   let entryPointAddress: string;
 
   if (network.name === "hardhat" || network.name === "localhost") {
@@ -94,7 +95,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   }
 
   if (!ethers.isAddress(configAddress) || configAddress === ethers.ZeroAddress) {
-    throw new Error("❌ WalletFuelConfig inválido");
+    throw new Error("❌ GasXConfig inválido");
   }
 
   const environment: Environment = resolveEnvironment(network.name);
@@ -106,9 +107,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   log(`🌐 Entorno: ${getEnvironmentName(environment)} (${network.name}, chainId ${chainId})`);
   log(`⛽ EntryPoint: ${entryPointAddress}`);
-  log(`🧩 WalletFuelConfig: ${configAddress}`);
+  log(`🧩 GasXConfig: ${configAddress}`);
 
-  const res = await deploy("WalletFuel", {
+  const res = await deploy("GasX", {
     from: deployer,
     args: [
       entryPointAddress,
@@ -119,14 +120,14 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     log: true,
   });
 
-  log(`✅ WalletFuel desplegado en: ${res.address}`);
+  log(`✅ GasX desplegado en: ${res.address}`);
   if (cfg.paymasterOwner) {
     log(`⚠️  Owner: ${cfg.paymasterOwner}`);
   }
 
   if (isLocal || isTestnet) {
     if (isLocal && (doStake || doDeposit)) {
-      const paymaster = await hre.ethers.getContractAt("WalletFuel", res.address);
+      const paymaster = await hre.ethers.getContractAt("GasX", res.address);
 
       if (doStake) {
         await paymaster.addStake(24 * 60 * 60, {
@@ -152,9 +153,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     }
   }
 
-  await verifyContract(hre, "WalletFuel", res.address, res.args || []);
+  await verifyContract(hre, "GasX", res.address, res.args || []);
 };
 
 export default func;
-func.tags = ["WalletFuel"];
-func.dependencies = ["EntryPoint", "WalletFuelConfig"]; // ← asegura que 00_entrypoint y 01_deploy_config se ejecuten antes
+func.tags = ["GasX"];
+func.dependencies = ["EntryPoint", "GasXConfig"]; // ← asegura que 00_entrypoint y 01_deploy_config se ejecuten antes

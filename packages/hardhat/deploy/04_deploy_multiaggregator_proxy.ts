@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers, upgrades } from "hardhat";
+import { verifyContract } from "../helpers/verify";
 
 /**
  * @notice Despliega una instancia inicializable (proxy UUPS) de MultiOracleAggregator.
@@ -45,6 +46,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 
   log(`✅ ${proxyName} desplegado en: ${addr}`);
+
+  await verifyContract(hre, artifactName, addr, [deployer, maxDeviationBps, trustedForwarder]);
 };
 
 export default func;

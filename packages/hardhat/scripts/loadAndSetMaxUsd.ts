@@ -1,7 +1,6 @@
 import { ethers } from "hardhat";
 import fs from "fs";
 import path from "path";
-import { WalletFuelConfig } from "../typechain-types";
 
 async function main() {
   const [signer] = await ethers.getSigners();
@@ -10,7 +9,7 @@ async function main() {
   console.log(`🔑 Signer: ${signer.address}`);
 
   const CONFIG_ADDRESS = "0xYourDeployedConfigAddressHere"; // ← actualizá esto
-  const config = (await ethers.getContractAt("Config", CONFIG_ADDRESS)) as WalletFuelConfig;
+  const config = (await ethers.getContractAt("GasXConfig", CONFIG_ADDRESS)) as GasXConfig;
 
   // === Carga JSON de selectors
   const filePath = path.join(__dirname, "../data/selectors.json");

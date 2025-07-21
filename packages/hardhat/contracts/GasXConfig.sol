@@ -2,18 +2,14 @@
 pragma solidity ^0.8.24;
 
 /**
- * @title WalletFuelConfig
- * @author blocketh
- * @notice Stores and manages configuration data for WalletFuel protocol:
- *         - Manages the public key used for validating oracle-signed payloads.
- *         - Defines maximum USD subsidy limits per function selector (ERC-4337 flow).
- *         - Supports bulk updates and view functions for external integrations.
- *         - Designed to be minimal, auditable, and secure.
- * @dev Used by WalletFuel Paymaster to enforce subsidy limits and oracle verification logic.
- *      Only the owner may update parameters.
+ * @title GasXConfig
+ * @author 🤖
+ * @notice Stores and manages configuration data for GasX protocol:
+ *         - oracleSigner: address authorised to sign off-chain subsidy data
+ *         - maxUsdPerSelector: maps function selectors to max spend in USDC
+ * @dev Used by GasX Paymaster to enforce subsidy limits and oracle verification logic.
  */
-
-contract WalletFuelConfig {
+contract GasXConfig {
     // ────────────────────────────────────────────────
     // ░░  STATE VARIABLES
     // ────────────────────────────────────────────────

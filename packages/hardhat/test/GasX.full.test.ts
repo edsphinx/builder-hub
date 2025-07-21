@@ -1,12 +1,12 @@
 import { ethers } from "hardhat";
 import { assert, expect } from "chai";
-import { EntryPoint, EntryPoint__factory, TestableWalletFuel, TestableWalletFuel__factory } from "../typechain-types";
+import { EntryPoint, EntryPoint__factory, TestableGasX, TestableGasX__factory } from "../typechain-types";
 import type { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
-describe("WalletFuel", () => {
+describe("GasX", () => {
   let deployer: SignerWithAddress;
   let entryPoint: EntryPoint;
-  let paymaster: TestableWalletFuel;
+  let paymaster: TestableGasX;
 
   // Base template for UserOperation
   const opTemplate = {
@@ -31,8 +31,8 @@ describe("WalletFuel", () => {
     entryPoint = await epFactory.deploy();
     await entryPoint.waitForDeployment();
 
-    // Deploy TestableWalletFuel
-    const pmFactory = (await ethers.getContractFactory("TestableWalletFuel")) as TestableWalletFuel__factory;
+    // Deploy TestableGasX
+    const pmFactory = (await ethers.getContractFactory("TestableGasX")) as TestableGasX__factory;
     paymaster = await pmFactory.deploy(await entryPoint.getAddress(), deployer.address, deployer.address);
     await paymaster.waitForDeployment();
 

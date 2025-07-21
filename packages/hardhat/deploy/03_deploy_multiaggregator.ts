@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { resolveEnvironment, getEnvironmentName } from "../helpers/environment";
+import { verifyContract } from "../helpers/verify";
 
 /**
  * @notice Despliega la implementación lógica de MultiOracleAggregator como contrato base sin inicializar.
@@ -38,6 +39,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 
   log(`✅ ${artifactName} (implementación lógica) desplegado en: ${res.address}`);
+
+  await verifyContract(hre, artifactName, res.address, res.args || []);
 };
 
 export default func;

@@ -2,6 +2,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { ethers } from "hardhat";
+import { verifyContract } from "../helpers/verify";
 
 /**
  * @notice Despliega AggregatorFactory con referencia a MultiOracleAggregatorInstance como lógica.
@@ -41,6 +42,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   });
 
   log(`✅ ${factoryName} desplegado en: ${result.address}`);
+
+  await verifyContract(hre, factoryName, result.address, result.args || []);
 };
 
 export default func;

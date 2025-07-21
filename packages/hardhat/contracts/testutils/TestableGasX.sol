@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
-import "../WalletFuel.sol";
+import "../GasX.sol";
 
-/// @title TestableWalletFuel
-/// @notice Exposes internal WalletFuel functions for unit testing purposes.
-contract TestableWalletFuel is WalletFuel {
-    constructor(address ep, address cfg, address treas) WalletFuel(IEntryPoint(ep), cfg, treas, environment) {}
+/// @title TestableGasX
+/// @notice Exposes internal GasX functions for unit testing purposes.
+contract TestableGasX is GasX {
+    constructor(address ep, address cfg, address treas) GasX(IEntryPoint(ep), cfg, treas, environment) {}
 
     /// @notice expone la validación internamente para tests
     function exposedValidate(

@@ -13,14 +13,50 @@ import "@openzeppelin/hardhat-upgrades";
 import { task } from "hardhat/config";
 import generateTsAbis from "./scripts/generateTsAbis";
 import "./tasks/showAddress";
+import { Wallet } from "ethers";
 
 // If not set, it uses ours Alchemy's default API key.
 // You can get your own at https://dashboard.alchemyapi.io
 const providerApiKey = process.env.ALCHEMY_API_KEY || "oKxs-03sij-U_N0iOlrSsZFr29-IqbuF";
 // If not set, it uses the hardhat account 0 private key.
 // You can generate a random account with `yarn generate` or `yarn account:import` to import your existing PK
-const deployerPrivateKey =
-  process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY ?? "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+
+// ================================= KEY MANAGEMENT LOGIC =================================
+// Define the default Hardhat private key as a safe fallback for local development.
+const hardhatDefaultPrivateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+
+// Function to safely get the deployer's private key.
+const getDeployerPrivateKey = (): string => {
+  // 1. Priority: Encrypted key (for testnets and mainnet)
+  if (process.env.DEPLOYER_PRIVATE_KEY_ENCRYPTED && process.env.DEPLOYER_PASSWORD) {
+    try {
+      const wallet = Wallet.fromEncryptedJsonSync(
+        process.env.DEPLOYER_PRIVATE_KEY_ENCRYPTED,
+        process.env.DEPLOYER_PASSWORD,
+      );
+      console.log("✅ Deployer key successfully decrypted from .env.");
+      return wallet.privateKey;
+    } catch (error) {
+      console.error("❌ Could not decrypt key. Check your .env and password.", error);
+      // If decryption fails, it's a critical error. Stop the process.
+      process.exit(1);
+    }
+  }
+
+  // 2. Second priority: Direct private key (useful for CI/CD or simple setups)
+  if (process.env.DEPLOYER_PRIVATE_KEY) {
+    console.log("✅ Using DEPLOYER_PRIVATE_KEY from .env.");
+    return process.env.DEPLOYER_PRIVATE_KEY;
+  }
+
+  // 3. Fallback: Default Hardhat key (ONLY for local development)
+  console.warn("⚠️  Deployer key not found in .env. Using default Hardhat account for local development.");
+  return hardhatDefaultPrivateKey;
+};
+
+const deployerPrivateKey = getDeployerPrivateKey();
+// ================================= END OF KEY MANAGEMENT LOGIC =================================
+
 // If not set, it uses our block explorers default API keys.
 const etherscanApiKey = process.env.ETHERSCAN_MAINNET_API_KEY || "DNXJA8RX2Q3VZ4URQIWP7Z68CJXQZSC6AW";
 const etherscanOptimisticApiKey = process.env.ETHERSCAN_OPTIMISTIC_API_KEY || "RM62RDISS1RH448ZY379NX625ASG1N633R";
