@@ -174,10 +174,12 @@ describe("GasX", () => {
       const block = await ethers.provider.getBlock("latest");
       const expiry = BigInt(block!.timestamp - 10); // timestamp pasado
 
-      // Pack: [20B paymaster][12B expiry][65B sig]
+      // Pack: [20B paymaster][16B validationGas][16B postOpGas][6B expiry][65B sig]
       const pack = ethers.concat([
         ethers.zeroPadValue(await paymaster.getAddress(), 20),
-        ethers.zeroPadValue(ethers.toBeHex(expiry), 12),
+        ethers.zeroPadValue(ethers.toBeHex(0), 16), // dummy validationGas
+        ethers.zeroPadValue(ethers.toBeHex(0), 16), // dummy postOpGas
+        ethers.zeroPadValue(ethers.toBeHex(expiry), 6), // 6-byte expiry
         ethers.randomBytes(65),
       ]);
 
@@ -197,9 +199,12 @@ describe("GasX", () => {
       const block = await ethers.provider.getBlock("latest");
       const expiry = BigInt(block!.timestamp + 60); // futuro
 
+      // Pack: [20B paymaster][16B validationGas][16B postOpGas][6B expiry][65B sig]
       const pack = ethers.concat([
         ethers.zeroPadValue(await paymaster.getAddress(), 20),
-        ethers.zeroPadValue(ethers.toBeHex(expiry), 12),
+        ethers.zeroPadValue(ethers.toBeHex(0), 16), // dummy validationGas
+        ethers.zeroPadValue(ethers.toBeHex(0), 16), // dummy postOpGas
+        ethers.zeroPadValue(ethers.toBeHex(expiry), 6), // 6-byte expiry
         ethers.randomBytes(65),
       ]);
 

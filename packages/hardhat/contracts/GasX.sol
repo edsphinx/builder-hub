@@ -275,12 +275,13 @@ contract GasX is BasePaymaster {
     function _decodePaymasterData(bytes calldata pData)
         private
         pure
-        returns (uint96 expiry, bytes memory sig)
+        returns (uint48 expiry, bytes memory sig)
     {
         // Skip the static fields: address (20) + validationGas (16) + postOpGas (16) = 52 bytes
         bytes calldata data = pData[52:];
-        expiry = uint96(bytes12(data[:12]));
-        sig = data[12:];
+        require(data.length >= 6, "invalid paymaster data length for expiry");
+        expiry = uint48(bytes6(data[:6]));
+        sig = data[6:];
     }
 
     // ----------------------------------------------------------------------

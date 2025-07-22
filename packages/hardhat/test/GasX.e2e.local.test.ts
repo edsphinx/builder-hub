@@ -182,6 +182,8 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
           gasXDeployment.address as Address,
           ethers.zeroPadValue(ethers.toBeHex(paymasterVerificationGasLimit), 16),
           ethers.zeroPadValue(ethers.toBeHex(paymasterPostOpGasLimit), 16),
+          ethers.zeroPadValue(ethers.toBeHex(Math.floor(Date.now() / 1000) + 3600), 6), // 6-byte expiry
+          ethers.zeroPadValue("0x", 65), // Dummy signature
         ]),
       ) as `0x${string}`,
       signature: "0x", // Placeholder, will be replaced after signing.
