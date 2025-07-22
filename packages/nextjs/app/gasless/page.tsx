@@ -1,119 +1,24 @@
 "use client";
 
-import { useState } from "react";
 import type { NextPage } from "next";
-import { SmartAccountClient, createSmartAccountClient } from "permissionless";
-import { toSimpleSmartAccount } from "permissionless/accounts";
-import { createPimlicoClient } from "permissionless/clients/pimlico";
-import { createPublicClient, encodeFunctionData, http } from "viem";
 import { scrollSepolia } from "viem/chains";
-import { useAccount, useWalletClient } from "wagmi";
 import deployedContracts from "~~/contracts/deployedContracts";
-import { useTargetNetwork } from "~~/hooks/scaffold-eth";
-
-type SimpleSmartAccount = Awaited<ReturnType<typeof toSimpleSmartAccount>>;
+import { useGaslessTransaction } from "~~/hooks/gasx/useGaslessTransaction";
 
 const GaslessPage: NextPage = () => {
-  let smartAccount: SimpleSmartAccount;
-  let smartAccountClient: SmartAccountClient;
-  const { address: userAddress, chain: userChain } = useAccount();
-  const { targetNetwork } = useTargetNetwork();
+  const { sendTransaction, isLoading, txHash, error } = useGaslessTransaction({
+    chain: scrollSepolia,
+  });
 
-  const { data: walletClient } = useWalletClient({ chainId: scrollSepolia.id });
-  const [isLoading, setIsLoading] = useState(false);
-  const [txHash, setTxHash] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const handleSendTransaction = () => {
+    const { MockTarget } = deployedContracts[scrollSepolia.id];
 
-  const handleSendTransaction = async () => {
-    console.log("--- Iniciando Transacción ---");
-    console.log("Dirección de usuario:", userAddress);
-    console.log("Chain del usuario:", userChain);
-    console.log("WalletClient (firmante):", walletClient);
-    console.log("Target Network:", targetNetwork);
-
-    if (!userAddress || !walletClient) {
-      setError("Please connect your wallet.");
-      return;
-    }
-
-    if (userChain!.id !== scrollSepolia.id) {
-      setError(`Please switch to Scroll Sepolia (current: ${userChain!.name}).`);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    setTxHash(null);
-
-    try {
-      // [1] CLIENTS AND ACCOUNTS SETUP
-      const publicClient = createPublicClient({
-        chain: scrollSepolia,
-        transport: http(),
-      });
-
-      const pimlicoUrl = `https://api.pimlico.io/v2/${scrollSepolia.id}/rpc?apikey=${process.env.NEXT_PUBLIC_PIMLICO_API_KEY}`;
-      const paymasterClient = createPimlicoClient({ transport: http(pimlicoUrl) });
-
-      smartAccount = await toSimpleSmartAccount({
-        owner: walletClient,
-        client: publicClient,
-      });
-
-      console.log("    ✅ Smart Account created.");
-      console.log(`    ✅ Smart Account Address: ${smartAccount.address}`);
-
-      smartAccountClient = createSmartAccountClient({
-        account: smartAccount,
-        chain: scrollSepolia,
-        bundlerTransport: http(pimlicoUrl),
-        paymaster: paymasterClient,
-        userOperation: {
-          estimateFeesPerGas: async () => {
-            return (await paymasterClient.getUserOperationGasPrice()).fast;
-          },
-        },
-      });
-
-      console.log("    ✅ Smart Account Client created.");
-      console.log(`    ✅ Smart Account Client Account Address: ${smartAccountClient}`);
-
-      // [2] ENCODE CALLDATA
-      const mockTargetAddress = deployedContracts[scrollSepolia.id].MockTarget.address;
-      const mockTargetAbi = deployedContracts[scrollSepolia.id].MockTarget.abi;
-
-      const callData = encodeFunctionData({
-        abi: mockTargetAbi,
-        functionName: "execute",
-        args: [],
-      });
-
-      // [3] SEND THE USEROPERATION
-      const userOpHash = await smartAccountClient.sendTransaction({
-        account: smartAccount,
-        chain: scrollSepolia,
-        to: mockTargetAddress,
-        data: callData,
-      });
-
-      console.log("UserOperation Hash:", userOpHash);
-      setTxHash(userOpHash);
-
-      // [4] WAIT FOR TRANSACTION RECEIPT
-      const receipt = await publicClient.waitForTransactionReceipt({ hash: userOpHash });
-
-      console.log("Recibo de la transacción:", receipt);
-      if (receipt.status !== "success") {
-        throw new Error(`Transaction failed: ${receipt.status}`);
-      }
-    } catch (e: any) {
-      // 🐛 DEBUG: Log del error completo en la consola
-      console.error("--- Error Capturado ---", e);
-      setError(e.message || "An unknown error occurred.");
-    } finally {
-      console.log("--- Finalizando Transacción ---");
-      setIsLoading(false);
-    }
+    sendTransaction({
+      targetAddress: MockTarget.address,
+      targetAbi: MockTarget.abi,
+      functionName: "execute",
+      args: [],
+    });
   };
 
   return (

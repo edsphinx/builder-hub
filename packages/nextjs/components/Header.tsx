@@ -21,13 +21,8 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/",
   },
   {
-    label: "Gasless Hardcoded",
+    label: "Gasless",
     href: "/gasless",
-    icon: <BugAntIcon className="h-4 w-4" />,
-  },
-  {
-    label: "Gasless Pro",
-    href: "/gasless-pro",
     icon: <BugAntIcon className="h-4 w-4" />,
   },
   {
