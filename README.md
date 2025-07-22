@@ -30,7 +30,7 @@ Builder-Hub focuses on **LATAM** as an initial region for rollout and validation
 
 ## ⚙️ What is GasX?
 
-**GasX** is the first Builder-Hub module: an ERC-4337 Paymaster that enables **USDC-based** gasless transactions across Base, Optimism, Arbitrum, zkSync, and Scroll.
+**GasX** is the first Builder-Hub module: an ERC-4337 Paymaster that enables **USDC-based** gasless transactions across Base, Optimism, Arbitrum, zkSync, and Scroll. It is now fully compatible with EntryPoint v0.8.0.
 
 ### Key Features
 
@@ -66,14 +66,14 @@ _This README is scoped to **GasX**, the first deployed module inside Builder-Hub
 ## ✨ Why this matters
 
 On-chain commerce stalls when new users must first acquire ETH for gas.  
-Our **WalletFuel** (ERC-4337, EntryPoint v0.8) removes that friction:
+Our **GasX** (ERC-4337, EntryPoint v0.8) removes that friction:
 
 - **No custodial wallets** – users pay in native **USDC** while the Paymaster covers gas.
 - **Bridges built-in** – integrates Circle CCTP for cross-chain liquidity.
 - **Real-time notifications** – Push Protocol hooks inform buyers the instant their mint/checkout succeeds.
 - **Ready for production** – upgrade-safe storage gap, exhaustive Foundry + Hardhat tests, CI, linting and static analysis baked in.
 
-This repo is the foundation of our multi-chain **Gasless Checkout Module** submitted to the following grant tracks:
+This repo is the foundation of our multi-chain **Gasless Checkout Module** with a functional frontend demonstration.
 
 | Programme                    | Track / RFP                 |
 | ---------------------------- | --------------------------- |
@@ -96,8 +96,8 @@ packages/
 │  ├── SimpleAccount.sol
 │  ├── EntryPoint.sol
 │  ├── SimpleAccountFactory.sol
-│  ├── WalletFuelConfig.sol
-│  ├── WalletFuel.sol
+│  ├── GasXConfig.sol
+│  ├── GasX.sol
 │  ├── factories
 │  │   ├── AggregatorFactory.sol
 │  │   └── DIAAdapterFactory.sol
@@ -112,13 +112,13 @@ packages/
 │  │   ├── EulerOracleAdapter.sol
 │  │   └── MultiOracleAggregator.sol
 │  └── testutils
-│      └── TestableWalletFuel.sol
+│      └── TestableGasX.sol
 ├─ scripts/
-│  │  ├─ WalletFuel.sol
+│  │  ├─ GasX.sol
 │  │  ├─ Config.sol
 │  ├─ deploy/
 │  │  ├─ 01_deploy_config.ts
-│  │  └─ 02_deploy_walletfuel.ts
+│  │  └─ 02_deploy_GasX.ts
 │  ├─ scripts/
 │  │  ├─ setMaxUsd.ts
 │  │  ├─ bulkSetMaxUsd.ts
@@ -132,11 +132,15 @@ packages/
 │     └─ showAddress.ts
 │
 ├─ nextjs/ # demo storefront (Scaffold-ETH 2)
-│  └─ app/
-│     └─ checkout/…
+│  ├─ app/
+│  │  └─ gasless-pro/…
+│  ├─ hooks/
+│  │  └─ gasx/…
+│  └─ services/
+│     └─ web3/…
 │
 └─ docs/ # Structured documentation for GitBook/Docusaurus
-   ├─ walletfuel.md
+   ├─ gasx.md
    ├─ config.md
    ├─ dev-vs-prod.md
    └─ project_docs_index.md
@@ -222,20 +226,20 @@ Compiles contracts and runs Hardhat tests in packages/hardhat
 | **PostOp analytics hook**            | Emits `GasSponsored(sender, gasUsed, feeWei)` for off-chain dashboards.              |
 | **Oracle-priced subsidies (opt-in)** | `paymasterAndData = abi.encode(expiry, sig…)` enables off-chain USDC price checks.   |
 
-See [contracts/hardhat/contracts/WalletFuel.sol](packages/hardhat/contracts/WalletFuel.sol) for inline NatSpec.
+See [contracts/hardhat/contracts/GasX.sol](packages/hardhat/contracts/GasX.sol) for inline NatSpec.
 
 ---
 
 ## ✅ Grant checklist – Week 1 deliverable
 
-| Item                                                              | Status |
-| ----------------------------------------------------------------- | :----: |
-| **EntryPoint 0.8** deployed to Base Sepolia & Scroll Sepolia      |   ✔︎   |
-| **WalletFuel - GaslessPaymaster** verified on Explorer + Sourcify |   ✔︎   |
-| **Demo checkout** (Next.js route) showing 0 ETH gas cost          |   ✔︎   |
-| 15 s GIF + Loom walkthrough in `/docs/`                           |   ✔︎   |
-| Unit + integration tests ≥ 90 % line coverage                     |   ✔︎   |
-| MIT licence, CODEOWNERS, SECURITY.md                              |   ✔︎   |
+| Item                                                         | Status |
+| ------------------------------------------------------------ | :----: |
+| **EntryPoint 0.8** deployed to Base Sepolia & Scroll Sepolia |   ✔︎   |
+| **GasX - GaslessPaymaster** verified on Explorer + Sourcify  |   ✔︎   |
+| **Demo checkout** (Next.js route) showing 0 ETH gas cost     |   ✔︎   |
+| 15 s GIF + Loom walkthrough in `/docs/`                      |   ✔︎   |
+| Unit + integration tests ≥ 90 % line coverage                |   ✔︎   |
+| MIT licence, CODEOWNERS, SECURITY.md                         |   ✔︎   |
 
 All items bundled in commit `v0.1.0` and immutable on GitHub.
 
@@ -243,7 +247,7 @@ All items bundled in commit `v0.1.0` and immutable on GitHub.
 
 ## ✅ Test Coverage
 
-The `WalletFuel` contract has been thoroughly tested via Hardhat using a custom harness, covering all critical behaviors expected from a production-grade Paymaster.
+The `GasX` contract has been thoroughly tested via Hardhat using a custom harness, covering all critical behaviors expected from a production-grade Paymaster.
 
 | Suite                                           | Tests                             |
 | ----------------------------------------------- | --------------------------------- |
@@ -267,7 +271,7 @@ The `WalletFuel` contract has been thoroughly tested via Hardhat using a custom 
 
 ## 🟡 Implementation Status (updated)
 
-> WalletFuel is a functional MVP designed for real-world USDC-based gas sponsorship.  
+> GasX is a functional MVP designed for real-world USDC-based gas sponsorship.  
 > The core logic is minimal, modular, and ready for progressive enhancement.
 
 ### ✅ Implemented
@@ -282,6 +286,7 @@ The `WalletFuel` contract has been thoroughly tested via Hardhat using a custom 
 - ✅ **External Config contract**: deployed via `01_deploy_config.ts`.
 - ✅ **Config-aware scripts**: `useConfig.ts` auto-loads addresses per network.
 - ✅ **USD limits settable**: scripts (`setMaxUsd.ts`, `bulkSetMaxUsd.ts`) load and apply per-address caps.
+- ✅ **Frontend Demo**: A functional frontend page (`/gasless-pro`) demonstrates the gasless transaction flow.
 
 ### ⚠️ Partially implemented
 
@@ -308,9 +313,9 @@ The `WalletFuel` contract has been thoroughly tested via Hardhat using a custom 
 We're now entering **Week 2–3 deliverables**, focused on demonstrating utility across real checkout flows:
 
 - ✅ **Paymaster MVP logic complete and tested**
+- ✅ **Frontend Demo Implemented**
 - 🔄 CCTP integration (in progress)
 - 🔄 Push Protocol hooks for real-time buyer feedback
-- 🔄 Frontend: Next.js / Scaffold-ETH checkout using GasX
 - 📦 SDK packaging for dev adoption (planned)
 
 We welcome feedback from grant reviewers on which part of the integration they'd like highlighted in live demos or walkthroughs.

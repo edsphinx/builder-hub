@@ -29,7 +29,33 @@ A critical aspect of the `GasX` implementation is its compatibility with `EntryP
 
 - **The Solution:** The `GasX.sol` contract was updated to correctly handle the `EntryPoint v0.8.0` data structure. The validation logic now checks if the `paymasterAndData` length exceeds 52 bytes before attempting to decode oracle-specific data. This ensures that the 32 bytes of gas limits are correctly ignored during the validation of non-oracle-based UserOperations, resolving the incompatibility. This fix was validated by the `GasX.e2e.local.test.ts` test suite.
 
-### 2.2. Paymaster Configuration (`GasXConfig.sol`)
+#### 2.1.2. `paymasterAndData` Structure for EntryPoint v0.8.0
+
+Understanding the exact structure of the `paymasterAndData` field is crucial for ERC-4337 compatibility, especially when integrating with `EntryPoint v0.8.0` and bundlers like Pimlico. This field is a `bytes` array that carries information from the Paymaster to the EntryPoint and potentially to the Paymaster itself for validation.
+
+**Official Specification & Community Convention:**
+
+1. **Static Fields (First 52 bytes - defined by EIP-4337 and `UserOperationLib.sol`):**
+
+   - **Bytes 0-19 (20 bytes):** `Paymaster Address` (`address`)
+   - **Bytes 20-35 (16 bytes):** `Paymaster Verification Gas Limit` (`uint128`)
+   - **Bytes 36-51 (16 bytes):** `Paymaster PostOp Gas Limit` (`uint128`)
+
+   These fields are always expected by the `EntryPoint` if `paymasterAndData` is not empty. Our `GasX.sol` contract was updated to correctly parse these initial 52 bytes.
+
+2. **Custom Paymaster Data (Variable Length - defined by Paymaster implementation):**
+
+   - Following the static fields, Paymasters can include additional custom data. The most common convention for oracle-based sponsorship (as used by bundlers and `permissionless`) is to include an `expiry` timestamp and an `oracleSignature`.
+   - **Bytes 52-57 (6 bytes):** `Expiry Timestamp` (`uint48`)
+   - **Bytes 58-122 (65 bytes):** `Oracle Signature` (`bytes` for ECDSA signature)
+
+   This means that if a Paymaster uses this convention, the minimum length of `paymasterAndData` would be `52 + 6 + 65 = 123 bytes`.
+
+**References:**
+
+- [EIP-4337: Account Abstraction via EntryPoint Contract](https://eips.ethereum.org/EIPS/eip-4337)
+- [`@account-abstraction/contracts/core/UserOperationLib.sol`](https://github.com/eth-infinitism/account-abstraction/blob/main/contracts/core/UserOperationLib.sol) (See `PAYMASTER_DATA_OFFSET` and `unpackPaymasterStaticFields`)
+- [`permissionless` Library Documentation](https://permissionless.js.org/) (Refer to `createSmartAccountClient` and `paymaster` options for expected `UserOperation` structure)
 
 - **Address (Scroll Sepolia):** `0x53220F8a08e7008A5c57c40D32200ac3D2B4ee8e`
 - **Purpose:** Stores and manages configuration data for the `GasX` Paymaster. This includes the address of the authorized oracle signer and potentially maximum USD subsidy limits per function selector.
