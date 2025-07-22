@@ -4315,6 +4315,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@se-2/nextjs@workspace:packages/nextjs"
   dependencies:
+    "@alchemy/aa-accounts": latest
+    "@alchemy/aa-core": latest
+    "@alchemy/aa-ethers": latest
     "@heroicons/react": ~2.1.5
     "@rainbow-me/rainbowkit": 2.2.7
     "@tailwindcss/postcss": 4.0.15
@@ -4338,6 +4341,7 @@ __metadata:
     next: ~15.2.3
     next-nprogress-bar: ~2.3.13
     next-themes: ~0.3.0
+    permissionless: latest
     postcss: ~8.4.45
     prettier: ~3.5.3
     qrcode.react: ~4.0.1

@@ -21,9 +21,11 @@ jobs:
 
       - name: 📦 Install dependencies (Yarn v3)
         run: yarn install --immutable
+        working-directory: ./builder-hub
 
       - name: Initialize vendor libs
         run: yarn aa:init
+        working-directory: ./builder-hub
 
       - name: Load fallback .env
         run: cp packages/hardhat/.env.example packages/hardhat/.env
