@@ -127,7 +127,7 @@ contract GasX is BasePaymaster {
      */
     function _validatePaymasterUserOp(
         PackedUserOperation calldata op,
-        bytes32 /*opHash*/,
+        bytes32 opHash,
         uint256 /*maxCost*/
     ) internal view override returns (bytes memory context, uint256 validationData) {
         // (1) selector whitelist. Function selector must be explicitly allowed
@@ -140,9 +140,9 @@ contract GasX is BasePaymaster {
         // paymasterAndData = abi.encodePacked(paymaster, validationGas, postOpGas, expiry, sig)
         bytes calldata pData = op.paymasterAndData;
         if (pData.length > 52) { // Addr (20) + Gas (32) = 52 bytes for static fields
-            (uint96 expiry, bytes memory sig) = _decodePaymasterData(pData);
+            (uint48 expiry, bytes memory sig) = _decodePaymasterData(pData);
             require(block.timestamp < expiry, "expired!");
-            _verifyOracleSig(op, expiry, sig);
+            _verifyOracleSig(opHash, expiry, sig);
         }
         return ("", 0); // validationData = 0 means valid , no extra signature time
     }
@@ -153,14 +153,14 @@ contract GasX is BasePaymaster {
     
     /**
      * @notice Verifies oracle signature over a UserOperation + expiry
-     * @param op The UserOperation being validated
+     * @param opHash The hash of the UserOperation being validated
      * @param expiry Timestamp until which the signature is valid
      * @param sig Oracle-provided ECDSA signature
      * @dev Skipped if in Dev mode. Signature must match oracleSigner from config.
      */
     function _verifyOracleSig(
-        PackedUserOperation calldata op,
-        uint96 expiry,
+        bytes32 opHash,
+        uint48 expiry,
         bytes memory sig
     ) private view {
         // --- DEV BYPASS ---
@@ -172,9 +172,6 @@ contract GasX is BasePaymaster {
         require(block.timestamp < expiry, "signature expired");
 
         // --- BUILD MESSAGE HASH ---
-        // ⚠️ NOTE: This uses a placeholder hash for demo purposes.
-        // For real bundler integration, replace with the actual userOpHash.
-        bytes32 opHash = keccak256(abi.encode(op));
         bytes32 digest = keccak256(abi.encodePacked(opHash, expiry));
         bytes32 ethSignedMessageHash = keccak256(
             abi.encodePacked("\x19Ethereum Signed Message:\n32", digest)

@@ -2,11 +2,9 @@
 pragma solidity ^0.8.24;
 
 import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
-import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
-import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol"; // Asegúrate de importar esto
 
 /**
  * @title MultiOracleAggregator (UUPS Upgradeable + Trusted Forwarder Compatible)
@@ -14,7 +12,7 @@ import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Co
  * @notice Aggregates multiple oracle feeds and provides average/median pricing with full traceability.
  * @dev Ensure all adapters return 1e18-scaled quotes. Emits events for tracing and deviation validation.
  */
-contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract MultiOracleAggregator is OwnableUpgradeable, UUPSUpgradeable {
     // ────────────────────────────────────────────────
     // ░░ DATA STRUCTURES
     // ────────────────────────────────────────────────
@@ -82,23 +80,16 @@ contract MultiOracleAggregator is Initializable, OwnableUpgradeable, UUPSUpgrade
     // ░░ CONSTRUCTOR / INITIALIZER
     // ────────────────────────────────────────────────
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    // constructor(address trustedForwarder) ERC2771ContextUpgradeable(trustedForwarder) {
-    //     _disableInitializers();
-    // }
-
     /**
      * @notice Initializes the contract with the owner and deviation settings
      * @param initialOwner The owner to set
      * @param deviationBps Max allowed deviation in basis points
      */
-    function initialize(address initialOwner, uint256 deviationBps, address trustedForwarder) external initializer {
+    function initialize(address initialOwner, uint256 deviationBps) external initializer {
         require(deviationBps <= 10_000, "too high");
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
-        _transferOwnership(initialOwner);
         maxDeviationBps = deviationBps;
-        _trustedForwarder = trustedForwarder;
     }
 
     /// @notice Required by UUPS pattern

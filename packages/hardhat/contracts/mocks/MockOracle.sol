@@ -6,7 +6,7 @@ import { IPriceOracle } from "../interfaces/IPriceOracle.sol";
 /// @title MockOracle
 /// @notice Mock contract for testing MultiOracleAggregator
 contract MockOracle is IPriceOracle {
-    uint256 private _quote;
+    uint256 private _quote; // Price with 18 decimals
     bool private _shouldRevert;
 
     constructor(uint256 initialQuote) {
@@ -22,8 +22,9 @@ contract MockOracle is IPriceOracle {
         _shouldRevert = shouldRevert;
     }
 
-    function getQuote(uint256, address, address) external view override returns (uint256) {
+    // This version correctly simulates a price by using the input amount.
+    function getQuote(uint256 amount, address, address) external view override returns (uint256) {
         require(!_shouldRevert, "MockOracle: forced revert");
-        return _quote;
+        return (amount * _quote) / 1e18;
     }
 }
