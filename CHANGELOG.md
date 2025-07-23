@@ -14,6 +14,7 @@
 ### Chore
 
 - **Repository Cleanup:** Removed multiple redundant test files and cleaned up commented-out code.
+- **CI Workflow:** Corrected the working directory configuration in `.github/workflows/ci.yml` to resolve build failures.
 - **Documentation:** Updated all major documentation files (`README.md`, `ARCHITECTURE.md`, `FUTURE_FEATURES.md`, `STATUS.md`, `SESSION_SUMMARY.md`) to reflect the current state of the project.
 
 ---

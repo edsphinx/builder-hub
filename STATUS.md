@@ -27,14 +27,27 @@ This document serves as a checkpoint for the ongoing development session, detail
 
 ### Current Status
 
-The project is in a highly stable, well-documented, and feature-complete state for the current milestone. All E2E tests are passing, and a functional, refactored frontend demonstration is live on the `/gasless-pro` page.
+The project is in a highly stable, well-documented, and feature-complete state for the current milestone.
+
+**GasX Paymaster Functionality (Implemented & Verified):**
+- ✅ **EntryPoint v0.8.0 Compatibility:** `GasX.sol` is fully compatible with EntryPoint v0.8.0. Its `_decodePaymasterData` correctly handles the standardized `paymasterAndData` structure, including `uint48` expiry.
+- ✅ **E2E Test Suite:** Both local (`GasX.e2e.local.test.ts`) and public (`GasX.e2e.public.test.ts`) E2E tests are passing, verifying the end-to-end sponsored UserOperation flow.
+- ✅ **Frontend Demonstration:** A functional, refactored frontend page (`/gasless`) is live, demonstrating the gasless transaction flow on Scroll Sepolia.
+- ✅ **Core `GasX.sol` Logic:** Selector whitelisting, gas ceiling, and basic expiry enforcement are implemented and tested.
+
+**GasX Paymaster Functionality (Partially Implemented / To Be Activated):**
+- 🔄 **`GasXConfig.sol` Integration:** The `GasXConfig` contract is deployed and its address is passed to `GasX.sol`.
+- ⚠️ **Oracle Signature Verification:** The `_verifyOracleSig()` function in `GasX.sol` is implemented but currently **bypassed** (`isDevMode = true`). The `oracleSigner` from `GasXConfig` is not actively used for validation.
+- ⚠️ **USD Limit Enforcement:** `maxUsd` limits are stored in `GasXConfig.sol` but are **not yet actively enforced on-chain** within `GasX.sol`'s `_validatePaymasterUserOp`.
 
 ---
 
 ## Next Steps
 
-- Begin implementation of the next features as outlined in `FUTURE_FEATURES.md`, likely starting with the signature-based sponsorship pattern.
+- **Activate Oracle Signature Verification:** Set `isDevMode` to `false` in `GasX.sol` and ensure the oracle signer is correctly configured in `GasXConfig` and used for validation.
+- **Implement USD Limit Enforcement:** Integrate the `maxUsd` limits from `GasXConfig` into `GasX.sol`'s `_validatePaymasterUserOp` for on-chain enforcement. This will require a clear strategy for passing the USD value in the UserOperation's `paymasterAndData`.
 - Continue to expand test coverage for new and existing features.
+- Begin implementation of other features as outlined in `FUTURE_FEATURES.md` (e.g., CCTP integration, Push Protocol hooks).
 
 ---
 

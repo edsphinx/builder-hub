@@ -37,6 +37,12 @@ This session transitioned from backend contract and testing fixes to frontend im
 - **Problem:** The frontend was hardcoded to the `localhost` network.
 - **Resolution:** The `packages/nextjs/scaffold.config.ts` file was modified to include `scrollSepolia` and set it as the default target network.
 
+### 4. CI Workflow Fix
+
+- **Problem:** The GitHub Actions CI workflow was failing due to an incorrect working directory configuration (`./builder-hub` being nested).
+- **Resolution:** The `working-directory` parameter was removed from the `yarn install` and `yarn aa:init` steps in `.github/workflows/ci.yml`, allowing them to execute from the correct repository root.
+- **Outcome:** The CI pipeline is now functional, ensuring continuous integration and code quality checks.
+
 ---
 
 ## Final Outcome
