@@ -28,7 +28,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan github.com >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts      
+          chmod 600 ~/.ssh/known_hosts
 
       - name: 📦 Install dependencies (Yarn v3)
         run: yarn install --immutable
@@ -40,11 +40,9 @@ jobs:
         run: cp packages/hardhat/.env.example packages/hardhat/.env
 
       - name: Compile contracts
-        run: |
-          cd packages/hardhat
-          yarn compile
+        run: yarn compile
+        working-directory: packages/hardhat
 
       - name: Run Hardhat tests
-        run: |
-          cd packages/hardhat
-          yarn test
+        run: yarn test
+        working-directory: packages/hardhat
