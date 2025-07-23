@@ -18,6 +18,9 @@ yarn-error.log*
 # Dependency directories
 .pnp/
 .pnp.js
+# Yarn
+.yarn/releases/
+.yarn/install-state.gz
 __pycache__/
 
 # OS files
