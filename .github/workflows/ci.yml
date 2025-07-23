@@ -19,6 +19,17 @@ jobs:
           node-version: 20.19.3
           cache: 'yarn'
 
+      - name: Install SSH key for private repo
+        uses: webfactory/ssh-agent@v0.8.0 # Utiliza la última versión disponible (puedes verificarla en GitHub Marketplace)
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_EULER_ORACLE }} # El nombre del secreto que creaste
+
+      - name: Add GitHub to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts      
+
       - name: 📦 Install dependencies (Yarn v3)
         run: yarn install --immutable
 
