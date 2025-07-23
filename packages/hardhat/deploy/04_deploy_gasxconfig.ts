@@ -4,28 +4,28 @@ import { Environment, resolveEnvironment, getEnvironmentName } from "../helpers/
 import { verifyContract } from "../helpers/verify";
 
 /*─────────────────────────────────────────────────────────
-│  CONFIG POR RED
+│  CONFIG BY NETWORK
 └─────────────────────────────────────────────────────────*/
 
 type ConfigParams = {
   oracleSigner: string;
 };
 
-const CONFIGS: Record<number, ConfigParams> = {
+const CONFIGS: Record<string, ConfigParams> = {
   31337: {
     oracleSigner: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // Dev key
   },
   84532: {
-    oracleSigner: "0x...", // base-sepolia signer
+    oracleSigner: process.env.ORACLE_SIGNER_BASE_SEPOLIA ?? "", // base-sepolia signer
   },
   421614: {
-    oracleSigner: "0x...", // arbitrum-sepolia signer
+    oracleSigner: process.env.ORACLE_SIGNER_ARB_SEPOLIA ?? "", // arbitrum-sepolia signer
   },
   534351: {
-    oracleSigner: "0x19d400d79AC12eBa630fC1fa998f8bD0f08cc5f6", // scroll-sepolia signer
+    oracleSigner: process.env.ORACLE_SIGNER_SCR_SEPOLIA ?? "", // scroll-sepolia signer
   },
   1: {
-    oracleSigner: process.env.ORACLE_SIGNER ?? "", // mainnet key (from env)
+    oracleSigner: process.env.ORACLE_SIGNER_MAINNET ?? "", // mainnet key (from env)
   },
 };
 
@@ -34,20 +34,30 @@ const CONFIGS: Record<number, ConfigParams> = {
 └─────────────────────────────────────────────────────────*/
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
-  const { deployments, getNamedAccounts, network } = hre;
+  const { deployments, getNamedAccounts, network, getChainId, ethers } = hre;
   const { deploy, getOrNull, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
   // Verifica si ya existe una EntryPoint desplegada
-  const existing = await getOrNull("WalletFuelConfig");
-  if (existing) {
-    log(`⚠️  WalletFuelConfig already deployed at ${existing.address}, skipping...`);
-    return;
+  const forceRedeploy = process.env.REDEPLOY_GASXCONFIG === "true";
+  if (!forceRedeploy) {
+    const existing = await getOrNull("GasXConfig");
+    if (existing) {
+      log(`⚠️  GasXConfig already deployed at ${existing.address}, skipping...`);
+      return;
+    }
   }
 
-  const chainId = network.config.chainId ?? Number(await hre.ethers.provider.send("eth_chainId", []));
+  const chainId = await getChainId();
   const cfg = CONFIGS[chainId!];
-  if (!cfg) throw new Error(`❌ WalletFuelConfig.sol params not defined for chainId ${chainId}`);
+  if (!cfg) throw new Error(`❌ GasXConfig.sol params not defined for chainId ${chainId}`);
+
+  // **IMPROVEMENT: Validate the signer address before deployment**
+  if (!ethers.isAddress(cfg.oracleSigner)) {
+    throw new Error(
+      `❌ Invalid oracleSigner address for chainId ${chainId}: "${cfg.oracleSigner}". Check your .env file.`,
+    );
+  }
 
   const env: Environment = resolveEnvironment(network.name);
   log(`🌐 Environment: ${getEnvironmentName(env)} (chainId: ${chainId})`);

@@ -26,12 +26,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   }
 
   const maxDeviationBps = 300; // 3% máximo de desviación
-  const trustedForwarder = ethers.ZeroAddress; // Puede cambiar si usás ERC2771
 
   log(`🚀 Desplegando proxy UUPS de ${artifactName} (como ${proxyName})…`);
   const factory = await ethers.getContractFactory(artifactName);
 
-  const instance = await upgrades.deployProxy(factory, [deployer, maxDeviationBps, trustedForwarder], {
+  const instance = await upgrades.deployProxy(factory, [deployer, maxDeviationBps], {
     kind: "uups",
     initializer: "initialize",
   });
@@ -47,7 +46,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   log(`✅ ${proxyName} desplegado en: ${addr}`);
 
-  await verifyContract(hre, artifactName, addr, [deployer, maxDeviationBps, trustedForwarder]);
+  await verifyContract(hre, artifactName, addr, [deployer, maxDeviationBps]);
 };
 
 export default func;
