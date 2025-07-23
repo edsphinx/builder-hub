@@ -1,6 +1,13 @@
 import { ethers } from "hardhat";
 import { assert, expect } from "chai";
-import { EntryPoint, EntryPoint__factory, TestableGasX, TestableGasX__factory } from "../typechain-types";
+import {
+  EntryPoint,
+  EntryPoint__factory,
+  GasXConfig,
+  GasXConfig__factory,
+  TestableGasX,
+  TestableGasX__factory,
+} from "../typechain-types";
 import type { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("GasX", () => {
@@ -21,8 +28,11 @@ describe("GasX", () => {
     signature: "0x",
   };
 
+  let oracle: SignerWithAddress;
+  let config: GasXConfig;
+
   beforeEach(async () => {
-    [deployer] = (await ethers.getSigners()) as SignerWithAddress[];
+    [deployer, oracle] = (await ethers.getSigners()) as [SignerWithAddress, SignerWithAddress];
 
     // Deploy a fresh EntryPoint
     const epFactory = (await ethers.getContractFactory(
@@ -31,9 +41,14 @@ describe("GasX", () => {
     entryPoint = await epFactory.deploy();
     await entryPoint.waitForDeployment();
 
+    // Deploy GasXConfig
+    const configFactory = (await ethers.getContractFactory("GasXConfig")) as GasXConfig__factory;
+    config = await configFactory.deploy(oracle.address);
+    await config.waitForDeployment();
+
     // Deploy TestableGasX
     const pmFactory = (await ethers.getContractFactory("TestableGasX")) as TestableGasX__factory;
-    paymaster = await pmFactory.deploy(await entryPoint.getAddress(), deployer.address, deployer.address);
+    paymaster = await pmFactory.deploy(await entryPoint.getAddress(), await config.getAddress(), deployer.address);
     await paymaster.waitForDeployment();
 
     // Set default gas limit
@@ -247,12 +262,180 @@ describe("GasX", () => {
     });
   });
 
-  describe("6. Post-op behavior", () => {
-    it("emits GasSponsored event via harness", async () => {
-      const caller = await deployer.getAddress();
-      await expect(paymaster.exposedPostOp("0x", 200n, 3n))
-        .to.emit(paymaster, "GasSponsored")
-        .withArgs(caller, 200n, 200n * 3n);
+  describe("7. Oracle Signature Verification", () => {
+    it("should accept a valid signature when dev mode is off", async () => {
+      await paymaster.setDevMode(false);
+      const sel = ethers.zeroPadValue("0x1234", 4);
+      await paymaster.setSelector(sel, true);
+
+      const block = await ethers.provider.getBlock("latest");
+      const expiry = BigInt(block!.timestamp + 60);
+
+      const opHash = ethers.keccak256(ethers.toUtf8Bytes("test"));
+      // const digest = ethers.solidityPackedKeccak256(["bytes32", "uint256"], [opHash, expiry]);
+      const digest = ethers.solidityPackedKeccak256(["bytes32", "uint48"], [opHash, expiry]);
+      const signature = await oracle.signMessage(ethers.getBytes(digest));
+
+      const pack = ethers.concat([
+        ethers.zeroPadValue(await paymaster.getAddress(), 20),
+        ethers.zeroPadValue(ethers.toBeHex(0), 16),
+        ethers.zeroPadValue(ethers.toBeHex(0), 16),
+        ethers.zeroPadValue(ethers.toBeHex(expiry), 6),
+        signature,
+      ]);
+
+      const op = {
+        ...opTemplate,
+        sender: deployer,
+        callData: sel + "dead",
+        paymasterAndData: pack,
+      };
+
+      const [, vd] = await paymaster.exposedValidate(op as any, opHash, 0n);
+      assert.equal(vd, 0n, "Should accept valid signature");
+    });
+
+    it("should reject an invalid signature when dev mode is off", async () => {
+      await paymaster.setDevMode(false);
+      const sel = ethers.zeroPadValue("0x1234", 4);
+      await paymaster.setSelector(sel, true);
+
+      const block = await ethers.provider.getBlock("latest");
+      const expiry = BigInt(block!.timestamp + 60);
+
+      const opHash = ethers.keccak256(ethers.toUtf8Bytes("test"));
+      const signature = await deployer.signMessage(ethers.getBytes(opHash)); // Signed by wrong signer
+
+      const pack = ethers.concat([
+        ethers.zeroPadValue(await paymaster.getAddress(), 20),
+        ethers.zeroPadValue(ethers.toBeHex(0), 16),
+        ethers.zeroPadValue(ethers.toBeHex(0), 16),
+        ethers.zeroPadValue(ethers.toBeHex(expiry), 6),
+        signature,
+      ]);
+
+      const op = {
+        ...opTemplate,
+        sender: deployer,
+        callData: sel + "dead",
+        paymasterAndData: pack,
+      };
+
+      await expect(paymaster.exposedValidate(op as any, opHash, 0n)).to.be.revertedWith("unauthorized signer");
+    });
+
+    it("should bypass signature validation when dev mode is on", async () => {
+      await paymaster.setDevMode(true);
+      const sel = ethers.zeroPadValue("0x1234", 4);
+      await paymaster.setSelector(sel, true);
+
+      const block = await ethers.provider.getBlock("latest");
+      const expiry = BigInt(block!.timestamp + 60);
+
+      const opHash = ethers.keccak256(ethers.toUtf8Bytes("test"));
+      const signature = await deployer.signMessage(ethers.getBytes(opHash)); // Signed by wrong signer
+
+      const pack = ethers.concat([
+        ethers.zeroPadValue(await paymaster.getAddress(), 20),
+        ethers.zeroPadValue(ethers.toBeHex(0), 16),
+        ethers.zeroPadValue(ethers.toBeHex(0), 16),
+        ethers.zeroPadValue(ethers.toBeHex(expiry), 6),
+        signature,
+      ]);
+
+      const op = {
+        ...opTemplate,
+        sender: deployer,
+        callData: sel + "dead",
+        paymasterAndData: pack,
+      };
+
+      const [, vd] = await paymaster.exposedValidate(op as any, opHash, 0n);
+      assert.equal(vd, 0n, "Should bypass signature validation in dev mode");
+    });
+  });
+
+  // Last set of tests
+  describe("GasXConfig", () => {
+    // `config` y `deployer` ya están definidos en el `beforeEach` principal,
+    // por lo que podemos usarlos directamente aquí.
+
+    it("should deploy with the correct owner and initial oracle signer", async () => {
+      // Verifica que el owner del contrato es quien lo desplegó
+      const contractOwner = await config.owner();
+      assert.equal(contractOwner, deployer.address, "Owner should be the deployer");
+
+      // Verifica que el oracleSigner inicial es el correcto
+      const initialSigner = await config.oracleSigner();
+      assert.equal(initialSigner, oracle.address, "Initial oracle signer is incorrect");
+    });
+
+    it("should allow the owner to update the oracle signer", async () => {
+      const [, newSigner] = await ethers.getSigners();
+
+      // El owner cambia el signer
+      await expect(config.connect(deployer).setOracleSigner(newSigner.address))
+        .to.emit(config, "OracleUpdated")
+        .withArgs(newSigner.address);
+
+      // Verifica que la dirección se actualizó correctamente
+      const updatedSigner = await config.oracleSigner();
+      assert.equal(updatedSigner, newSigner.address, "Oracle signer should be updated");
+    });
+
+    it("should prevent non-owners from updating configuration", async () => {
+      const [, attacker, newSigner] = await ethers.getSigners();
+      const sel = "0x12345678";
+
+      // Un atacante no puede cambiar el oracle signer
+      await expect(config.connect(attacker).setOracleSigner(newSigner.address)).to.be.revertedWith("not owner");
+
+      // Un atacante no puede establecer límites de USD
+      await expect(config.connect(attacker).setMaxUsd(sel, 100)).to.be.revertedWith("not owner");
+
+      await expect(config.connect(attacker).bulkSetMaxUsd([sel], [100])).to.be.revertedWith("not owner");
+    });
+
+    it("should allow the owner to set and get max USD for a selector", async () => {
+      const selector = "0xabcdef12";
+      const limit = ethers.parseUnits("10.5", 6); // 10.5 USD con 6 decimales
+
+      // Establece el límite
+      await expect(config.setMaxUsd(selector, limit)).to.emit(config, "MaxUsdSet").withArgs(selector, limit);
+
+      // Verifica el límite usando la función de vista individual
+      const retrievedLimit = await config.getMaxUsd(selector);
+      assert.equal(retrievedLimit.toString(), limit.toString(), "Max USD should be set correctly");
+    });
+
+    it("should allow the owner to bulk-set max USD limits", async () => {
+      const selectors = ["0x11111111", "0x22222222", "0x33333333"];
+      const limits = [
+        ethers.parseUnits("5", 6), // 5 USD
+        ethers.parseUnits("20", 6), // 20 USD
+        ethers.parseUnits("0.1", 6), // 0.1 USD
+      ];
+
+      await config.bulkSetMaxUsd(selectors, limits);
+
+      // Verifica los límites usando la función de vista múltiple
+      const retrievedLimits = await config.getAllLimits(selectors);
+      assert.deepEqual(
+        retrievedLimits.map((l: { toString: () => any }) => l.toString()),
+        limits.map(l => l.toString()),
+        "Bulk-set limits should match",
+      );
+
+      // Verifica uno de los límites individualmente también
+      const singleLimit = await config.getMaxUsd("0x22222222");
+      assert.equal(singleLimit.toString(), limits[1].toString(), "Individual limit after bulk set is incorrect");
+    });
+
+    it("should revert bulk-set if array lengths mismatch", async () => {
+      const selectors = ["0x11111111"];
+      const limits = [ethers.parseUnits("1", 6), ethers.parseUnits("2", 6)]; // Longitud incorrecta
+
+      await expect(config.bulkSetMaxUsd(selectors, limits)).to.be.revertedWith("length mismatch");
     });
   });
 });

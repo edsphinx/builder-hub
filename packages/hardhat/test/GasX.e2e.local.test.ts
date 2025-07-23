@@ -26,13 +26,15 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
       this.skip();
     }
 
+    const HARDHAT_ACCOUNT_0_PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" as Hex;
+
     console.log(`\n--- Test Setup Complete ---\n`);
     console.log(`  Running on local network: ${network.name}`);
     console.log(`---------------------------\n`);
 
     // Reset Hardhat network and deploy contracts
     await network.provider.send("hardhat_reset");
-    await deployments.fixture(["GasX", "MockTarget", "SimpleAccountFactory", "EntryPoint"]);
+    await deployments.fixture(["GasX", "GasXConfig", "MockTarget", "SimpleAccountFactory", "EntryPoint"]);
 
     gasXDeployment = await deployments.get("GasX");
     mockTargetDeployment = await deployments.get("MockTarget");
@@ -40,7 +42,16 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
 
     // Define the owner account (default Hardhat account)
     const { deployer } = await getNamedAccounts();
-    deployerAccount = privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" as Hex);
+    console.log("Hardhat deployer:", deployer);
+    const ethersDeployerSigner = await ethers.getSigner(deployer);
+    deployerAccount = privateKeyToAccount(HARDHAT_ACCOUNT_0_PRIVATE_KEY);
+    console.log("Viem deployer: deployerAccount (from privateKeyToAccount) address:", deployerAccount.address);
+
+    if (deployerAccount.address.toLowerCase() !== deployer.toLowerCase()) {
+      throw new Error(
+        `Mismatched deployer accounts! Hardhat deployer: ${deployer}, Viem deployer: ${deployerAccount.address}`,
+      );
+    }
 
     publicClient = createPublicClient({ chain: hardhat, transport: http() });
     const walletClient = createWalletClient({ account: deployerAccount, chain: hardhat, transport: http() });
@@ -48,17 +59,42 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
     const entryPointDeployment = await deployments.get("EntryPoint");
 
     // Fund Paymaster
-    const ethersDeployerSigner = await ethers.getSigner(deployer);
     entryPoint = await ethers.getContractAt("EntryPoint", entryPointDeployment.address, ethersDeployerSigner);
     await entryPoint.depositTo(gasXDeployment.address, { value: parseEther("0.1") });
 
-    // Configure Paymaster limits and selectors
-    await walletClient.writeContract({
-      address: gasXDeployment.address as Address,
-      abi: gasXDeployment.abi,
-      functionName: "setLimit",
-      args: [1_000_000, 0],
-    });
+    try {
+      await walletClient.writeContract({
+        address: gasXDeployment.address as Address,
+        abi: gasXDeployment.abi,
+        functionName: "setLimit",
+        args: [1_000_000n, 0n],
+        account: deployerAccount,
+      });
+      console.log("✅ setLimit call executed successfully using viem!");
+    } catch (error) {
+      console.error("❌ setLimit call FAILED using viem:", error);
+      throw error; // Re-throw to fail the test
+    }
+
+    // Verify limits after setting them
+    try {
+      const limitsFromViem = (await publicClient.readContract({
+        address: gasXDeployment.address as Address,
+        abi: gasXDeployment.abi, // Usamos el ABI del deployment directamente
+        functionName: "limits",
+        args: [], // La función limits no tiene argumentos
+      })) as any;
+
+      console.log(
+        `✅ New GasX limits (after setLimit): gas=${limitsFromViem[0].toString()}, usd=${limitsFromViem[1].toString()}`,
+      );
+      // Asumimos que inicialmente son 0,0 como en tu log previo
+      expect(limitsFromViem[0]).to.equal(1_000_000n);
+      expect(limitsFromViem[1]).to.equal(0n);
+    } catch (error) {
+      console.error("❌ readContract call FAILED using viem:", error);
+      throw error; // Re-throw to fail the test
+    }
 
     const simpleAccountInterface = new ethers.Interface((await deployments.getArtifact("SimpleAccount")).abi);
     const executeFunction = simpleAccountInterface.getFunction("execute");
