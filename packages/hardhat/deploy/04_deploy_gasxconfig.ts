@@ -1,77 +1,71 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import { Environment, resolveEnvironment, getEnvironmentName } from "../helpers/environment";
+import { ethers } from "hardhat";
 import { verifyContract } from "../helpers/verify";
+import { getEnvironmentName, resolveEnvironment } from "../helpers/environment";
+import { networkConfigs } from "../config/networks";
 
-/*─────────────────────────────────────────────────────────
-│  CONFIG BY NETWORK
-└─────────────────────────────────────────────────────────*/
-
-type ConfigParams = {
-  oracleSigner: string;
-};
-
-const CONFIGS: Record<string, ConfigParams> = {
-  31337: {
-    oracleSigner: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // Dev key
-  },
-  84532: {
-    oracleSigner: process.env.ORACLE_SIGNER_BASE_SEPOLIA ?? "", // base-sepolia signer
-  },
-  421614: {
-    oracleSigner: process.env.ORACLE_SIGNER_ARB_SEPOLIA ?? "", // arbitrum-sepolia signer
-  },
-  534351: {
-    oracleSigner: process.env.ORACLE_SIGNER_SCR_SEPOLIA ?? "", // scroll-sepolia signer
-  },
-  1: {
-    oracleSigner: process.env.ORACLE_SIGNER_MAINNET ?? "", // mainnet key (from env)
-  },
-};
-
-/*─────────────────────────────────────────────────────────
-│  DEPLOY SCRIPT
-└─────────────────────────────────────────────────────────*/
-
+/**
+ * @notice Deploys the GasXConfig contract using network-specific configurations.
+ * @dev This script reads the `oracleSigner` address for the target chain from a
+ * centralized configuration object and passes it to the contract's constructor.
+ * It ensures that the project's configuration is deployed correctly for each environment.
+ * @param hre The Hardhat Runtime Environment.
+ */
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
-  const { deployments, getNamedAccounts, network, getChainId, ethers } = hre;
-  const { deploy, getOrNull, log } = deployments;
+  const { deployments, getNamedAccounts, network } = hre;
+  const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  // Verifica si ya existe una EntryPoint desplegada
-  const forceRedeploy = process.env.REDEPLOY_GASXCONFIG === "true";
+  const artifactName = "GasXConfig";
+  const forceRedeploy = process.env.REDEPLOY_ALL === "true" || process.env.REDEPLOY_GASXCONFIG === "true";
+
+  // --- Environment Sanity Check Log ---
+  const envName = getEnvironmentName(resolveEnvironment(network.name));
+  const chainId = network.config.chainId?.toString() ?? (await hre.getChainId());
+  log(`\n🛰️  Deploying: ${artifactName}`);
+  log(`----------------------------------------------------`);
+  log(`🌐 Environment: ${envName}`);
+  log(`🔗 Network:     ${network.name} (Chain ID: ${chainId})`);
+  log(`👤 Deployer:    ${deployer}`);
+  log(`----------------------------------------------------`);
+
+  // --- Configuration Validation ---
+  log("  > Validating configuration for this network...");
+  const cfg = networkConfigs[chainId];
+  if (!cfg) {
+    throw new Error(`❌ Configuration not found for chainId ${chainId}. Please update the CONFIGS object.`);
+  }
+  if (!ethers.isAddress(cfg.oracleSigner) || cfg.oracleSigner === ethers.ZeroAddress) {
+    throw new Error(
+      `❌ Invalid oracleSigner address for chainId ${chainId}: "${cfg.oracleSigner}". Please check your .env file.`,
+    );
+  }
+  log(`    ✅ Oracle Signer: ${cfg.oracleSigner}`);
+
+  // --- Deployment ---
   if (!forceRedeploy) {
-    const existing = await getOrNull("GasXConfig");
+    const existing = await deployments.getOrNull(artifactName);
     if (existing) {
-      log(`⚠️  GasXConfig already deployed at ${existing.address}, skipping...`);
+      log(`⚠️  ${artifactName} already deployed at ${existing.address}`);
+      log(`ℹ️  To force a redeploy, set REDEPLOY_GASXCONFIG=true or REDEPLOY_ALL=true`);
       return;
     }
   }
 
-  const chainId = await getChainId();
-  const cfg = CONFIGS[chainId!];
-  if (!cfg) throw new Error(`❌ GasXConfig.sol params not defined for chainId ${chainId}`);
+  log(`🚀 Deploying ${artifactName}...`);
 
-  // **IMPROVEMENT: Validate the signer address before deployment**
-  if (!ethers.isAddress(cfg.oracleSigner)) {
-    throw new Error(
-      `❌ Invalid oracleSigner address for chainId ${chainId}: "${cfg.oracleSigner}". Check your .env file.`,
-    );
-  }
-
-  const env: Environment = resolveEnvironment(network.name);
-  log(`🌐 Environment: ${getEnvironmentName(env)} (chainId: ${chainId})`);
-  log(`🔐 Oracle signer: ${cfg.oracleSigner}`);
-
-  const res = await deploy("GasXConfig", {
+  const deployResult = await deploy(artifactName, {
     from: deployer,
     args: [cfg.oracleSigner],
     log: true,
   });
 
-  log(`✅ GasXConfig.sol deployed @ ${res.address}`);
+  log(`✅ ${artifactName} deployed at: ${deployResult.address}`);
 
-  await verifyContract(hre, "GasXConfig", res.address, [cfg.oracleSigner]);
+  // --- Verification ---
+  await verifyContract(hre, artifactName, deployResult.address, deployResult.args || []);
+  log(`----------------------------------------------------\n`);
 };
 
 export default func;

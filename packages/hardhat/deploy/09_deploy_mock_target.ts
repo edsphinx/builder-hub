@@ -1,44 +1,53 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
+import { getEnvironmentName, resolveEnvironment } from "../helpers/environment";
 
 /**
  * @notice Deploys the MockTarget contract for testing purposes.
- * @dev This script is designed to be skipped on public networks by default.
- * To override this and deploy to a public network, set the `DEPLOY_MOCKS` environment variable to `true`.
- * This is necessary for running E2E tests against deployed contracts on testnets.
+ * @dev By default, this script is skipped on public networks. To deploy mocks to a
+ * live testnet for E2E testing, set the `DEPLOY_MOCKS=true` environment variable.
  * @param hre The Hardhat Runtime Environment.
- *
- * @example
- * // Command to be executed from the monorepo root:
- * DEPLOY_MOCKS=true yarn deploy --network scrollSepolia --tags MockTarget
  */
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
-  const { deployments, getNamedAccounts } = hre;
+  const { deployments, getNamedAccounts, network } = hre;
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  log("\nDeploying MockTarget contract...");
+  const artifactName = "MockTarget";
 
-  const res = await deploy("MockTarget", {
+  // --- Environment Sanity Check Log ---
+  const envName = getEnvironmentName(resolveEnvironment(network.name));
+  const chainId = network.config.chainId ?? Number(await hre.ethers.provider.send("eth_chainId", []));
+  log(`\n🛰️  Deploying: ${artifactName}`);
+  log(`----------------------------------------------------`);
+  log(`🌐 Environment: ${envName}`);
+  log(`🔗 Network:     ${network.name} (Chain ID: ${chainId})`);
+  log(`👤 Deployer:    ${deployer}`);
+  log(`----------------------------------------------------`);
+
+  log(`🚀 Deploying ${artifactName}...`);
+
+  const deployResult = await deploy(artifactName, {
     from: deployer,
     args: [],
     log: true,
-    contract: "contracts/mocks/MockTarget.sol:MockTarget",
   });
 
-  log(`✅ MockTarget deployed @ ${res.address}`);
+  log(`✅ ${artifactName} deployed at: ${deployResult.address}`);
+  log(`----------------------------------------------------\n`);
 };
-
 func.skip = async hre => {
   const { network } = hre;
-  // Skip on non-local networks unless DEPLOY_MOCKS is explicitly set to true
+  // Skip on any non-local network...
   if (network.name !== "localhost" && network.name !== "hardhat") {
+    // ...unless the DEPLOY_MOCKS flag is explicitly set to true.
     if (process.env.DEPLOY_MOCKS !== "true") {
-      console.log(`Skipping MockTarget deployment on ${network.name}. Set DEPLOY_MOCKS=true to deploy.`);
-      return true;
+      console.log(`\n⏩ Skipping mock contract deployment on ${network.name}.`);
+      console.log(`(Set DEPLOY_MOCKS=true to deploy anyway.)`);
+      return true; // Skips the deployment.
     }
   }
-  return false; // Never skip on local networks or if DEPLOY_MOCKS is true
+  return false; // Proceeds with deployment on local networks or if DEPLOY_MOCKS is true.
 };
 export default func;
 func.tags = ["MockTarget"];

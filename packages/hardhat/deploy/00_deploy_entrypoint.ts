@@ -12,10 +12,13 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     return;
   }
 
+  // Define the Fully Qualified Name for EntryPoint
+  const ENTRYPOINT_FQN = "@account-abstraction/contracts/core/EntryPoint.sol:EntryPoint";
+
   // 1. Despliega EntryPoint v0.8 (si no existe)
   const ep = await deploy("EntryPoint", {
     from: deployer,
-    contract: "@account-abstraction/contracts/core/EntryPoint.sol:EntryPoint", // ← FQN
+    contract: ENTRYPOINT_FQN, // ← FQN
     args: [], // <- constructor vacío
     log: true,
   });
@@ -23,7 +26,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   log(`✅ EntryPoint v0.8 deploy @ ${ep.address}`);
 
   // 2. Fondea con 0.5 ETH para pruebas locales
-  const entryPoint = await ethers.getContractAt("EntryPoint", ep.address);
+  const entryPoint = await ethers.getContractAt(ENTRYPOINT_FQN, ep.address);
 
   await entryPoint.depositTo(ep.address, {
     value: ethers.parseEther("0.5"),
