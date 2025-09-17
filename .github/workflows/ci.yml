@@ -63,10 +63,17 @@ jobs:
         run: yarn test
         working-directory: packages/hardhat
 
+      - name: 🔐 Verify secrets for public network tests
+        env:
+          # Necesita los mismos secretos que el paso de prueba
+          DEPLOYER_PRIVATE_KEY_ENCRYPTED: ${{ secrets.DEPLOYER_PRIVATE_KEY_ENCRYPTED }}
+          DEPLOYER_PASSWORD: ${{ secrets.DEPLOYER_PASSWORD }}
+        run: yarn verify-key
+        working-directory: packages/hardhat
+
       - name: 🚀 Run Hardhat Scroll Sepolia Tests
         env:
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
-          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
           PIMLICO_API_KEY: ${{ secrets.PIMLICO_API_KEY }}
           DEPLOYER_PRIVATE_KEY_ENCRYPTED: ${{ secrets.DEPLOYER_PRIVATE_KEY_ENCRYPTED }}
           DEPLOYER_PASSWORD: ${{ secrets.DEPLOYER_PASSWORD }}
