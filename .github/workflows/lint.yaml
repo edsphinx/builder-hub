@@ -21,6 +21,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@master
 
+      - name: ⚙️ Configure Git to prefer HTTPS for public repos (override SSH rewrite)
+        run: |
+          git config --global --unset-all url."git@github.com:".insteadOf || true
+          git config --global --unset-all url.ssh://git@github.com/.insteadOf || true
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
       - name: Setup node env
         uses: actions/setup-node@v3
         with:
@@ -29,7 +36,7 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --immutable
-      
+
       - name: Run hardhat node, deploy contracts (& generate contracts typescript output)
         run: yarn chain & yarn deploy
 

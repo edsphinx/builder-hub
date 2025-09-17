@@ -17,24 +17,40 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20.19.3
-          cache: 'yarn'
 
-      - name: Install SSH key for private repo
-        uses: webfactory/ssh-agent@v0.8.0 # Utiliza la última versión disponible (puedes verificarla en GitHub Marketplace)
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_EULER_ORACLE }} # El nombre del secreto que creaste
+      - name: 🚀 Enable Corepack
+        run: corepack enable
 
-      - name: Add GitHub to known hosts
+      - name: ⚙️ Configure Git to prefer HTTPS for public repos (override SSH rewrite)
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
+          git config --global --unset-all url."git@github.com:".insteadOf || true
+          git config --global --unset-all url.ssh://git@github.com/.insteadOf || true
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
 
       - name: 📦 Install dependencies (Yarn v3)
         run: yarn install --immutable
 
-      - name: Initialize vendor libs
-        run: yarn aa:init
+      # - name: Initialize vendor libs
+      #   run: yarn aa:init
+
+      - name: Debug Node Modules Resolution
+        run: |
+          echo "Listing contents of node_modules/@account-abstraction/contracts/core:"
+          ls -R packages/hardhat/node_modules/@account-abstraction/contracts/core/ || echo "Path not found in working directory"
+          echo "Absolute path to node_modules:"
+          readlink -f packages/hardhat/node_modules/@account-abstraction/contracts/core/EntryPoint.sol || echo "File not found at readlink path"
+        working-directory: packages/hardhat # Ensure this runs from the hardhat package dir
+
+      - name: Force Hardhat Compile and Check Artifacts
+        run: |
+          echo "Running npx hardhat compile again explicitly..."
+          npx hardhat compile # Run compile directly and watch for errors
+          echo "Listing contents of generated artifacts for EntryPoint:"
+          ls -R packages/hardhat/artifacts/@account-abstraction/contracts/core/ || echo "Artifacts path not found or empty"
+          echo "Checking for specific EntryPoint artifact file:"
+          ls packages/hardhat/artifacts/@account-abstraction/contracts/core/EntryPoint.sol/EntryPoint.json || echo "Specific EntryPoint artifact not found"
+        working-directory: packages/hardhat
 
       - name: Load fallback .env
         run: cp packages/hardhat/.env.example packages/hardhat/.env
@@ -43,6 +59,17 @@ jobs:
         run: yarn compile
         working-directory: packages/hardhat
 
-      - name: Run Hardhat tests
+      - name: 🚀 Run Hardhat Local Tests
         run: yarn test
+        working-directory: packages/hardhat
+
+      - name: 🚀 Run Hardhat Scroll Sepolia Tests
+        env:
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+          PIMLICO_API_KEY: ${{ secrets.PIMLICO_API_KEY }}
+          DEPLOYER_PRIVATE_KEY_ENCRYPTED: ${{ secrets.DEPLOYER_PRIVATE_KEY_ENCRYPTED }}
+          DEPLOYER_PASSWORD: ${{ secrets.DEPLOYER_PASSWORD }}
+        run: |
+          yarn test --network scrollSepolia
         working-directory: packages/hardhat

@@ -2,6 +2,7 @@
 node_modules/
 .next/
 .cache/
+.secrets
 .env
 .env.local
 dist/
