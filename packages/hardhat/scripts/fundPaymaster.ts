@@ -1,24 +1,46 @@
-import { ethers } from "hardhat";
+import { ethers, deployments, network } from "hardhat";
 import { parseEther } from "viem";
 import { entryPoint08Address } from "viem/account-abstraction";
-import gasXDeployment from "../deployments/scrollSepolia/GasX.json";
 
 async function main() {
-  const paymasterAddress = gasXDeployment.address;
-  const depositAmount = parseEther("0.1"); // Envía 0.1 ETH, por ejemplo
+  const networkName = network.name;
+  console.log(`\nRunning script on network: ${networkName}`);
 
-  const entryPoint = await ethers.getContractAt("IEntryPoint", entryPoint08Address);
+  // --- Get Paymaster Deployment ---
+  console.log("  > Fetching paymaster deployment...");
+  const paymasterDeployment = await deployments.get("GasXWhitelistPaymaster");
+  const paymasterAddress = paymasterDeployment.address;
+  console.log(`    ✅ Paymaster found at: ${paymasterAddress}`);
 
-  console.log(`Depositando ${ethers.formatEther(depositAmount)} ETH para el Paymaster ${paymasterAddress}...`);
+  // --- Get EntryPoint Address (Conditionally) ---
+  let entryPointAddress: string;
+  if (network.name === "hardhat" || network.name === "localhost") {
+    console.log("  > Network is local, fetching deployed EntryPoint...");
+    const entryPointDeployment = await deployments.get("EntryPoint");
+    entryPointAddress = entryPointDeployment.address;
+  } else {
+    console.log("  > Network is public, using official EntryPoint address from viem...");
+    entryPointAddress = entryPoint08Address; // ✅ Use the imported address
+  }
+
+  const entryPoint = await ethers.getContractAt("IEntryPoint", entryPointAddress);
+  console.log(`    ✅ Using EntryPoint at: ${await entryPoint.getAddress()}`);
+
+  // --- Deposit Funds ---
+  const depositAmount = parseEther("0.01");
+  console.log(`\n  > Depositing ${ethers.formatEther(depositAmount)} ETH to the Paymaster...`);
 
   const tx = await entryPoint.depositTo(paymasterAddress, {
     value: depositAmount,
   });
 
-  console.log(`Transacción enviada: ${tx.hash}. Esperando confirmación...`);
+  console.log(`    > Transaction sent: ${tx.hash}. Waiting for confirmation...`);
   await tx.wait();
 
-  console.log("✅ Depósito realizado con éxito!");
+  // --- Verify Balance ---
+  const depositInfo = await entryPoint.getDepositInfo(paymasterAddress);
+  console.log(`\n✅ Deposit successful!`);
+  console.log(`   New Paymaster deposit in EntryPoint: ${ethers.formatEther(depositInfo.deposit)} ETH`);
 }
 
 main().catch(error => {
