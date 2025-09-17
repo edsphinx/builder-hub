@@ -13,6 +13,7 @@
     "verify": "hardhat etherscan-verify",
     "hardhat-verify": "hardhat verify",
     "check:preflight": "ts-node scripts/pre_flight_check.ts",
+    "verify-key": "ts-node helpers/verify-pk-key.ts",
 
     "// 3. PROTOCOL OPERATIONS -------------": "",
     "op:fund-paymaster": "hardhat run scripts/fundPaymaster.ts --network ${NETWORK:-hardhat}",
