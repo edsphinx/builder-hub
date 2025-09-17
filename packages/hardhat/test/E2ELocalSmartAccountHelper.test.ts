@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import { deployments, network } from "hardhat";
-import { createPublicClient, http, Address, Hex, encodeFunctionData, PublicClient } from "viem";
+import { createPublicClient, custom, Address, Hex, encodeFunctionData, PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts"; // Correct import for privateKeyToAccount
 import { hardhat } from "viem/chains";
 import { createE2ELocalSmartAccount } from "../helpers/e2eLocalSmartAccount";
@@ -39,7 +39,10 @@ describe("E2ELocalSmartAccount Helper Functionality", () => {
     // Hardcode the default Hardhat private key for local testing
     ownerAccount = privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" as Hex);
 
-    publicClient = createPublicClient({ chain: hardhat, transport: http() });
+    publicClient = createPublicClient({
+      chain: hardhat,
+      transport: custom(network.provider),
+    });
   });
 
   it("should create a SmartAccount-like object with expected properties and methods", async function () {
