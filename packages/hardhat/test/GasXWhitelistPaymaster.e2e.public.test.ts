@@ -1,5 +1,5 @@
-// This test is designed for public networks (e.g., Scroll Sepolia).
-// It verifies the end-to-end sponsored UserOperation flow for the GasX contract in a public environment.
+// This test is designed for public networks (e.g., Scroll Sepolia, ArbitrumSepolia).
+// It verifies the end-to-end sponsored UserOperation flow for the GasXWhitelistPaymaster contract in a public environment.
 
 import "dotenv/config";
 import { expect } from "chai";
@@ -14,14 +14,15 @@ import {
   PublicClient,
   parseEther,
   formatEther,
+  Chain,
 } from "viem";
-import { scrollSepolia } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { entryPoint08Address, entryPoint08Abi } from "viem/account-abstraction";
 import { createSmartAccountClient, SmartAccountClient } from "permissionless";
 import { createPimlicoClient } from "permissionless/clients/pimlico";
 import { toSimpleSmartAccount } from "permissionless/accounts";
 import { Wallet } from "ethers";
+import { getChain } from "./utils/chain-config";
 
 // --- 💡 DEPURATION MODE 💡 ---
 // Set this on 'true' to disable sponsorship. Essential to isolate issues.
@@ -34,9 +35,10 @@ interface ContractToVerify {
   address: Address;
 }
 
-describe("GasX E2E Sponsorship Flow (Public)", function () {
+describe("GasXWhitelistPaymaster E2E Sponsorship Flow (Public)", function () {
   this.timeout(180000);
 
+  let chain: Chain;
   let smartAccount: SimpleSmartAccount;
   let smartAccountClient: SmartAccountClient;
   let publicClient: PublicClient;
@@ -47,9 +49,11 @@ describe("GasX E2E Sponsorship Flow (Public)", function () {
   let mockTargetAddress: Address;
 
   before("Phase 0: Pre-flight System & Environment Checks", async function () {
-    if (network.name !== "scrollSepolia") {
-      this.skip();
+    const dynamicChain = getChain(network.name);
+    if (!dynamicChain) {
+      this.skip(); // Skip if the network is not one of our supported public testnets
     }
+    chain = dynamicChain;
 
     // [0] ENVIRONMENT VALIDATION
     console.log("  > 0.1: Verifying environment variables...");
@@ -65,29 +69,32 @@ describe("GasX E2E Sponsorship Flow (Public)", function () {
 
     // 0.2: Conectividad RPC y Carga de Artefactos
     console.log("  > 0.2: Verifying conectivity to RPC & loading artifacts...");
-    const networkName = network.name; // Standardized network access
     publicClient = createPublicClient({
-      chain: scrollSepolia,
+      chain: chain,
       transport: http(),
     });
-    const chainId = await publicClient.getChainId();
-    console.log(`    ✅ Conectivity to ${networkName} (Chain ID: ${chainId}) confirmed.`);
+    console.log("\n  > [1] Creating Public Client...");
+    expect(publicClient).to.not.equal(undefined); // Verify publicClient is initialized
+    console.log("    ✅ Public Client created.");
 
-    gasXDeployment = await deployments.get("GasX");
+    const chainId = await publicClient.getChainId();
+    console.log(`    ✅ Conectivity to ${network.name} (Chain ID: ${chainId}) confirmed.`);
+
+    gasXDeployment = await deployments.get("GasXWhitelistPaymaster");
     mockTargetDeployment = await deployments.get("MockTarget");
     console.log("    ✅ Contract deployments loaded.");
 
-    // 0.3: Integridad de los Contratos Desplegados
+    // 0.3: Deployed Smart Contracts Integrity
     console.log("  > 0.3: Verifying contracts exists on public blockchain...");
     const contractsToVerify: ContractToVerify[] = [
-      { name: "GasX (Paymaster)", address: gasXDeployment.address as Address },
+      { name: "GasXWhitelistPaymaster", address: gasXDeployment.address as Address },
       { name: "MockTarget", address: mockTargetDeployment.address as Address },
     ];
     for (const contract of contractsToVerify) {
       const bytecode = await publicClient.getCode({ address: contract.address });
       if (!bytecode || bytecode === "0x") {
         throw new Error(
-          `❌ Fatal Error: Did not found bytecode on address of '${contract.name}' (${contract.address}). Asegúrate de que esté desplegado en ${networkName}.`,
+          `❌ Fatal Error: Did not found bytecode on address of '${contract.name}' (${contract.address}). Asegúrate de que esté desplegado en ${network.name}.`,
         );
       }
     }
@@ -109,26 +116,18 @@ describe("GasX E2E Sponsorship Flow (Public)", function () {
 
     console.log("🎉 Fase 0 completed: All verifications passed.");
 
+    // --- Test Setup ---
     console.log(`\n--- Test Setup Complete ---`);
     console.log(`  Running on public network: ${network.name}`);
     console.log(`---------------------------\n`);
 
     // [1] CLIENTS AND ACCOUNTS SETUP
-
-    console.log("\n  > [1] Creating Public Client...");
-    publicClient = createPublicClient({
-      chain: scrollSepolia,
-      transport: http(),
-    });
-    expect(publicClient).to.not.equal(undefined); // Verify publicClient is initialized
-    console.log("    ✅ Public Client created.");
-
-    // [2] PIMLICO PAYMASTER CLIENT
-    console.log("\n  > [2] Initializing Pimlico Paymaster Client...");
     gasXAddress = gasXDeployment.address as Address;
     mockTargetAddress = mockTargetDeployment.address as Address;
 
-    const pimlicoUrl = `https://api.pimlico.io/v2/${scrollSepolia.id}/rpc?apikey=${PIMLICO_API_KEY}`;
+    // [2] PIMLICO PAYMASTER CLIENT
+    console.log("\n  > [2] Initializing Pimlico Paymaster Client...");
+    const pimlicoUrl = `https://api.pimlico.io/v2/${chain.id}/rpc?apikey=${PIMLICO_API_KEY}`;
     const paymasterClient = createPimlicoClient({ transport: http(pimlicoUrl) });
 
     expect(paymasterClient).to.be.an("object").with.property("sponsorUserOperation");
@@ -146,7 +145,7 @@ describe("GasX E2E Sponsorship Flow (Public)", function () {
 
     smartAccountClient = createSmartAccountClient({
       account: smartAccount,
-      chain: scrollSepolia,
+      chain: chain,
       bundlerTransport: http(pimlicoUrl),
       paymaster: paymasterClient,
       userOperation: {

@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
-import "../GasX.sol";
+import "../core/GasXWhitelistPaymaster.sol";
 
 /// @title TestableGasX
 /// @notice Exposes internal GasX functions for unit testing purposes.
-contract TestableGasX is GasX {
-    constructor(address ep, address cfg, address treas) GasX(IEntryPoint(ep), cfg, treas, environment) {}
+contract TestableGasX is GasXWhitelistPaymaster {
+    constructor(
+        address ep,
+        address cfg,
+        address treas
+    ) GasXWhitelistPaymaster(IEntryPoint(ep), cfg, treas, environment) {}
 
     /// @notice expone la validación internamente para tests
     function exposedValidate(

@@ -10,7 +10,7 @@ import {
 } from "../typechain-types";
 import type { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
-describe("GasX", () => {
+describe("GasXWhitelistPaymaster", () => {
   let deployer: SignerWithAddress;
   let entryPoint: EntryPoint;
   let paymaster: TestableGasX;
@@ -104,7 +104,9 @@ describe("GasX", () => {
         sender: deployer,
         callData: sel + "dead",
       };
-      await expect(paymaster.exposedValidate(op as any, ethers.ZeroHash, 0n)).to.be.revertedWith("func!");
+      await expect(paymaster.exposedValidate(op as any, ethers.ZeroHash, 0n)).to.be.revertedWith(
+        "GasX: Disallowed function",
+      );
     });
 
     it("allows toggling whitelist on and off", async () => {
@@ -156,7 +158,9 @@ describe("GasX", () => {
         callData: sel + "abcd",
         accountGasLimits,
       };
-      await expect(paymaster.exposedValidate(op as any, ethers.ZeroHash, 0n)).to.be.revertedWith("gas!");
+      await expect(paymaster.exposedValidate(op as any, ethers.ZeroHash, 0n)).to.be.revertedWith(
+        "GasX: Gas limit exceeded",
+      );
     });
 
     it("rejects gas above limit", async () => {
@@ -177,7 +181,9 @@ describe("GasX", () => {
         callData: sel + "cafecafe",
         accountGasLimits,
       };
-      await expect(paymaster.exposedValidate(op as any, ethers.ZeroHash, 0n)).to.be.revertedWith("gas!");
+      await expect(paymaster.exposedValidate(op as any, ethers.ZeroHash, 0n)).to.be.revertedWith(
+        "GasX: Gas limit exceeded",
+      );
     });
   });
 
@@ -321,7 +327,7 @@ describe("GasX", () => {
         paymasterAndData: pack,
       };
 
-      await expect(paymaster.exposedValidate(op as any, opHash, 0n)).to.be.revertedWith("unauthorized signer");
+      await expect(paymaster.exposedValidate(op as any, opHash, 0n)).to.be.revertedWith("GasX: Unauthorized signer");
     });
 
     it("should bypass signature validation when dev mode is on", async () => {
@@ -433,7 +439,7 @@ describe("GasX", () => {
 
     it("should revert bulk-set if array lengths mismatch", async () => {
       const selectors = ["0x11111111"];
-      const limits = [ethers.parseUnits("1", 6), ethers.parseUnits("2", 6)]; // Longitud incorrecta
+      const limits = [ethers.parseUnits("1", 6), ethers.parseUnits("2", 6)];
 
       await expect(config.bulkSetMaxUsd(selectors, limits)).to.be.revertedWith("length mismatch");
     });

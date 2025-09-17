@@ -6,9 +6,12 @@
 import "dotenv/config";
 import { expect } from "chai";
 import { deployments, ethers, getNamedAccounts, network } from "hardhat";
-import { createPublicClient, createWalletClient, http, Address, PublicClient, parseEther, Hex } from "viem";
+import { createPublicClient, createWalletClient, Address, PublicClient, parseEther, Hex, custom } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { hardhat } from "viem/chains";
+
+const GASX_FQN = "GasXWhitelistPaymaster";
+const MOCK_TARGET_FQN = "MockTarget";
 
 describe("GasX E2E Sponsorship Flow (Local)", function () {
   this.timeout(180000);
@@ -34,10 +37,16 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
 
     // Reset Hardhat network and deploy contracts
     await network.provider.send("hardhat_reset");
-    await deployments.fixture(["GasX", "GasXConfig", "MockTarget", "SimpleAccountFactory", "EntryPoint"]);
+    await deployments.fixture([
+      "GasXWhitelistPaymaster",
+      "GasXConfig",
+      "MockTarget",
+      "SimpleAccountFactory",
+      "EntryPoint",
+    ]);
 
-    gasXDeployment = await deployments.get("GasX");
-    mockTargetDeployment = await deployments.get("MockTarget");
+    gasXDeployment = await deployments.get(GASX_FQN);
+    mockTargetDeployment = await deployments.get(MOCK_TARGET_FQN);
     // const factoryDeployment = await deployments.get("SimpleAccountFactory"); // Not directly used in this simplified flow
 
     // Define the owner account (default Hardhat account)
@@ -53,8 +62,12 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
       );
     }
 
-    publicClient = createPublicClient({ chain: hardhat, transport: http() });
-    const walletClient = createWalletClient({ account: deployerAccount, chain: hardhat, transport: http() });
+    publicClient = createPublicClient({ chain: hardhat, transport: custom(network.provider) });
+    const walletClient = createWalletClient({
+      account: deployerAccount,
+      chain: hardhat,
+      transport: custom(network.provider),
+    });
 
     const entryPointDeployment = await deployments.get("EntryPoint");
 
@@ -86,7 +99,7 @@ describe("GasX E2E Sponsorship Flow (Local)", function () {
       })) as any;
 
       console.log(
-        `✅ New GasX limits (after setLimit): gas=${limitsFromViem[0].toString()}, usd=${limitsFromViem[1].toString()}`,
+        `✅ New GasXWhitelistPaymaster limits (after setLimit): gas=${limitsFromViem[0].toString()}, usd=${limitsFromViem[1].toString()}`,
       );
       // Asumimos que inicialmente son 0,0 como en tu log previo
       expect(limitsFromViem[0]).to.equal(1_000_000n);
