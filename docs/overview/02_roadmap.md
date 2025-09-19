@@ -17,60 +17,44 @@ The ultimate goal is to evolve GasX into a comprehensive gas abstraction module 
 
 ---
 
-## 2. Current Architecture Limitations
-
-While the current `GasXWhitelistPaymaster` provides a solid foundation, its design has limitations for achieving the broader vision:
-
-- **Monolithic Validation Logic:** The paymaster's `_validatePaymasterUserOp` function is self-contained and focused on selector whitelisting, lacking the flexibility to query external eligibility criteria.
-- **Limited `GasXConfig` Scope:** The config contract is designed for simple, updatable parameters (`oracleSigner`) and would need significant expansion to manage complex rule sets for multiple dApps.
-- **Static Whitelisting:** The current `allowedSelectors` mechanism is manual and controlled by a single owner, limiting its adaptability for a multi-dApp ecosystem.
-
----
-
-## 3. Architectural Paths for Expansion
+## 2. Architectural Paths for Expansion
 
 To achieve the vision, we propose two primary architectural paths.
 
-### 3.1. Path A: On-Chain Modular Eligibility
+### 2.1. Path A: On-Chain Modular Eligibility
 
 This path focuses on creating a highly flexible and decentralized system where all eligibility logic is verifiable on-chain.
 
 - **Concept:** Introduce a new, pluggable "module" system where a core `GasXStrategyPaymaster` delegates eligibility checks to specialized, single-purpose contracts.
-- **Architectural Components:**
-  - **`GasXStrategyPaymaster.sol`:** A new core paymaster that routes validation requests to the appropriate module.
-  - **`IEligibilityProvider` Interface:** A standard interface for all eligibility modules.
-  - **Eligibility Provider Contracts:**
-    - `NFTHolderEligibility.sol`: Checks NFT ownership.
-    - `ERC20HolderEligibility.sol`: Checks token balances.
-    - `MerkleProofEligibility.sol`: Verifies inclusion in an off-chain list.
-    - `AttestationEligibility.sol`: Verifies EAS attestations.
-  - **`GasXConfig` Extension:** The config contract would be extended to act as a registry, mapping dApps or functions to their chosen `EligibilityProvider` addresses and rule parameters.
+- **Architectural Components:** This includes a core routing paymaster, a standard `IEligibilityProvider` interface, and specialized modules for checking NFT/Token ownership, Merkle proofs, and on-chain attestations.
 
-### 3.2. Path B: Off-Chain Signature-Based Sponsorship (Industry Standard)
+### 2.2. Path B: Off-Chain Signature-Based Sponsorship (Industry Standard)
 
 This path aligns GasX with the dominant, highly scalable pattern used by major infrastructure providers.
 
-- **Concept:** Move the complex, dApp-specific eligibility logic off-chain to the dApp's own backend. The paymaster's on-chain role is simplified to only verifying a cryptographic signature.
-- **How it Works:**
-  1. A dApp's backend validates a user's action against its own private logic (e.g., premium status, API limits).
-  2. If valid, the backend signs the `userOpHash` with its secure private key (the "oracle signer").
-  3. The signature is passed to the user's frontend and included in the `paymasterAndData`.
-  4. The GasX paymaster's `_validatePaymasterUserOp` recovers the signer from the signature and confirms it's on the authorized list in `GasXConfig`.
-- **Architectural Impact:**
-  - **Simplifies the Paymaster:** The on-chain contract becomes much simpler, smaller, and easier to audit.
-  - **Maximizes Flexibility:** DApps can implement any conceivable eligibility logic in their backend without requiring any on-chain changes from the GasX protocol.
-  - **Enhances `GasXConfig`:** The config contract's primary role becomes managing the list of trusted oracle signer addresses for different dApps.
+- **Concept:** Move the complex, dApp-specific eligibility logic off-chain to the dApp's own backend. The paymaster's on-chain role is simplified to only verifying a cryptographic signature from an authorized "oracle signer."
+- **Architectural Impact:** This simplifies the on-chain contracts, maximizes flexibility for integrating dApps, and focuses the `GasXConfig` contract on managing trusted signers.
 
 ---
 
-## 4. Prioritization & Recommended Strategy
+## 3. Prioritization & Recommended Strategy
 
-- **Path B (Signature-Based) is the highest priority.** It is the most scalable, secure, and industry-aligned model for a general-purpose paymaster. It simplifies our on-chain footprint and gives integrating dApps maximum flexibility.
-- **Path A (On-Chain Modular) is a valuable long-term goal.** It's ideal for use cases that require maximum decentralization and on-chain verifiability, such as DAOs.
+- **Path B (Signature-Based) is the highest priority.** It is the most scalable, secure, and industry-aligned model for a general-purpose paymaster.
+- **Path A (On-Chain Modular) is a valuable long-term goal,** ideal for use cases that require maximum decentralization.
 
-**Recommendation:** Focus development on perfecting the signature-based model for the `GasXWhitelistPaymaster` and the upcoming `GasXERC20FeePaymaster`.
+**Recommendation:** Focus immediate development on perfecting the signature-based model for the entire GasX Suite.
 
 ---
+## 4. Development Roadmap
+
+| Quarter | Phase | Key Deliverables | Status |
+| :--- | :--- | :--- | :--- |
+| **Q4 2025** | **Foundation & USDC Support** | - **`GasXERC20FeePaymaster.sol`:** Finalize, test, and deploy the USDC fee paymaster.<br>- **Oracle Signer Service:** Build and deploy the secure off-chain backend for signing validation requests.<br>- **Admin Dashboard v1:** Implement UI for managing `oracleSigner` addresses. | ⏳ In Progress |
+| **Q1 2026** | **Whitelist Paymaster Refactor** | - Refactor `GasXWhitelistPaymaster` to fully embrace the signature-based model.<br>- Introduce on-chain selector whitelist as an optional, secondary check.<br>- Launch Admin Dashboard features for managing whitelist rules. | 📝 Planned |
+| **Q2 2026** | **Scalability & New Strategies** | - Begin development of the first on-chain module from Path A (`GasXMerkleProofPaymaster`).<br>- Onboard first wave of integration partners.<br>- Publish a professional SDK for easy dApp integration. | 📝 Planned |
+
+---
+
 ## 5. Naming Conventions & Best Practices
 
 To maintain clarity and organization, the project adheres to specific conventions.

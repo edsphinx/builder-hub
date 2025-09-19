@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 /**
  * @title IOracleAggregator
- * @author blocketh
+ * @author edsphinx
  * @notice Interface for registering new oracles in a multi-oracle aggregator.
  * @dev Intended to be implemented by contracts like MultiOracleAggregator that support
  *      multiple price feeds per token pair.

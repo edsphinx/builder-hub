@@ -8,7 +8,7 @@ import { EulerOracleAdapter } from "../oracles/EulerOracleAdapter.sol";
 
 /**
  * @title AggregatorFactory
- * @author blocketh
+ * @author edsphinx
  * @notice Deploys and manages MultiOracleAggregator contracts per asset pair.
  *         Each (base, quote) pair gets its own aggregator instance.
  * @dev Designed for compatibility with MultiOracleAggregator and oracle adapters conforming to IPriceOracle.
@@ -18,7 +18,7 @@ contract AggregatorFactory {
     address public owner;
 
     /// @notice Dirección del contrato lógico previamente desplegado
-    address public aggregatorImplementation;
+    address public immutable aggregatorImplementation;
 
     /// @notice Mapping from base token ⇒ quote token ⇒ aggregator address
     mapping(address => mapping(address => address)) private _aggregators;
@@ -163,14 +163,16 @@ contract AggregatorFactory {
 
         ERC1967Proxy proxy = new ERC1967Proxy(aggregatorImplementation, initData);
         MultiOracleAggregator agg = MultiOracleAggregator(address(proxy));
+
+        _aggregators[base][quote] = address(agg);
+        emit AggregatorCreated(base, quote, address(agg));
+
         for (uint256 i = 0; i < oracles.length; i++) {
             agg.addOracle(base, quote, oracles[i]);
         }
         agg.setMaxDeviationBps(maxDeviationBps);
         emit MaxDeviationUpdated(base, quote, maxDeviationBps);
 
-        _aggregators[base][quote] = address(agg);
-        emit AggregatorCreated(base, quote, address(agg));
         return address(agg);
     }
 

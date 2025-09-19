@@ -107,6 +107,8 @@ contract GasXWhitelistPaymaster is BasePaymaster {
         address _treasury, // multisig que fondea el paymaster
         Environment _environment
     ) BasePaymaster(_entryPoint) {
+        require(_config != address(0), "GasX: Invalid config address");
+        require(_treasury != address(0), "GasX: Invalid treasury address");
         config = _config;
         treasury = _treasury;
         environment = _environment;

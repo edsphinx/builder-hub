@@ -56,3 +56,8 @@ packages/hardhat/contracts/@account-abstraction/
 
 # OpenZeppelin state files
 packages/hardhat/.openzeppelin/
+
+# --- Local & Internal Documentation ---
+# These files are for the developer's internal use and should not be committed.
+STATUS.md
+SESSION_SUMMARY.md

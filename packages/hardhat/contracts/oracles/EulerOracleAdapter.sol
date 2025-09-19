@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 /**
  * @title EulerOracleAdapter
- * @author blocketh
+ * @author edsphinx
  * @notice Adapter to convert token prices using the Euler on-chain oracle.
  *         Implements the IPriceOracle interface expected by aggregators like MultiOracleAggregator.
  *         - Uses Euler’s getPrice(base, quote) with 1e18 precision.

@@ -1,11 +1,9 @@
-# Builder-Hub - Modular Web3 Onboarding Infrastructure
-
-<!-- Or, simply use Markdown image syntax (not centered, but compliant): -->
+# Builder-Hub: The GasX Suite of Paymasters
 
 ![Builder-Hub Logo](https://github.com/edsphinx/builder-hub/blob/main/.github/assets/gasx.png)
 
-**Builder-Hub is a modular infrastructure stack for onboarding, grants, and gasless experiences – starting with LATAM.**
-_Includes plug-and-play modules like GasX, SybilQF, Push Notifier, CCTP Widget, Restake Tracker and more._
+**GasX is a professional suite of ERC-4337 Paymasters designed to eliminate gas fee friction for any dApp.**
+_Sponsor transactions completely with our **Whitelist Paymaster**, or empower users to pay gas with tokens like **USDC** using our **ERC20 Fee Paymaster**. GasX is the flagship protocol of Builder-Hub._
 
 [![CI](https://github.com/edsphinx/builder-hub/workflows/CI/badge.svg)](https://github.com/edsphinx/builder-hub/actions)
 [![Telegram](https://img.shields.io/badge/chat-Telegram-blue?logo=telegram)](https://t.me/edsphinx)
@@ -13,358 +11,122 @@ _Includes plug-and-play modules like GasX, SybilQF, Push Notifier, CCTP Widget, 
 
 ---
 
-## 🧱 What is Builder-Hub?
+## ✨ Why GasX Matters
 
-**Builder-Hub** is a modular Web3 infra suite to streamline onboarding and participation for new users in dApps, DAOs, grants and more.
+On-chain adoption stalls when new users must first acquire a native gas token (like ETH) before they can perform any action. The **GasX Suite** directly solves this by offering two powerful solutions that dApps can integrate:
 
-It is designed to:
+1.  **Complete Sponsorship (`GasXWhitelistPaymaster`):**
+    -   **Problem:** You want to offer a truly free "first mint" or "create profile" experience to onboard new users.
+    -   **Solution:** The protocol uses the `GasXWhitelistPaymaster` to pay 100% of the gas fees for specific, pre-approved actions, creating a frictionless, Web2-like experience.
 
-- Subsidize gas fees dynamically via Paymasters
-- Enable quadratic funding rounds with Sybil protection
-- Integrate real-time Push notifications
-- Sponsor actions like voting, minting or staking
-- Track restaking yields across networks
-- Simplify dApp flows for Web3 entrants
+2.  **Convenient Payments (`GasXERC20FeePaymaster`):**
+    -   **Problem:** Your users hold stablecoins like USDC but don't have ETH on the right network to pay for gas.
+    -   **Solution:** The `GasXERC20FeePaymaster` allows users to pay for their own transactions using USDC. The protocol handles the on-chain price conversion and pays the network in ETH, abstracting away the native gas token entirely.
 
-Builder-Hub focuses on **LATAM** as an initial region for rollout and validation.
+The GasX Suite is currently deployed and tested on **Arbitrum Sepolia** and **Scroll Sepolia** and is fully compatible with EntryPoint v0.8.
 
-## ⚙️ What is GasX?
+---
+## 📈 Project Status & Milestones
 
-**GasX** is the first Builder-Hub module: an ERC-4337 Paymaster that enables **USDC-based** gasless transactions across Base, Optimism, Arbitrum, zkSync, and Scroll. It is now fully compatible with EntryPoint v0.8.0.
+The GasX Protocol has achieved a **feature-complete MVP (Minimum Viable Product)** state. The core contracts, tooling, and documentation have been professionally architected, providing a stable foundation for rigorous testnet validation and future expansion.
 
-### Key Features
+| Category | Deliverable | Status |
+| :--- | :--- | :---: |
+| **Smart Contracts** | **`GasXWhitelistPaymaster`** deployed and verified on-chain. | ✅ |
+| | **`GasXConfig`** and **`MultiOracleAggregator`** deployed and verified. | ✅ |
+| | **`GasXERC20FeePaymaster`** development in progress. | ⏳ |
+| **Tooling** | Professional, multi-chain Hardhat deployment and testing suite. | ✅ |
+| **Frontend** | Functional Next.js demo app for gasless transactions. | ✅ |
+| **Testing** | Comprehensive unit, integration, and E2E tests with high coverage. | ✅ |
+| **Documentation** | Complete `/docs` suite, including architecture, guides, and references. | ✅ |
+| **Open Source** | MIT License, `CONTRIBUTING.md`, and `SECURITY.md` in place. | ✅ |
 
-- **Non-custodial gas abstraction**
-- **Oracle modularity** via adapters (e.g., Euler, DIA)
-- **Spending caps per user/address**
-- **Push Protocol integration** for checkout UX
-- **Composability with ZK identity, CCTP, etc.**
+The project is fully prepared for deployment and E2E testing on the **Arbitrum** network.
 
 ---
 
-## 🧩 Modular Architecture
+## ✅ Comprehensive Test Coverage
 
-Each Builder-Hub module is:
+The GasX Protocol is rigorously tested using a multi-layered approach to ensure reliability and security. Our test suite, executed via Hardhat, covers everything from individual contract logic to full, end-to-end transaction flows on live testnets.
 
-- 🔌 Plug-and-play
-- 📦 ERC-4337 & metaTx compatible
-- 🧱 Decoupled for reusability
-- 🔄 Targeted at onboarding and incentive flows
+| Test Type | Contract / System Tested | Key Verifications |
+| :--- | :--- | :--- |
+| **Unit & Integration** | `GasXWhitelistPaymaster` | Owner-only access, selector whitelisting, gas limit enforcement, oracle signature logic. |
+| | `GasXConfig` | Correct deployment, access control, and parameter updates. |
+| | `MultiOracleAggregator`| Oracle management, average/median price calculation, and deviation checks. |
+| **End-to-End (E2E)** | Full AA Stack (Local) | Simulates a complete, sponsored `UserOperation` on a local Hardhat network. |
+| | Full AA Stack (Public) | Verifies the entire flow on live testnets (e.g., Arbitrum Sepolia) using a real bundler. |
 
-Modules include:
-
-- `GasX`: Paymaster + Oracle adapters
-- `SybilQF`: Quadratic funding w/ Sybil resistance
-- `Push Notifier`: User feedback layer
-- `Restake Tracker`: APY tracking for EigenLayer
-- `CCTP Widget`: Bridge onboarding UX
-
-_This README is scoped to **GasX**, the first deployed module inside Builder-Hub._
-
-[Original WalletFuel → GasX content continues below, renamed and adapted accordingly.]
-
-## ✨ Why this matters
-
-On-chain commerce stalls when new users must first acquire ETH for gas.  
-Our **GasX** (ERC-4337, EntryPoint v0.8) removes that friction:
-
-- **No custodial wallets** – users pay in native **USDC** while the Paymaster covers gas.
-- **Bridges built-in** – integrates Circle CCTP for cross-chain liquidity.
-- **Real-time notifications** – Push Protocol hooks inform buyers the instant their mint/checkout succeeds.
-- **Ready for production** – upgrade-safe storage gap, exhaustive Foundry + Hardhat tests, CI, linting and static analysis baked in.
-
-This repo is the foundation of our multi-chain **Gasless Checkout Module** with a functional frontend demonstration.
-
-| Programme                    | Track / RFP                 |
-| ---------------------------- | --------------------------- |
-| **Base Builder**             | Infrastructure → Paymasters |
-| **Circle Quick-Win** (LATAM) | CCTP + stable-coin commerce |
-| **Push Protocol mini-grant** | Notifications for dCommerce |
-| **Arbitrum ArbiFuel**        | Gas fee sponsorship         |
-| **Scroll DAO DeFi Seed**     | L2 onboarding & tooling     |
-
-Grant reviewers can assess _at a glance_ how the module meets each programme’s goals (see **▶ Grant Checklist**).
+> The entire test suite is run automatically on every commit via our **Continuous Integration** pipeline.
 
 ---
 
-## 📂 Repository structure
+## 🛠️ Architectural & Security Highlights
 
-```bash
-packages/
-├─ hardhat/ # Solidity contracts + scripts + helpers + tasks
-│  ├─ contracts
-│  ├── SimpleAccount.sol
-│  ├── EntryPoint.sol
-│  ├── SimpleAccountFactory.sol
-│  ├── GasXConfig.sol
-│  ├── GasX.sol
-│  ├── factories
-│  │   ├── AggregatorFactory.sol
-│  │   └── DIAAdapterFactory.sol
-│  ├── interfaces
-│  │   ├── IDIAOracleV2.sol
-│  │   ├── IOracleAggregator.sol
-│  │   └── IPriceOracle.sol
-│  ├── mocks
-│  │   └── MockOracle.sol
-│  ├── oracles
-│  │   ├── DIAOracleAdapter.sol
-│  │   ├── EulerOracleAdapter.sol
-│  │   └── MultiOracleAggregator.sol
-│  └── testutils
-│      └── TestableGasX.sol
-├─ scripts/
-│  │  ├─ GasX.sol
-│  │  ├─ Config.sol
-│  ├─ deploy/
-│  │  ├─ 01_deploy_config.ts
-│  │  └─ 02_deploy_GasX.ts
-│  ├─ scripts/
-│  │  ├─ setMaxUsd.ts
-│  │  ├─ bulkSetMaxUsd.ts
-│  │  ├─ loadAndSetMaxUsd.ts
-│  │  ├─ useConfig.ts
-│  │  └─ addresses.ts
-│  ├─ helpers/
-│  │  ├─ environment.ts
-│  │  └─ addresses.ts
-│  └─ tasks/
-│     └─ showAddress.ts
-│
-├─ nextjs/ # demo storefront (Scaffold-ETH 2)
-│  ├─ app/
-│  │  └─ gasless-pro/…
-│  ├─ hooks/
-│  │  └─ gasx/…
-│  └─ services/
-│     └─ web3/…
-│
-└─ docs/ # Structured documentation for GitBook/Docusaurus
-   ├─ gasx.md
-   ├─ config.md
-   ├─ dev-vs-prod.md
-   └─ project_docs_index.md
-```
-
-_One mono-repo – contracts, front-end demo and docs live together, simplifying review & CI._
+-   **Security-First Design:** V1 contracts are deployed as **immutable** for maximum trust. The protocol uses a strict separation of concerns and includes on-chain protections like gas ceilings and selector whitelists.
+-   **Multi-Paymaster Suite:** A suite of specialized paymasters allows dApps to choose the exact tool for their needs.
+-   **Resilient On-Chain Oracles:** A robust `MultiOracleAggregator` provides reliable price data with built-in deviation checks.
+-   **Chain-Agnostic Architecture:** Professional deployment scripts and a centralized configuration allow for seamless multi-chain support.
+-   **Off-Chain Extensibility:** Paymasters support time-bound signatures from off-chain services for powerful, real-time validation logic.
+-   **Analytics & Monitoring:** Paymasters emit detailed events like `GasSponsored` on every successful transaction.
 
 ---
 
+## 🚀 Roadmap
+
+| Quarter | Phase | Key Deliverables |
+| :--- | :--- | :--- |
+| **Q3 2025** | **Foundation & Launch** | - **`GasXWhitelistPaymaster`:** Deploy the immutable contract on Arbitrum & other L2s.<br>- **Professional Tooling:** Finalize the multi-chain deployment and testing suite.<br>- **Complete Documentation:** Publish the full `/docs` suite. |
+| **Q4 2025**| **USDC & Partner Onboarding**| - **`GasXERC20FeePaymaster`:** Develop, test, and deploy the USDC fee paymaster.<br>- **Off-Chain Service:** Launch the secure Oracle Signer service.<br>- **First Partner Integrations:** Onboard the first wave of dApps. |
+| **Q1 2026**| **SDK & Scalability** | - **Developer SDK:** Release a public NPM package to simplify dApp integration.<br>- **Admin Dashboard v1:** Launch a UI for partners to manage paymaster configurations. |
+
+---
 ## 📘 Documentation
 
-Modular technical documentation is under `docs/` and ready to be imported into GitBook or Docusaurus:
+Comprehensive technical documentation for the GasX protocol is maintained in the `/docs` directory. The best place to start is the **[Documentation Hub (`/docs/index.md`)](./docs/index.md)**.
 
-- [`docs/index.md`](docs/index.md): index / outline
-- [`docs/dev-vs-prod.md`](docs/dev-vs-prod.md): runtime environment behavior
-- [`docs/gasx.md`](docs/gasx.md): main GasX contract logic
-- [`docs/config.md`](docs/config.md): external config contract details
+-   **[Architecture Overview](./docs/overview/01_architecture.md):** A deep dive into the smart contract system.
+-   **[Deployment Guide](./DEPLOYMENT_GUIDE.md):** Step-by-step instructions for deploying the protocol.
 
 ---
+## 🔨 Quick Start (Local Development)
 
-## 🏛️ Architecture Overview
+### 1. Prerequisites
+- **Node.js:** `20.19.3` (Exact version recommended)
+- **Yarn:** v3.x or higher
 
-For a detailed explanation of the project's smart contract architecture, including core components, interaction flows, and design principles, please refer to the [Architecture Overview](ARCHITECTURE.md).
-
----
-
-## 🚀 Future Features
-
-Explore our vision for the evolution of the GasX Paymaster, including advanced user eligibility strategies and dApp adaptability, in the [Future Features and Architectural Considerations](FUTURE_FEATURES.md) document.
-
----
-
-## 📜 Deployment History
-
-For a detailed log of all contract deployments to testnets and mainnet, including network details, contract addresses, and verification links, please see the [Deployment History](deployHistory.md).
-
----
-
-## 🔨 Quick start (local)
-
+### 2. Setup & Run
 ```bash
-git clone https://github.com/edsphinx/builder-hub
+# Clone the repo and install dependencies
+git clone [https://github.com/edsphinx/builder-hub.git](https://github.com/edsphinx/builder-hub.git)
 cd builder-hub
+yarn install
 
-# yarn install
-
-# Spin up scaffold-eth-2 hardhat node + deploy EntryPoint + Paymaster
-yarn chain
-yarn compile
+# In one terminal, run the local blockchain & deploy contracts
+cd packages/hardhat
 yarn deploy
 
-# Run the full test-suite (Hardhat)
-yarn test
-
-# Start the frontend
+# In a second terminal, start the frontend demo
+cd packages/nextjs
 yarn start
 ```
-
-> **Prerequisites** – Node 2020.19.3, Yarn 3.
-
----
-
-## 🔁 Continuous Integration
-
-We use GitHub Actions to ensure code quality:
-
-Runs on every push/PR to main
-
-Installs dependencies and clones local AA vendor (yarn aa:init)
-
-Compiles contracts and runs Hardhat tests in packages/hardhat
+> The frontend is now available at `http://localhost:3000`.
 
 ---
+## 🤝 Contributing & Security
 
-## 🛠️ Key smart-contract features
+The GasX Protocol is an open-source project. We welcome contributions and take security very seriously. Please see our **[Contributing Guide](./CONTRIBUTING.md)** and our **[Security Policy](./SECURITY.md)**.
 
-| Feature                              | Detail                                                                               |
-| ------------------------------------ | ------------------------------------------------------------------------------------ |
-| **EntryPoint v0.8**                  | Cancun-ready, supports EIP-1153 TransientStorage. Verified compatible.               |
-| **Strict selector whitelist**        | Only explicitly allowed functions can be gas-sponsored, preventing malicious drains. |
-| **Soft gas ceiling per UserOp**      | Stops griefing attacks by limiting `callGasLimit`.                                   |
-| **Upgradeable (UUPS)**               | 50-slot storage gap, `_disableInitializers` guard, OZ 5.1 patterns.                  |
-| **PostOp analytics hook**            | Emits `GasSponsored(sender, gasUsed, feeWei)` for off-chain dashboards.              |
-| **Oracle-priced subsidies (opt-in)** | `paymasterAndData = abi.encode(expiry, sig…)` enables off-chain USDC price checks.   |
+## 👥 Core Team
 
-See [contracts/hardhat/contracts/GasX.sol](packages/hardhat/contracts/GasX.sol) for inline NatSpec.
+| Name | Role | GitHub / X |
+| :--- | :--- | :--- |
+| **edsphinx** | Lead Solidity / ZK | [@edsphinx](https://github.com/edsphinx) / [@oFonCK](https://x.com/oFonCK) |
 
 ---
-
-## ✅ Grant checklist – Week 1 deliverable
-
-| Item                                                         | Status |
-| ------------------------------------------------------------ | :----: |
-| **EntryPoint 0.8** deployed to Base Sepolia & Scroll Sepolia |   ✔︎   |
-| **GasX - GaslessPaymaster** verified on Explorer + Sourcify  |   ✔︎   |
-| **Demo checkout** (Next.js route) showing 0 ETH gas cost     |   ✔︎   |
-| 15 s GIF + Loom walkthrough in `/docs/`                      |   ✔︎   |
-| Unit + integration tests ≥ 90 % line coverage                |   ✔︎   |
-| MIT licence, CODEOWNERS, SECURITY.md                         |   ✔︎   |
-
-All items bundled in commit `v0.1.0` and immutable on GitHub.
-
----
-
-## ✅ Test Coverage
-
-The `GasX` contract has been thoroughly tested via Hardhat using a custom harness, covering all critical behaviors expected from a production-grade Paymaster.
-
-| Suite                                           | Tests                             |
-| ----------------------------------------------- | --------------------------------- |
-| **Deployment & config**                         | ✔ Deploys with correct EntryPoint |
-| ✔ Owner-only access for limit/whitelist updates |                                   |
-| **Selector whitelist**                          | ✔ Accepts whitelisted selector    |
-
-✔ Rejects unlisted selector  
-✔ Toggleable on/off |
-| **Gas enforcement** | ✔ Accepts calls at limit  
-✔ Rejects just above limit  
-✔ Enforces upper ceiling |
-| **Oracle expiry** | ✔ Rejects expired data  
-✔ Accepts valid future expiry |
-| **ERC‑4337 integration** | ✔ Validates full `PackedUserOperation` |
-| **PostOp hook** | ✔ Emits `GasSponsored` analytics event |
-
-> All tests pass on `@account-abstraction/contracts v0.8.0` with TypeChain bindings. CI auto-runs on every commit.
-
----
-
-## 🟡 Implementation Status (updated)
-
-> GasX is a functional MVP designed for real-world USDC-based gas sponsorship.  
-> The core logic is minimal, modular, and ready for progressive enhancement.
-
-### ✅ Implemented
-
-- ✅ **Selector whitelist**: prevents malicious drain vectors.
-- ✅ **Gas ceiling**: enforces a max `callGasLimit` per `UserOperation`.
-- ✅ **Expiry enforcement**: all sponsored ops require a future `expiry` timestamp.
-- ✅ **PostOp event**: emits granular `GasSponsored()` for analytics and indexing.
-- ✅ **Upgradeable (UUPS)**: 50-slot storage gap + ownership handover guard.
-- ✅ **EntryPoint v0.8 compatibility**: fully integrated and testable via harness.
-- ✅ **CI + test coverage**: full suite validated via GitHub Actions.
-- ✅ **External Config contract**: deployed via `01_deploy_config.ts`.
-- ✅ **Config-aware scripts**: `useConfig.ts` auto-loads addresses per network.
-- ✅ **USD limits settable**: scripts (`setMaxUsd.ts`, `bulkSetMaxUsd.ts`) load and apply per-address caps.
-- ✅ **Frontend Demo**: A functional frontend page (`/gasless-pro`) demonstrates the gasless transaction flow.
-
-### ⚠️ Partially implemented
-
-| Module / Feature              | Status | Detail                                         |
-| ----------------------------- | ------ | ---------------------------------------------- |
-| Oracle signature verification | ⚠️     | `_verifyOracleSig()` stubbed, not yet enforced |
-| USD-based limit enforcement   | ⚠️     | Stored in config but not checked on-chain      |
-
-### ⚠️ To be implemented
-
-| Module / Intention                     | Present? | Detail                                           |
-| -------------------------------------- | -------- | ------------------------------------------------ |
-| External config usage                  | ❌       | `config` address unused so far                   |
-| Subsidy duplication protection         | ❌       | No checks for repeated abuse by same sender      |
-| `PostOpMode` handling                  | ❌       | Mode not interpreted (e.g. OpReverted)           |
-| Address-level or nonce-level filtering | ❌       | No whitelist/blacklist or fine-grained filtering |
-
-> These modules are planned for future releases and externalized via a `Config` contract.
-
----
-
-## 📌 Next Steps for Grants
-
-We're now entering **Week 2–3 deliverables**, focused on demonstrating utility across real checkout flows:
-
-- ✅ **Paymaster MVP logic complete and tested**
-- ✅ **Frontend Demo Implemented**
-- 🔄 CCTP integration (in progress)
-- 🔄 Push Protocol hooks for real-time buyer feedback
-- 📦 SDK packaging for dev adoption (planned)
-
-We welcome feedback from grant reviewers on which part of the integration they'd like highlighted in live demos or walkthroughs.
-
----
-
-## 🚀 Roadmap (Updated)
-
-| Phase   | Milestone                                   | Target week |
-| ------- | ------------------------------------------- | ----------- |
-| **α**   | Merge Paymaster into Scaffold-ETH 2 starter | W-2         |
-|         | Push Protocol notifications                 | W-2         |
-|         | ArbiFuel CSV gas tracker (Node CLI)         | W-3         |
-| **β**   | Scroll vault composer + restake router      | W-7         |
-| **1.0** | Multi-chain SDK (npm) + audited contracts   | Sep 2025    |
-
-Detailed Gantt in [`docs/roadmap.pdf`](docs/roadmap.pdf)
-
----
-
-## 🔒 Security & audits
-
-- Slither, Echidna and Foundry invariants run in GitHub Actions (`.github/workflows/ci.yml`).
-- **0 high-severity** issues per Slither on commit `v0.1.0`.
-- External audit scheduled with **Statemind** (slot confirmed: 12 Aug 2025).
-
----
-
-## 🤝 Contributing
-
-We welcome contributions from the community. If you're interested in improving Builder-Hub, please read our [**Contributing Guide**](CONTRIBUTING.md) to learn about our development process, coding conventions, and deployment procedures.
-
----
-
-## 👥 Core team
-
-| Name         | Role               | Github / X                               |
-| ------------ | ------------------ | ---------------------------------------- |
-| **Ed S. F.** | Lead Solidity / zk | [@edsphinx](https://github.com/edsphinx) |
-
----
-
 ## ✍️ Licence
 
 MIT – see [LICENSE](LICENSE).
 
-> We believe **open infrastructure drives adoption**.
-> Fork it, remix it, ship it – just keep the attribution.
-
 ---
-
-_Made with ♥ in Honduras & deployed on Base, Arbitrum and Scroll._
+_Made with ♥ in Honduras. Coming soon to Arbitrum, Base, Scroll, and more._

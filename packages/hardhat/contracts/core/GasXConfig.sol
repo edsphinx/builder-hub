@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 /**
  * @title GasXConfig
- * @author 🤖
+ * @author edsphinx
  * @notice Stores and manages configuration data for GasX protocol:
  *         - oracleSigner: address authorised to sign off-chain subsidy data
  *         - maxUsdPerSelector: maps function selectors to max spend in USDC
@@ -45,6 +45,7 @@ contract GasXConfig {
      * @param _oracleSigner Initial address allowed to sign oracle payloads
      */
     constructor(address _oracleSigner) {
+        require(_oracleSigner != address(0), "GasX: Invalid oracle signer address");
         owner = msg.sender;
         oracleSigner = _oracleSigner;
     }

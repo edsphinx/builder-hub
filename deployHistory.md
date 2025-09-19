@@ -4,6 +4,49 @@ This document records the smart contract deployments made to the different netwo
 
 ---
 
+## Deployment to `arbitrumSepolia` - 2025-09-19
+
+| Contract | Address | Explorer Link |
+| :--- | :--- | :--- |
+| **AggregatorFactory** | `0xB2892924b07aFf5785a35651C58AfEd8c396b337` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0xB2892924b07aFf5785a35651C58AfEd8c396b337) |
+| **DIAAdapterFactory_arbitrumSepolia** | `0xCe5c337aFB342EfEBC105BdbC2432A38759B0536` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0xCe5c337aFB342EfEBC105BdbC2432A38759B0536) |
+| **GasXConfig** | `0xaad72E9b91D45a1c0435DcacAae1590050a05c1F` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0xaad72E9b91D45a1c0435DcacAae1590050a05c1F) |
+| **GasXWhitelistPaymaster** | `0x2dF916fE7731A1eE58e9AE27bc2Fd6F20208b30f` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0x2dF916fE7731A1eE58e9AE27bc2Fd6F20208b30f) |
+| **MultiOracleAggregator** | `0xfC573Eb43Fc022B0847c103A7eC1f62AF43dCfcA` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0xfC573Eb43Fc022B0847c103A7eC1f62AF43dCfcA) |
+| **MultiOracleAggregatorInstance** | `0x2b97D871643456bFaf95ea8C17170abaC996fa72` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0x2b97D871643456bFaf95ea8C17170abaC996fa72) |
+| **SimpleAccountFactory** | `0x0e5D45510035d244740c32B2CCebDd34551567cD` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0x0e5D45510035d244740c32B2CCebDd34551567cD) |
+
+---
+
+## Deployment to `scrollSepolia` - 2025-09-19
+
+| Contract | Address | Explorer Link |
+| :--- | :--- | :--- |
+| **AggregatorFactory** | `0x65B95F744a98099a4c5A7240d1AF58E258304a4B` | [View on sepolia.scrollscan.com](https://sepolia.scrollscan.com/address/0x65B95F744a98099a4c5A7240d1AF58E258304a4B) |
+| **GasX** | `0x0C86Df491EBD8F469396C66C42143BccD1E8f42B` | [View on sepolia.scrollscan.com](https://sepolia.scrollscan.com/address/0x0C86Df491EBD8F469396C66C42143BccD1E8f42B) |
+| **GasXConfig** | `0xFE2eb9CC13a2a10675AE747477157aED25D78421` | [View on sepolia.scrollscan.com](https://sepolia.scrollscan.com/address/0xFE2eb9CC13a2a10675AE747477157aED25D78421) |
+| **MockTarget** | `0xd04Aa7BC88b9F21D9aCb4B2b3d9720f8A76a98E5` | [View on sepolia.scrollscan.com](https://sepolia.scrollscan.com/address/0xd04Aa7BC88b9F21D9aCb4B2b3d9720f8A76a98E5) |
+| **MultiOracleAggregator** | `0x525d61BCFfafa7f95E2986CA4E975A7fF53D8364` | [View on sepolia.scrollscan.com](https://sepolia.scrollscan.com/address/0x525d61BCFfafa7f95E2986CA4E975A7fF53D8364) |
+| **MultiOracleAggregatorInstance** | `0xbb9DCbCBc625EE7c8980dDE40640bb5c0d5E71A1` | [View on sepolia.scrollscan.com](https://sepolia.scrollscan.com/address/0xbb9DCbCBc625EE7c8980dDE40640bb5c0d5E71A1) |
+| **SimpleAccountFactory** | `0xA13DeF51D3F5D1d923d5bB7117F0c59b23cee81A` | [View on sepolia.scrollscan.com](https://sepolia.scrollscan.com/address/0xA13DeF51D3F5D1d923d5bB7117F0c59b23cee81A) |
+| **GasXWhitelistPaymaster** | `0xC639bef2dDFd60D63fCFD95d6C13d2A9D8c3E2EC` | [View on sepolia.scrollscan.com](https://sepolia.scrollscan.com/address/0xC639bef2dDFd60D63fCFD95d6C13d2A9D8c3E2EC) |
+
+---
+
+## Deployment to `arbitrumSepolia` - 2025-09-17
+
+| Contract | Address | Explorer Link |
+| :--- | :--- | :--- |
+| **AggregatorFactory** | `0x41e83789A4c90841109593c7DB23D7d3aD11C454` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0x41e83789A4c90841109593c7DB23D7d3aD11C454) |
+| **DIAAdapterFactory_arbitrumSepolia** | `0xa96a4F8D30791475420b43EBdAD51F1F40C2Bd85` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0xa96a4F8D30791475420b43EBdAD51F1F40C2Bd85) |
+| **GasXConfig** | `0x717Fce1A8204047F401d3549c015771EC6553C89` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0x717Fce1A8204047F401d3549c015771EC6553C89) |
+| **GasXWhitelistPaymaster** | `0xD087e72aCed4d3b25492fB86b0b670C9187c0A8f` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0xD087e72aCed4d3b25492fB86b0b670C9187c0A8f) |
+| **MultiOracleAggregator** | `0x227a87CF330EefB73eC96C21C7F2e45DB91f568e` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0x227a87CF330EefB73eC96C21C7F2e45DB91f568e) |
+| **MultiOracleAggregatorInstance** | `0xD4a9d7971feB2c98359d0c5Cb63B534983f8b17b` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0xD4a9d7971feB2c98359d0c5Cb63B534983f8b17b) |
+| **SimpleAccountFactory** | `0x7E4cf1a463d501a7A25374e8b995A439CC8B11fA` | [View on sepolia.arbiscan.io](https://sepolia.arbiscan.io/address/0x7E4cf1a463d501a7A25374e8b995A439CC8B11fA) |
+
+---
+
 ## Deployment to `scrollSepolia` - 2025-07-22
 
 | Contract | Address | Explorer Link |

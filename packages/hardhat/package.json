@@ -26,7 +26,7 @@
     "lint-staged": "eslint",
     "check-types": "tsc --noEmit --incremental",
     "flatten": "hardhat flatten",
-
+  
     "// 5. TESTING ---------------------------": "",
     "test": "REPORT_GAS=true hardhat test",
     "test:coverage": "hardhat coverage",

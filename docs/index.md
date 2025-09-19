@@ -1,90 +1,43 @@
-# 📘 Documentación Técnica - WalletFuel
+# Welcome to the GasX Protocol Documentation
 
-Este repositorio contiene la implementación de un sistema modular ERC-4337 con lógica de subsidios dinámicos, firmado por oráculos, y funciones avanzadas de Paymaster. Está estructurado para ser extensible y compatible con flujos CI/CD, testing local y despliegues multi-red.
+This documentation provides a comprehensive overview of the GasX Protocol, from high-level architectural concepts to detailed smart contract references and deployment guides.
 
----
-
-## Índice de Documentos
-
-### 🧠 Conceptos Principales
-
-- [`docs/overview.md`](./overview.md): Introducción general a WalletFuel y ERC-4337.
-- [`docs/dev-vs-prod.md`](./dev-vs-prod.md): Uso de bandera global de entorno (develop vs producción).
-
-### ⚙️ Contratos
-
-- [`docs/walletfuel.md`](./walletfuel.md): Paymaster principal WalletFuel.sol
-- [`docs/config.md`](./config.md): Contrato de configuración externa (Config.sol)
-- [`docs/testable.md`](./testable.md): Contrato extendido para testing (TestableWalletFuel)
-
-### 🧪 Testing
-
-- [`docs/testing.md`](./testing.md): Pruebas disponibles, test harness y validaciones
-
-### 🚀 Despliegues y Configuración
-
-- [`docs/deploy.md`](./deploy.md): Scripts de deploy por red (walletfuel, config)
-- [`docs/addresses.md`](./addresses.md): Centralización de direcciones y helpers
-
-### 📂 Scripts
-
-- [`docs/scripts.md`](./scripts.md): Uso de:
-  - `loadAndSetMaxUsd.ts`
-  - `bulkSetMaxUsd.ts`
-  - `setMaxUsd.ts`
-  - `useConfig.ts`
-
-### 🛠️ Tareas CLI
-
-- [`docs/tasks.md`](./tasks.md): Custom Hardhat tasks:
-  - `show-address`
-  - `set-max-usd`
-  - Otros CLI helpers para scripting
+GasX is a professional suite of ERC-4337 Paymasters designed to eliminate gas fee friction for any dApp.
 
 ---
+## 🚀 Getting Started
 
-## 📦 Estructura del Repositorio
+If you are a developer looking to integrate or contribute to the GasX protocol, these documents are the best place to start.
 
-```
-packages/hardhat
-├── contracts/
-│   ├── WalletFuel.sol
-│   ├── Config.sol
-│   └── test/TestableWalletFuel.sol
-├── deploy/
-│   ├── 01_deploy_config.ts
-│   └── 02_deploy_walletfuel.ts
-├── helpers/
-│   └── env.ts (bandera de entorno y helpers comunes)
-├── scripts/
-│   ├── addresses.ts
-│   ├── bulkSetMaxUsd.ts
-│   ├── loadAndSetMaxUsd.ts
-│   ├── setMaxUsd.ts
-│   └── useConfig.ts
-├── tasks/
-│   └── (custom hardhat tasks)
-└── hardhat.config.ts
-```
+| Guide | Description |
+| :--- | :--- |
+| **[Architecture Overview](./overview/01_architecture.md)** | Start here for a high-level understanding of the entire smart contract system. |
+| **[Deployment Guide](./guides/01_deployment.md)** | Follow these step-by-step instructions to deploy the protocol on any network. |
+| **[Project Roadmap](./overview/02_roadmap.md)** | Explore the long-term vision and planned features for the GasX suite. |
 
 ---
+## 📚 Table of Contents
 
-## 🔗 Recomendaciones de Uso
+### 1. Overview
+- **[Architecture](./overview/01_architecture.md):** A deep dive into the smart contract system, its components, and design principles.
+- **[Roadmap](./overview/2_roadmap.md):** The long-term vision, including planned features like new paymaster strategies.
 
-- Cloná este repo con `--recursive` si se usa submodules.
-- Revisá `README.md` para los comandos básicos de testing y deploy.
-- Usá `NODE_ENV=production` para activar la lógica de entorno productivo.
-- Verificá las direcciones usando `npx hardhat show-address --contract GasX --network base_sepolia`
+### 2. Developer Guides
+- **[Deployment Guide](./guides/01_deployment.md):** Step-by-step instructions for deploying all protocol contracts.
+- **[Quick Start](./guides/02_quick-start.md):** A guide on setting up the local development environment and running tests.
+- **[Environment-Specific Behavior](./guides/03_environments.md):** Explains how the protocol behaves differently in `Dev`, `Testnet`, and `Production`.
+- **[Environment Implementation Details](./guides/04_environment_implementation.md):** A technical reference with code snippets on how environment handling is implemented.
+
+### 3. Smart Contract Reference
+- **[`GasXWhitelistPaymaster`](./contracts/01_GasXWhitelistPaymaster.md):** Technical reference for the pure gas sponsorship paymaster.
+- **[`GasXERC20FeePaymaster`](./contracts/02_GasXERC20FeePaymaster.md):** Technical reference for the paymaster that allows users to pay fees in ERC20 tokens.
+- **[`GasXConfig`](./contracts/03_GasXConfig.md):** Technical reference for the protocol's updatable configuration contract.
+- **[`MultiOracleAggregator`](./contracts/04_MultiOracleAggregator.md):** Technical reference for the on-chain price oracle aggregation system.
+- **[`AggregatorFactory`](./contracts/05_AggregatorFactory.md):** Technical reference for the factory that deploys oracle aggregators.
+
 
 ---
+## 🤝 Contributing & Security
 
-## 📄 Próximos documentos a incluir
-
-- docs/security.md (validaciones, límites, prevención de abuso)
-- docs/grants.md (pitch para grants y documentación de motivación)
-- docs/api.md (si se expone una API externa o REST helper)
-
----
-
-¿Necesitás extender algún archivo? Abrí el `.md` correspondiente y usá el índice como guía para continuar.
-
+- **[Contributing Guide](../CONTRIBUTING.md):** Learn about our development process and coding conventions.
+- **[Security Policy](../SECURITY.md):** View our security policy and learn how to report vulnerabilities.

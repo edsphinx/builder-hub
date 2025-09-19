@@ -6,7 +6,7 @@ import { IOracleAggregator } from "../interfaces/IOracleAggregator.sol";
 
 /**
  * @title DIAAdapterFactory
- * @author blocketh
+ * @author edsphinx
  * @notice Factory contract to deploy DIAOracleAdapter instances and register them with an oracle aggregator.
  * @dev Each deployed adapter is preconfigured with a specific DIA key and registered with the provided aggregator.
  */
@@ -56,7 +56,6 @@ contract DIAAdapterFactory {
      */
     function deployAdapter(address base, address quote, string calldata key) external onlyOwner returns (address) {
         DIAOracleAdapter adapter = new DIAOracleAdapter(dia, base, quote, key);
-        IOracleAggregator(aggregator).addOracle(base, quote, address(adapter));
 
         emit AdapterCreated(address(adapter), base, quote, key);
         return address(adapter);

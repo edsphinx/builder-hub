@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 /**
  * @title IPriceOracle
- * @author blocketh
+ * @author edsphinx
  * @notice Standard interface for retrieving price quotes between token pairs.
  *         Designed for use in modular oracle adapters (Euler, DIA, Chainlink, etc.).
  * @dev All implementations MUST return values scaled to 1e18 to ensure consistency.

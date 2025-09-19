@@ -6,7 +6,7 @@ import { IDIAOracleV2 } from "../interfaces/IDIAOracleV2.sol";
 
 /**
  * @title DIAOracleAdapter
- * @author blocketh
+ * @author edsphinx
  * @notice Adapter to consume DIA oracle feeds and expose them in IPriceOracle format.
  * @dev Designed for integration with MultiOracleAggregator.
  *      Assumes DIA price values are returned with 8 decimals.

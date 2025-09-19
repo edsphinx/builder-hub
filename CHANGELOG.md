@@ -1,3 +1,29 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+---
+
+## [v0.3.0] – 2025-09-18
+
+This version marks a major architectural overhaul, transforming the project into a professional, multi-chain-ready protocol with a clear and scalable foundation.
+
+### Refactor - **Project-Wide Professionalization**
+- **Contract Naming & Structure:** All core contracts were renamed to a professional `GasX<Role>Paymaster` convention and moved to a `/contracts/core` directory. The "GasX Suite" concept was formally adopted.
+- **Multi-Chain Tooling:** All deployment scripts, operational scripts, and Hardhat configurations were refactored to be fully chain-agnostic, removing hardcoded values and dynamically loading configuration from a central `config/networks.ts` file.
+- **Security Strategy:** V1 paymaster contracts have been defined as **immutable** to provide maximum trust and security for initial partners. Upgradeability is now a planned V2 feature to be managed by a Timelock.
+
+### Features
+- **Professional `package.json` Scripts:** The NPM scripts have been reorganized into a logical "command center" for all development, testing, and operational tasks.
+- **Robust Deployment Workflow:** Implemented professional deployment practices, including a `DEPLOYMENT_GUIDE.md`, a `pre_flight_check.ts` script, dynamic dependency management, and consistent, standardized logging.
+
+### Documentation
+- **Complete Documentation Overhaul:** The entire `/docs` folder was restructured into a professional hierarchy (`overview`, `guides`, `contracts`).
+- **New Core Documents:** Added definitive guides for `ARCHITECTURE`, `ROADMAP`, `NAMING_CONVENTIONS`, and detailed technical references for each core smart contract.
+- **Language Standardization:** All documentation, comments, and logs across the entire project have been standardized to professional English.
+
+---
+
 ## [v0.2.0] – 2025-07-21
 
 ### Features
