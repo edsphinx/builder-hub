@@ -50,6 +50,10 @@ contract GasXERC20FeePaymaster is BasePaymaster {
         address _priceOracle,
         address _initialOracleSigner
     ) BasePaymaster(_entryPoint) {
+        require(_feeToken != address(0), "GasX: Invalid feeToken address");
+        require(_priceQuoteBaseToken != address(0), "GasX: Invalid priceQuoteBaseToken address");
+        require(_priceOracle != address(0), "GasX: Invalid priceOracle address");
+        require(_initialOracleSigner != address(0), "GasX: Invalid initialOracleSigner address");
         _transferOwnership(msg.sender);
         feeToken = _feeToken;
         priceQuoteBaseToken = _priceQuoteBaseToken;
@@ -105,7 +109,8 @@ contract GasXERC20FeePaymaster is BasePaymaster {
         uint256 actualFee = (actualGasCost * onChainPrice) / 1e18;
 
         // Collect the fee
-        IERC20(feeToken).transferFrom(sender, address(this), actualFee);
+        bool success = IERC20(feeToken).transferFrom(sender, address(this), actualFee);
+        require(success, "GasX: ERC20 transfer failed");
 
         // It's good practice to get the userOpHash here if possible for the event
         // Note: Accessing userOpHash in postOp is complex, this is a simplification

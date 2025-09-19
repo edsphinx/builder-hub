@@ -8,7 +8,7 @@ import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Co
 
 /**
  * @title MultiOracleAggregator (UUPS Upgradeable + Trusted Forwarder Compatible)
- * @author blocketh
+ * @author edsphinx
  * @notice Aggregates multiple oracle feeds and provides average/median pricing with full traceability.
  * @dev Ensure all adapters return 1e18-scaled quotes. Emits events for tracing and deviation validation.
  */

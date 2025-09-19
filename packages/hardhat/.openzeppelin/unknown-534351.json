@@ -960,6 +960,21 @@
       "address": "0xd5B06804822c479F2354cA46ABf1825492893B6B",
       "txHash": "0x5f2220350e5b9b8b21b89af0d5b5055c2f2380e6b3904ea1192ce554dc0e6c09",
       "kind": "uups"
+    },
+    {
+      "address": "0x97fF0E1c654628c6cc07B1e60Efd886C347a9F59",
+      "txHash": "0x8da3ea928fc7259c3d5727934df2f7a016daae7efbebb44d28407f6f4f603978",
+      "kind": "uups"
+    },
+    {
+      "address": "0x0924A9AE97a8d349A6284ebe1c0f2Ce2682B89db",
+      "txHash": "0x345f5661810518ede17fad32c8b5c3471196d54cb34f504fe8bc8366bf611030",
+      "kind": "uups"
+    },
+    {
+      "address": "0xbb9DCbCBc625EE7c8980dDE40640bb5c0d5E71A1",
+      "txHash": "0x5c6f022c4a70fe03681eb847b60e8665689f453714de6173087c15a6e4542670",
+      "kind": "uups"
     }
   ],
   "impls": {
