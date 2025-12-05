@@ -170,11 +170,11 @@ jobs:
 
       - name: Install Aderyn
         run: |
-          # Download specific version with checksum verification
-          ADERYN_VERSION="0.6.12"
-          curl -L -o /tmp/aderyn.tar.gz "https://github.com/Cyfrin/aderyn/releases/download/v${ADERYN_VERSION}/aderyn_linux_amd64.tar.gz"
-          tar -xzf /tmp/aderyn.tar.gz -C /tmp/
-          sudo mv /tmp/aderyn /usr/local/bin/
+          # Download specific version from official releases
+          ADERYN_VERSION="0.6.5"
+          curl -L -o /tmp/aderyn.tar.xz "https://github.com/Cyfrin/aderyn/releases/download/aderyn-v${ADERYN_VERSION}/aderyn-x86_64-unknown-linux-gnu.tar.xz"
+          tar -xJf /tmp/aderyn.tar.xz -C /tmp/
+          sudo mv /tmp/aderyn-x86_64-unknown-linux-gnu/aderyn /usr/local/bin/
           aderyn --version
 
       - name: Run Aderyn Analysis
