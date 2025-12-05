@@ -654,8 +654,10 @@ describe("GasXERC20FeePaymaster", function () {
         paymasterAndData: paymasterData,
       };
 
-      await expect(paymaster.exposedValidate(op as any, userOpHash, maxCost)).to.be.revertedWith(
-        "GasX: Paymaster is paused",
+      // whenNotPaused modifier uses OpenZeppelin's EnforcedPause() custom error
+      await expect(paymaster.exposedValidate(op as any, userOpHash, maxCost)).to.be.revertedWithCustomError(
+        paymaster,
+        "EnforcedPause",
       );
     });
 
@@ -949,6 +951,104 @@ describe("GasXERC20FeePaymaster", function () {
 
       // No fees should be collected on failure
       expect(balanceAfter).to.equal(balanceBefore);
+    });
+  });
+
+  describe("Emergency ETH Withdrawal", function () {
+    it("Should receive ETH directly", async function () {
+      const { paymaster, owner } = await loadFixture(deployFixture);
+
+      const amount = ethers.parseEther("0.1");
+      await owner.sendTransaction({
+        to: await paymaster.getAddress(),
+        value: amount,
+      });
+
+      const balance = await ethers.provider.getBalance(await paymaster.getAddress());
+      expect(balance).to.equal(amount);
+    });
+
+    it("Should allow owner to withdraw all ETH with amount=0", async function () {
+      const { paymaster, owner, treasury } = await loadFixture(deployFixture);
+
+      const amount = ethers.parseEther("0.1");
+      const paymasterAddr = await paymaster.getAddress();
+
+      // Send ETH to paymaster
+      await owner.sendTransaction({
+        to: paymasterAddr,
+        value: amount,
+      });
+
+      const treasuryBalanceBefore = await ethers.provider.getBalance(treasury.address);
+
+      // Withdraw all with amount=0
+      await paymaster.connect(owner).emergencyWithdrawEth(treasury.address, 0);
+
+      const treasuryBalanceAfter = await ethers.provider.getBalance(treasury.address);
+      const paymasterBalance = await ethers.provider.getBalance(paymasterAddr);
+
+      expect(paymasterBalance).to.equal(0n);
+      expect(treasuryBalanceAfter - treasuryBalanceBefore).to.equal(amount);
+    });
+
+    it("Should allow owner to withdraw specific amount", async function () {
+      const { paymaster, owner, treasury } = await loadFixture(deployFixture);
+
+      const depositAmount = ethers.parseEther("0.5");
+      const withdrawAmount = ethers.parseEther("0.2");
+      const paymasterAddr = await paymaster.getAddress();
+
+      // Send ETH to paymaster
+      await owner.sendTransaction({
+        to: paymasterAddr,
+        value: depositAmount,
+      });
+
+      await paymaster.connect(owner).emergencyWithdrawEth(treasury.address, withdrawAmount);
+
+      const paymasterBalance = await ethers.provider.getBalance(paymasterAddr);
+      expect(paymasterBalance).to.equal(depositAmount - withdrawAmount);
+    });
+
+    it("Should emit EmergencyWithdraw event", async function () {
+      const { paymaster, owner, treasury } = await loadFixture(deployFixture);
+
+      const amount = ethers.parseEther("0.1");
+      const paymasterAddr = await paymaster.getAddress();
+
+      // Send ETH to paymaster
+      await owner.sendTransaction({
+        to: paymasterAddr,
+        value: amount,
+      });
+
+      await expect(paymaster.connect(owner).emergencyWithdrawEth(treasury.address, amount))
+        .to.emit(paymaster, "EmergencyWithdraw")
+        .withArgs(treasury.address, amount);
+    });
+
+    it("Should reject withdrawal to zero address", async function () {
+      const { paymaster, owner } = await loadFixture(deployFixture);
+
+      await expect(paymaster.connect(owner).emergencyWithdrawEth(ethers.ZeroAddress, 0)).to.be.revertedWith(
+        "GasX: Invalid recipient",
+      );
+    });
+
+    it("Should reject withdrawal exceeding balance", async function () {
+      const { paymaster, owner, treasury } = await loadFixture(deployFixture);
+
+      const excessiveAmount = ethers.parseEther("1000");
+      await expect(paymaster.connect(owner).emergencyWithdrawEth(treasury.address, excessiveAmount)).to.be.revertedWith(
+        "GasX: Insufficient balance",
+      );
+    });
+
+    it("Should only allow owner to call emergencyWithdrawEth", async function () {
+      const { paymaster, user, treasury } = await loadFixture(deployFixture);
+
+      await expect(paymaster.connect(user).emergencyWithdrawEth(treasury.address, 0)).to.be.reverted;
     });
   });
 });

@@ -47,6 +47,14 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
     /// @notice Total fees collected (for tracking)
     uint256 public totalFeesCollected;
 
+    // --- Constants ---
+    /// @dev PAYMASTER_DATA_OFFSET is inherited from BasePaymaster (52 bytes):
+    ///      - Paymaster address: 20 bytes
+    ///      - Validation gas limit (uint128): 16 bytes
+    ///      - Post-op gas limit (uint128): 16 bytes
+    uint256 private constant PRICE_SIZE = 32;
+    uint256 private constant EXPIRY_SIZE = 6;
+
     // --- Events ---
 
     event OracleSignerUpdated(address indexed previousSigner, address indexed newSigner);
@@ -55,6 +63,7 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
     event MinFeeUpdated(uint256 previousMinFee, uint256 newMinFee);
     event FeeMarkupUpdated(uint256 previousMarkupBps, uint256 newMarkupBps);
     event TokenRecovered(address indexed token, address indexed to, uint256 amount);
+    event EmergencyWithdraw(address indexed to, uint256 amount);
     // Note: Paused and Unpaused events are inherited from Pausable
 
     // --- Constructor ---
@@ -88,10 +97,7 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
         PackedUserOperation calldata op,
         bytes32 userOpHash,
         uint256 maxCost
-    ) internal view override returns (bytes memory context, uint256 validationData) {
-        // Check if paused
-        require(!paused(), "GasX: Paymaster is paused");
-
+    ) internal view override whenNotPaused returns (bytes memory context, uint256 validationData) {
         // 1. Decode and verify off-chain data
         (uint256 offChainPrice, uint48 expiry, bytes memory signature) = _decodePaymasterData(op.paymasterAndData);
         require(block.timestamp < expiry, "GasX: Signature expired");
@@ -246,6 +252,31 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
         _unpause();
     }
 
+    /**
+     * @notice Emergency withdrawal of Ether accidentally sent to this contract
+     * @dev This only withdraws ETH held directly by the contract, NOT the deposit
+     * with the EntryPoint (use withdrawTo from BasePaymaster for that).
+     * @param _to The address to send the recovered Ether to
+     * @param _amount The amount of Ether to withdraw (0 = withdraw all)
+     */
+    function emergencyWithdrawEth(address payable _to, uint256 _amount) external onlyOwner {
+        require(_to != address(0), "GasX: Invalid recipient");
+        uint256 toWithdraw = _amount == 0 ? address(this).balance : _amount;
+        require(toWithdraw <= address(this).balance, "GasX: Insufficient balance");
+        (bool success, ) = _to.call{ value: toWithdraw }("");
+        require(success, "GasX: ETH transfer failed");
+        emit EmergencyWithdraw(_to, toWithdraw);
+    }
+
+    // --- Receive Function ---
+
+    /**
+     * @notice Allows the contract to receive ETH directly
+     * @dev ETH received this way can be recovered via emergencyWithdrawEth().
+     * Normal paymaster funding should use deposit() or addStake() to fund via EntryPoint.
+     */
+    receive() external payable {}
+
     // --- View Functions ---
 
     /**
@@ -301,12 +332,12 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
     function _decodePaymasterData(
         bytes calldata pData
     ) private pure returns (uint256 price, uint48 expiry, bytes memory signature) {
-        // Skip the static 52 bytes (address + gas limits)
-        bytes calldata data = pData[52:];
-        require(data.length >= 32 + 6, "GasX: Invalid paymaster data length");
+        // Skip the static PAYMASTER_DATA_OFFSET bytes (address + gas limits)
+        bytes calldata data = pData[PAYMASTER_DATA_OFFSET:];
+        require(data.length >= PRICE_SIZE + EXPIRY_SIZE, "GasX: Invalid paymaster data length");
 
-        price = abi.decode(data[:32], (uint256));
-        expiry = uint48(bytes6(data[32:38]));
-        signature = data[38:];
+        price = abi.decode(data[:PRICE_SIZE], (uint256));
+        expiry = uint48(bytes6(data[PRICE_SIZE:PRICE_SIZE + EXPIRY_SIZE]));
+        signature = data[PRICE_SIZE + EXPIRY_SIZE:];
     }
 }
