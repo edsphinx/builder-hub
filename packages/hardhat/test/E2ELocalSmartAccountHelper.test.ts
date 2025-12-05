@@ -15,6 +15,9 @@ import {
   Hex,
   encodeFunctionData,
   PublicClient,
+  Account,
+  Chain,
+  Transport,
   WalletClient,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts"; // Correct import for privateKeyToAccount
@@ -24,7 +27,7 @@ import { SimpleAccountFactory__factory } from "../typechain-types";
 
 describe.skip("E2ELocalSmartAccount Helper Functionality", () => {
   let publicClient: PublicClient;
-  let walletClient: WalletClient;
+  let walletClient: WalletClient<Transport, Chain, Account>;
   let ownerAccount: ReturnType<typeof privateKeyToAccount>;
   let entryPointAddress: Address;
   let simpleAccountFactoryAddress: Address;

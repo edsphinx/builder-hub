@@ -1,4 +1,4 @@
-import { Address, PublicClient, Account, Hex, encodeFunctionData, WalletClient } from "viem";
+import { Address, PublicClient, Account, Hex, encodeFunctionData, WalletClient, Chain, Transport } from "viem";
 import { createLocalSmartAccount } from "./localSmartAccount"; // Import the existing helper
 import { SimpleAccountFactory__factory } from "../typechain-types"; // Needed for ABI
 
@@ -15,7 +15,7 @@ import { SimpleAccountFactory__factory } from "../typechain-types"; // Needed fo
  */
 export async function createE2ELocalSmartAccount(
   client: PublicClient,
-  walletClient: WalletClient,
+  walletClient: WalletClient<Transport, Chain, Account>,
   owner: Account,
   entryPointAddress: Address,
   simpleAccountFactoryAddress: Address,

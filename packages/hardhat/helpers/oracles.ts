@@ -23,14 +23,18 @@ export async function getAggregatorOrDeploy(
     maxDeviationBps,
   );
   const receipt = await tx.wait();
-  if (!receipt) {
-    throw new Error("Transaction receipt is null");
+  if (!receipt || !receipt.logs) {
+    throw new Error("Transaction receipt or logs is null");
   }
 
-  const event = receipt.logs.find(
-    (log): log is EventLog => log instanceof EventLog && log.fragment?.name === "AggregatorCreated",
-  );
-  const aggregatorAddress = event?.args?.aggregator ?? ethers.ZeroAddress;
+  // Find the AggregatorCreated event in logs
+  let aggregatorAddress = ethers.ZeroAddress;
+  for (const log of receipt.logs) {
+    if (log instanceof EventLog && log.fragment && log.fragment.name === "AggregatorCreated") {
+      aggregatorAddress = log.args?.aggregator ?? ethers.ZeroAddress;
+      break;
+    }
+  }
 
   return aggregatorAddress;
 }
