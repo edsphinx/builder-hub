@@ -14,10 +14,14 @@ contract EchidnaMockEntryPoint {
     }
     function depositTo(address) external payable {}
     function withdrawTo(address payable, uint256) external {}
-    function getDepositInfo(address) external pure returns (uint256 deposit, bool staked, uint112 stake, uint32 unstakeDelaySec, uint48 withdrawTime) {
+    function getDepositInfo(
+        address
+    ) external pure returns (uint256 deposit, bool staked, uint112 stake, uint32 unstakeDelaySec, uint48 withdrawTime) {
         return (0, false, 0, 0, 0);
     }
-    function balanceOf(address) external pure returns (uint256) { return 0; }
+    function balanceOf(address) external pure returns (uint256) {
+        return 0;
+    }
     function addStake(uint32) external payable {}
     function unlockStake() external {}
     function withdrawStake(address payable) external {}

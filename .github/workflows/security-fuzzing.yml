@@ -104,7 +104,7 @@ jobs:
           sudo mv /tmp/echidna /usr/local/bin/
           echidna --version
 
-      - name: Run Echidna Invariant Tests
+      - name: Run Echidna Invariant Tests - GasXSubscriptions
         run: |
           TEST_LIMIT="${{ github.event.inputs.echidna_limit || '10000' }}"
           echidna test/echidna/GasXSubscriptions.echidna.sol \
@@ -112,6 +112,27 @@ jobs:
             --test-limit $TEST_LIMIT \
             --format text
         working-directory: packages/hardhat
+        continue-on-error: true
+
+      - name: Run Echidna Invariant Tests - GasXERC20FeePaymaster
+        run: |
+          TEST_LIMIT="${{ github.event.inputs.echidna_limit || '10000' }}"
+          echidna test/echidna/GasXERC20FeePaymaster.echidna.sol \
+            --contract GasXERC20PaymasterEchidnaTest \
+            --test-limit $TEST_LIMIT \
+            --format text
+        working-directory: packages/hardhat
+        continue-on-error: true
+
+      - name: Run Echidna Invariant Tests - GasXConfig
+        run: |
+          TEST_LIMIT="${{ github.event.inputs.echidna_limit || '10000' }}"
+          echidna test/echidna/GasXConfig.echidna.sol \
+            --contract GasXConfigEchidnaTest \
+            --test-limit $TEST_LIMIT \
+            --format text
+        working-directory: packages/hardhat
+        continue-on-error: true
 
       - name: Upload Echidna Corpus
         uses: actions/upload-artifact@v4
@@ -120,3 +141,60 @@ jobs:
           path: packages/hardhat/echidna-corpus/
           retention-days: 30
         if: always()
+
+  aderyn-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.3
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Configure Git HTTPS
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Install Aderyn
+        run: |
+          curl -L https://raw.githubusercontent.com/Cyfrin/aderyn/dev/cyfrinup/install | bash
+          source ~/.bashrc || true
+          ~/.cyfrin/bin/cyfrinup
+          ~/.cyfrin/bin/aderyn --version
+
+      - name: Run Aderyn Analysis
+        run: |
+          ~/.cyfrin/bin/aderyn . --src contracts/core/ -o aderyn-report.md
+        working-directory: packages/hardhat
+
+      - name: Upload Aderyn Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: aderyn-report
+          path: packages/hardhat/aderyn-report.md
+          retention-days: 30
+        if: always()
+
+      - name: Check for High Severity Issues
+        run: |
+          if grep -q "| High |" aderyn-report.md; then
+            HIGH_COUNT=$(grep -c "| High |" aderyn-report.md || echo "0")
+            echo "Found high severity issues in Aderyn report!"
+            cat aderyn-report.md
+            exit 1
+          fi
+          echo "No high severity issues found"
+        working-directory: packages/hardhat

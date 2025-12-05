@@ -31,12 +31,7 @@ import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
  * - Multi-token support (USDC preferred)
  * - Tiered platform fee collection
  */
-contract GasXSubscriptions is
-    Initializable,
-    UUPSUpgradeable,
-    ReentrancyGuardUpgradeable,
-    PausableUpgradeable
-{
+contract GasXSubscriptions is Initializable, UUPSUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable {
     using SafeERC20 for IERC20;
 
     // ────────────────────────────────────────────────
@@ -57,20 +52,20 @@ contract GasXSubscriptions is
     // ────────────────────────────────────────────────
 
     struct Plan {
-        string name;              // "free", "pro", "enterprise"
-        uint256 priceUsdc;        // Price in USDC (6 decimals)
-        uint256 priceEth;         // Alternative price in ETH (wei)
-        uint256 durationDays;     // Subscription duration (30 for monthly, 365 for yearly)
-        uint256 platformFeeBps;   // Platform fee in basis points (500 = 5%)
+        string name; // "free", "pro", "enterprise"
+        uint256 priceUsdc; // Price in USDC (6 decimals)
+        uint256 priceEth; // Alternative price in ETH (wei)
+        uint256 durationDays; // Subscription duration (30 for monthly, 365 for yearly)
+        uint256 platformFeeBps; // Platform fee in basis points (500 = 5%)
         bool active;
     }
 
     struct CreditPack {
         string name;
-        uint256 credits;          // Number of credits
-        uint256 bonusCredits;     // Bonus credits included
-        uint256 priceUsdc;        // Price in USDC (6 decimals)
-        uint256 priceEth;         // Alternative price in ETH (wei)
+        uint256 credits; // Number of credits
+        uint256 bonusCredits; // Bonus credits included
+        uint256 priceUsdc; // Price in USDC (6 decimals)
+        uint256 priceEth; // Alternative price in ETH (wei)
         bool active;
     }
 
@@ -78,7 +73,7 @@ contract GasXSubscriptions is
         uint256 planId;
         uint256 startTime;
         uint256 endTime;
-        address paymentToken;     // Token used for payment (address(0) for ETH)
+        address paymentToken; // Token used for payment (address(0) for ETH)
         bool autoRenew;
     }
 
@@ -150,11 +145,7 @@ contract GasXSubscriptions is
         uint256 endTime
     );
 
-    event SubscriptionRenewed(
-        address indexed user,
-        uint256 indexed planId,
-        uint256 newEndTime
-    );
+    event SubscriptionRenewed(address indexed user, uint256 indexed planId, uint256 newEndTime);
 
     event SubscriptionCanceled(address indexed user);
 
@@ -300,11 +291,7 @@ contract GasXSubscriptions is
      * @param token ERC20 token to pay with (must be supported)
      * @param autoRenew Whether to enable auto-renewal
      */
-    function subscribe(
-        uint256 planId,
-        address token,
-        bool autoRenew
-    ) external nonReentrant whenNotPaused {
+    function subscribe(uint256 planId, address token, bool autoRenew) external nonReentrant whenNotPaused {
         if (planId >= planCount) revert InvalidPlan();
         Plan storage plan = plans[planId];
         if (!plan.active) revert InvalidPlan();
@@ -349,10 +336,7 @@ contract GasXSubscriptions is
      * @param planId ID of the plan to purchase
      * @param autoRenew Whether to enable auto-renewal
      */
-    function subscribeWithEth(
-        uint256 planId,
-        bool autoRenew
-    ) external payable nonReentrant whenNotPaused {
+    function subscribeWithEth(uint256 planId, bool autoRenew) external payable nonReentrant whenNotPaused {
         // ─── CHECKS ─────────────────────────────────────
         if (planId >= planCount) revert InvalidPlan();
         Plan storage plan = plans[planId];
@@ -389,17 +373,17 @@ contract GasXSubscriptions is
 
         // ─── INTERACTIONS ───────────────────────────────
         // External calls AFTER state changes
-        (bool success, ) = treasury.call{value: netAmount}("");
+        (bool success, ) = treasury.call{ value: netAmount }("");
         if (!success) revert TransferFailed();
 
         if (fee > 0) {
-            (success, ) = feeCollector.call{value: fee}("");
+            (success, ) = feeCollector.call{ value: fee }("");
             if (!success) revert TransferFailed();
         }
 
         // Refund excess ETH
         if (msg.value > plan.priceEth) {
-            (success, ) = msg.sender.call{value: msg.value - plan.priceEth}("");
+            (success, ) = msg.sender.call{ value: msg.value - plan.priceEth }("");
             if (!success) revert TransferFailed();
         }
     }
@@ -463,10 +447,7 @@ contract GasXSubscriptions is
      * @param packId ID of the credit package
      * @param token ERC20 token to pay with
      */
-    function purchaseCredits(
-        uint256 packId,
-        address token
-    ) external nonReentrant whenNotPaused {
+    function purchaseCredits(uint256 packId, address token) external nonReentrant whenNotPaused {
         if (packId >= creditPackCount) revert InvalidCreditPack();
         CreditPack storage pack = creditPacks[packId];
         if (!pack.active) revert InvalidCreditPack();
@@ -507,12 +488,12 @@ contract GasXSubscriptions is
 
         // ─── INTERACTIONS ───────────────────────────────
         // External calls AFTER state changes
-        (bool success, ) = treasury.call{value: pack.priceEth}("");
+        (bool success, ) = treasury.call{ value: pack.priceEth }("");
         if (!success) revert TransferFailed();
 
         // Refund excess
         if (msg.value > pack.priceEth) {
-            (success, ) = msg.sender.call{value: msg.value - pack.priceEth}("");
+            (success, ) = msg.sender.call{ value: msg.value - pack.priceEth }("");
             if (!success) revert TransferFailed();
         }
     }
@@ -523,11 +504,7 @@ contract GasXSubscriptions is
      * @param amount Number of credits to use
      * @param reason Description of credit usage
      */
-    function useCredits(
-        address user,
-        uint256 amount,
-        string calldata reason
-    ) external onlyOwner {
+    function useCredits(address user, uint256 amount, string calldata reason) external onlyOwner {
         if (creditBalances[user] < amount) revert InsufficientCredits();
 
         creditBalances[user] -= amount;
@@ -557,11 +534,9 @@ contract GasXSubscriptions is
      * @return planId Current plan ID (0 if none)
      * @return endTime Subscription end timestamp
      */
-    function getSubscriptionStatus(address user)
-        external
-        view
-        returns (bool isActive, uint256 planId, uint256 endTime)
-    {
+    function getSubscriptionStatus(
+        address user
+    ) external view returns (bool isActive, uint256 planId, uint256 endTime) {
         Subscription storage sub = subscriptions[user];
         isActive = sub.endTime > block.timestamp;
         planId = sub.planId;
@@ -756,11 +731,7 @@ contract GasXSubscriptions is
      * @param to Recipient address
      * @param amount Amount to withdraw
      */
-    function emergencyWithdrawToken(
-        address token,
-        address to,
-        uint256 amount
-    ) external onlyOwner {
+    function emergencyWithdrawToken(address token, address to, uint256 amount) external onlyOwner {
         if (to == address(0)) revert ZeroAddress();
         IERC20(token).safeTransfer(to, amount);
         emit EmergencyWithdraw(token, to, amount);
@@ -773,7 +744,7 @@ contract GasXSubscriptions is
      */
     function emergencyWithdrawEth(address to, uint256 amount) external onlyOwner {
         if (to == address(0)) revert ZeroAddress();
-        (bool success, ) = to.call{value: amount}("");
+        (bool success, ) = to.call{ value: amount }("");
         if (!success) revert TransferFailed();
         emit EmergencyWithdraw(address(0), to, amount);
     }

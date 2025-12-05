@@ -32,11 +32,7 @@ contract GasXSubscriptionsEchidna {
         implementation = new GasXSubscriptions();
 
         // Deploy proxy
-        bytes memory initData = abi.encodeWithSelector(
-            GasXSubscriptions.initialize.selector,
-            treasury,
-            address(usdc)
-        );
+        bytes memory initData = abi.encodeWithSelector(GasXSubscriptions.initialize.selector, treasury, address(usdc));
         ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), initData);
         subscriptions = GasXSubscriptions(payable(address(proxy)));
 
@@ -83,7 +79,7 @@ contract GasXSubscriptionsEchidna {
     function echidna_fee_capped() public view returns (bool) {
         uint256 planCount = subscriptions.planCount();
         for (uint256 i = 0; i < planCount; i++) {
-            (,,,,uint256 feeBps,) = subscriptions.plans(i);
+            (, , , , uint256 feeBps, ) = subscriptions.plans(i);
             if (feeBps > subscriptions.MAX_PLATFORM_FEE_BPS()) {
                 return false;
             }
@@ -106,7 +102,7 @@ contract GasXSubscriptionsEchidna {
     // ═══════════════════════════════════════════════════════════════════════════
 
     function echidna_subscription_valid_time() public view returns (bool) {
-        (bool isActive,, uint256 endTime) = subscriptions.getSubscriptionStatus(user);
+        (bool isActive, , uint256 endTime) = subscriptions.getSubscriptionStatus(user);
         // If active, end time must be > now
         // If not active, we don't care about end time (could be past or 0)
         if (isActive) {
@@ -119,7 +115,13 @@ contract GasXSubscriptionsEchidna {
     // STATE-CHANGING FUNCTIONS (for Echidna to call)
     // ═══════════════════════════════════════════════════════════════════════════
 
-    function createPlan(string memory name, uint256 priceUsdc, uint256 priceEth, uint256 durationDays, uint256 feeBps) public {
+    function createPlan(
+        string memory name,
+        uint256 priceUsdc,
+        uint256 priceEth,
+        uint256 durationDays,
+        uint256 feeBps
+    ) public {
         // Bound inputs to prevent obvious failures
         if (bytes(name).length == 0) name = "test";
         if (durationDays == 0) durationDays = 30;

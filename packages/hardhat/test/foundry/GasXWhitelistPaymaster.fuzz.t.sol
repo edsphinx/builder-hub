@@ -18,10 +18,14 @@ contract MockEntryPoint {
     }
     function depositTo(address) external payable {}
     function withdrawTo(address payable, uint256) external {}
-    function getDepositInfo(address) external pure returns (uint256 deposit, bool staked, uint112 stake, uint32 unstakeDelaySec, uint48 withdrawTime) {
+    function getDepositInfo(
+        address
+    ) external pure returns (uint256 deposit, bool staked, uint112 stake, uint32 unstakeDelaySec, uint48 withdrawTime) {
         return (0, false, 0, 0, 0);
     }
-    function balanceOf(address) external pure returns (uint256) { return 0; }
+    function balanceOf(address) external pure returns (uint256) {
+        return 0;
+    }
     function addStake(uint32) external payable {}
     function unlockStake() external {}
     function withdrawStake(address payable) external {}
@@ -56,11 +60,7 @@ contract GasXWhitelistPaymasterFuzzTest is Test {
         config = new GasXConfig(oracleSigner);
 
         // Deploy TestableGasX (inherits from GasXWhitelistPaymaster)
-        paymaster = new TestableGasX(
-            address(entryPoint),
-            address(config),
-            treasury
-        );
+        paymaster = new TestableGasX(address(entryPoint), address(config), treasury);
 
         // Enable dev mode for testing
         paymaster.setDevMode(true);
@@ -257,26 +257,24 @@ contract GasXWhitelistPaymasterFuzzTest is Test {
     // HELPER FUNCTIONS
     // ─────────────────────────────────────────────────────────────────
 
-    function _createBaseUserOp(bytes4 selector, uint256 callGasLimit)
-        internal
-        pure
-        returns (PackedUserOperation memory)
-    {
+    function _createBaseUserOp(
+        bytes4 selector,
+        uint256 callGasLimit
+    ) internal pure returns (PackedUserOperation memory) {
         // Pack accountGasLimits: [verificationGasLimit(16B) | callGasLimit(16B)]
-        bytes32 accountGasLimits = bytes32(
-            (uint256(0) << 128) | uint256(callGasLimit)
-        );
+        bytes32 accountGasLimits = bytes32((uint256(0) << 128) | uint256(callGasLimit));
 
-        return PackedUserOperation({
-            sender: address(0x1234),
-            nonce: 0,
-            initCode: "",
-            callData: abi.encodePacked(selector, bytes28(0)),
-            accountGasLimits: accountGasLimits,
-            preVerificationGas: 0,
-            gasFees: bytes32(0),
-            paymasterAndData: "",
-            signature: ""
-        });
+        return
+            PackedUserOperation({
+                sender: address(0x1234),
+                nonce: 0,
+                initCode: "",
+                callData: abi.encodePacked(selector, bytes28(0)),
+                accountGasLimits: accountGasLimits,
+                preVerificationGas: 0,
+                gasFees: bytes32(0),
+                paymasterAndData: "",
+                signature: ""
+            });
     }
 }
