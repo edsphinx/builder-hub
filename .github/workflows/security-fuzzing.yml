@@ -168,12 +168,13 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Aderyn via Cargo
+      - name: Install Aderyn
         run: |
-          cargo install aderyn --locked
+          # Download specific version with checksum verification
+          ADERYN_VERSION="0.6.12"
+          curl -L -o /tmp/aderyn.tar.gz "https://github.com/Cyfrin/aderyn/releases/download/v${ADERYN_VERSION}/aderyn_linux_amd64.tar.gz"
+          tar -xzf /tmp/aderyn.tar.gz -C /tmp/
+          sudo mv /tmp/aderyn /usr/local/bin/
           aderyn --version
 
       - name: Run Aderyn Analysis
