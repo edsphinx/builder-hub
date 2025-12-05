@@ -168,16 +168,17 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Install Aderyn
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: Install Aderyn via Cargo
         run: |
-          curl -L https://raw.githubusercontent.com/Cyfrin/aderyn/dev/cyfrinup/install | bash
-          source ~/.bashrc || true
-          ~/.cyfrin/bin/cyfrinup
-          ~/.cyfrin/bin/aderyn --version
+          cargo install aderyn --locked
+          aderyn --version
 
       - name: Run Aderyn Analysis
         run: |
-          ~/.cyfrin/bin/aderyn . --src contracts/core/ -o aderyn-report.md
+          aderyn . --src contracts/core/ -o aderyn-report.md
         working-directory: packages/hardhat
 
       - name: Upload Aderyn Report
