@@ -18,6 +18,7 @@ import { PackedUserOperation, UserOperationLib } from "@account-abstraction/cont
 import "@account-abstraction/contracts/core/BasePaymaster.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 interface IGasXConfig {
     function oracleSigner() external view returns (address);
@@ -36,7 +37,7 @@ interface IGasXConfig {
  * be optionally required for more dynamic, time-sensitive approvals. The contract
  * is designed with a storage gap for future upgradeability.
  */
-contract GasXWhitelistPaymaster is BasePaymaster {
+contract GasXWhitelistPaymaster is BasePaymaster, Pausable {
     using UserOperationLib for PackedUserOperation; // ⇐ exposes unpack*() helpers
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
@@ -57,7 +58,8 @@ contract GasXWhitelistPaymaster is BasePaymaster {
     mapping(bytes4 => bool) public allowedSelectors; // fast O(1) lookup for function selectors ok
 
     /// @notice If true, oracle signature validation is bypassed. For development and testing ONLY.
-    bool public isDevMode = true;
+    /// @dev Defaults to false for production safety. Must be explicitly enabled for dev/test.
+    bool public isDevMode = false;
 
     /// @notice The deployment environment context for this contract.
     enum Environment {
@@ -89,6 +91,15 @@ contract GasXWhitelistPaymaster is BasePaymaster {
         uint256 gasUsed, // The actual gas consumed by the operation.
         uint256 feeWei // The total fee in Wei paid by the paymaster (gasUsed * gasPrice).
     );
+
+    /// @notice Emitted when gas or USD limits are updated.
+    event LimitsUpdated(uint256 maxGas, uint256 maxUsd);
+
+    /// @notice Emitted when a function selector's whitelist status changes.
+    event SelectorUpdated(bytes4 indexed selector, bool allowed);
+
+    /// @notice Emitted when developer mode is toggled.
+    event DevModeChanged(bool enabled);
 
     // ----------------------------------------------------------------------
     // ░░  CONSTRUCTOR
@@ -137,6 +148,9 @@ contract GasXWhitelistPaymaster is BasePaymaster {
         bytes32 opHash,
         uint256 /*maxCost*/
     ) internal view override returns (bytes memory context, uint256 validationData) {
+        // (0) Pause Check - prevent new sponsorships when paused
+        require(!paused(), "GasX: Paymaster is paused");
+
         // (1) Selector Whitelist Check
         require(allowedSelectors[_firstSelector(op.callData)], "GasX: Disallowed function");
 
@@ -215,6 +229,7 @@ contract GasXWhitelistPaymaster is BasePaymaster {
      */
     function setLimit(uint256 gas, uint256 usd) external onlyOwner {
         limits = Limits(gas, usd);
+        emit LimitsUpdated(gas, usd);
     }
 
     /**
@@ -225,6 +240,7 @@ contract GasXWhitelistPaymaster is BasePaymaster {
      */
     function setSelector(bytes4 sel, bool allowed) external onlyOwner {
         allowedSelectors[sel] = allowed;
+        emit SelectorUpdated(sel, allowed);
     }
 
     /**
@@ -234,6 +250,23 @@ contract GasXWhitelistPaymaster is BasePaymaster {
      */
     function setDevMode(bool enabled) external onlyOwner {
         isDevMode = enabled;
+        emit DevModeChanged(enabled);
+    }
+
+    /**
+     * @notice Pauses the paymaster, preventing new sponsorships.
+     * @custom:security onlyOwner
+     */
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /**
+     * @notice Unpauses the paymaster, allowing sponsorships again.
+     * @custom:security onlyOwner
+     */
+    function unpause() external onlyOwner {
+        _unpause();
     }
 
     // ────────────────────────────────────────────────

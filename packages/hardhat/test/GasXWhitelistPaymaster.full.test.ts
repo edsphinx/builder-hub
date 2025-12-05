@@ -60,6 +60,8 @@ describe("GasXWhitelistPaymaster", () => {
 
     // Set default gas limit
     await paymaster.setLimit(500, 0);
+    // Enable dev mode for testing (default is now false for production safety)
+    await paymaster.setDevMode(true);
   });
 
   describe("1. Deployment & configuration", () => {
@@ -449,6 +451,198 @@ describe("GasXWhitelistPaymaster", () => {
       const limits = [ethers.parseUnits("1", 6), ethers.parseUnits("2", 6)];
 
       await expect(config.bulkSetMaxUsd(selectors, limits)).to.be.revertedWith("length mismatch");
+    });
+  });
+
+  describe("8. PostOp and Analytics", () => {
+    it("should emit GasSponsored event in postOp", async () => {
+      const gasCost = 21000n;
+      const feePerGas = 1000000000n; // 1 gwei
+
+      await expect(paymaster.exposedPostOp("0x", gasCost, feePerGas))
+        .to.emit(paymaster, "GasSponsored")
+        .withArgs(deployer.address, gasCost, gasCost * feePerGas);
+    });
+
+    it("should calculate correct fee in GasSponsored event", async () => {
+      const gasCost = 100000n;
+      const feePerGas = 50000000000n; // 50 gwei
+      const expectedFee = gasCost * feePerGas;
+
+      await expect(paymaster.exposedPostOp("0x", gasCost, feePerGas))
+        .to.emit(paymaster, "GasSponsored")
+        .withArgs(deployer.address, gasCost, expectedFee);
+    });
+  });
+
+  describe("9. Environment and View Functions", () => {
+    it("should return isDev as true by default", async () => {
+      assert.isTrue(await paymaster.isDev(), "isDev should be true by default");
+    });
+
+    it("should return isProd as false for non-production environment", async () => {
+      assert.isFalse(await paymaster.isProd(), "isProd should be false for dev environment");
+    });
+
+    it("should return correct treasury address", async () => {
+      const treasuryAddr = await paymaster.treasury();
+      assert.equal(treasuryAddr, deployer.address, "Treasury should match deployer");
+    });
+
+    it("should return correct config address", async () => {
+      const configAddr = await paymaster.config();
+      assert.equal(configAddr, await config.getAddress(), "Config address should match");
+    });
+
+    it("should return correct limits after setting", async () => {
+      await paymaster.setLimit(500000, 100);
+      const limits = await paymaster.limits();
+      assert.equal(limits.maxGas, 500000n, "maxGas should be 500000");
+      assert.equal(limits.maxUsd, 100n, "maxUsd should be 100");
+    });
+  });
+
+  describe("10. Pausable Functionality", () => {
+    it("should start unpaused", async () => {
+      assert.isFalse(await paymaster.paused(), "Should not be paused initially");
+    });
+
+    it("should allow owner to pause", async () => {
+      await paymaster.pause();
+      assert.isTrue(await paymaster.paused(), "Should be paused after pause()");
+    });
+
+    it("should allow owner to unpause", async () => {
+      await paymaster.pause();
+      await paymaster.unpause();
+      assert.isFalse(await paymaster.paused(), "Should be unpaused after unpause()");
+    });
+
+    it("should reject validation when paused", async () => {
+      const sel = ethers.zeroPadValue("0x1234", 4);
+      await paymaster.setSelector(sel, true);
+      await paymaster.pause();
+
+      const op = {
+        ...opTemplate,
+        sender: deployer,
+        callData: sel + "cafecafe",
+      };
+
+      await expect(paymaster.exposedValidate(op as any, ethers.ZeroHash, 0n)).to.be.revertedWith(
+        "GasX: Paymaster is paused",
+      );
+    });
+
+    it("should only allow owner to pause", async () => {
+      const [, attacker] = await ethers.getSigners();
+      await expect(paymaster.connect(attacker).pause()).to.be.reverted;
+    });
+
+    it("should only allow owner to unpause", async () => {
+      const [, attacker] = await ethers.getSigners();
+      await paymaster.pause();
+      await expect(paymaster.connect(attacker).unpause()).to.be.reverted;
+    });
+  });
+
+  describe("11. Admin Events", () => {
+    it("should emit LimitsUpdated when setting limits", async () => {
+      await expect(paymaster.setLimit(100000, 50)).to.emit(paymaster, "LimitsUpdated").withArgs(100000, 50);
+    });
+
+    it("should emit SelectorUpdated when adding selector", async () => {
+      const sel = "0xaabbccdd";
+      await expect(paymaster.setSelector(sel, true)).to.emit(paymaster, "SelectorUpdated").withArgs(sel, true);
+    });
+
+    it("should emit SelectorUpdated when removing selector", async () => {
+      const sel = "0xaabbccdd";
+      await paymaster.setSelector(sel, true);
+      await expect(paymaster.setSelector(sel, false)).to.emit(paymaster, "SelectorUpdated").withArgs(sel, false);
+    });
+
+    it("should emit DevModeChanged when toggling dev mode", async () => {
+      await expect(paymaster.setDevMode(false)).to.emit(paymaster, "DevModeChanged").withArgs(false);
+
+      await expect(paymaster.setDevMode(true)).to.emit(paymaster, "DevModeChanged").withArgs(true);
+    });
+
+    it("should emit Paused event when pausing", async () => {
+      await expect(paymaster.pause()).to.emit(paymaster, "Paused").withArgs(deployer.address);
+    });
+
+    it("should emit Unpaused event when unpausing", async () => {
+      await paymaster.pause();
+      await expect(paymaster.unpause()).to.emit(paymaster, "Unpaused").withArgs(deployer.address);
+    });
+  });
+
+  describe("12. Edge Cases and Security", () => {
+    it("should handle zero gas cost in postOp", async () => {
+      await expect(paymaster.exposedPostOp("0x", 0n, 1000000000n))
+        .to.emit(paymaster, "GasSponsored")
+        .withArgs(deployer.address, 0n, 0n);
+    });
+
+    it("should handle zero fee per gas in postOp", async () => {
+      await expect(paymaster.exposedPostOp("0x", 21000n, 0n))
+        .to.emit(paymaster, "GasSponsored")
+        .withArgs(deployer.address, 21000n, 0n);
+    });
+
+    it("should reject invalid paymaster data length for expiry", async () => {
+      const sel = ethers.zeroPadValue("0x1234", 4);
+      await paymaster.setSelector(sel, true);
+
+      // Pack with invalid length (less than 6 bytes after 52-byte header)
+      const pack = ethers.concat([
+        ethers.zeroPadValue(await paymaster.getAddress(), 20),
+        ethers.zeroPadValue(ethers.toBeHex(0), 16),
+        ethers.zeroPadValue(ethers.toBeHex(0), 16),
+        "0x1234", // Only 2 bytes, need 6
+      ]);
+
+      const op = {
+        ...opTemplate,
+        sender: deployer,
+        callData: sel + "dead",
+        paymasterAndData: pack,
+      };
+
+      await expect(paymaster.exposedValidate(op as any, ethers.ZeroHash, 0n)).to.be.revertedWith(
+        "invalid paymaster data length for expiry",
+      );
+    });
+
+    it("should reject zero recovered signer (invalid signature)", async () => {
+      await paymaster.setDevMode(false);
+      const sel = ethers.zeroPadValue("0x1234", 4);
+      await paymaster.setSelector(sel, true);
+
+      const block = await ethers.provider.getBlock("latest");
+      const expiry = BigInt(block!.timestamp + 60);
+
+      // Malformed signature that could recover to zero address
+      const malformedSig = ethers.zeroPadValue("0x00", 65);
+
+      const pack = ethers.concat([
+        ethers.zeroPadValue(await paymaster.getAddress(), 20),
+        ethers.zeroPadValue(ethers.toBeHex(0), 16),
+        ethers.zeroPadValue(ethers.toBeHex(0), 16),
+        ethers.zeroPadValue(ethers.toBeHex(expiry), 6),
+        malformedSig,
+      ]);
+
+      const op = {
+        ...opTemplate,
+        sender: deployer,
+        callData: sel + "dead",
+        paymasterAndData: pack,
+      };
+
+      // Should revert with either Invalid signature or ECDSAInvalidSignature
+      await expect(paymaster.exposedValidate(op as any, ethers.ZeroHash, 0n)).to.be.reverted;
     });
   });
 });
