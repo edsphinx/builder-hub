@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { AggregatorFactory } from "../typechain-types";
-import { Addressable } from "ethers";
+import { Addressable, EventLog } from "ethers";
 
 export async function getAggregatorOrDeploy(
   factoryAddress: string,
@@ -23,8 +23,18 @@ export async function getAggregatorOrDeploy(
     maxDeviationBps,
   );
   const receipt = await tx.wait();
-  const event = receipt.logs.find(log => log.fragment?.name === "AggregatorCreated");
-  const aggregatorAddress = event?.args?.aggregator ?? ethers.ZeroAddress;
+  if (!receipt || !receipt.logs) {
+    throw new Error("Transaction receipt or logs is null");
+  }
+
+  // Find the AggregatorCreated event in logs
+  let aggregatorAddress = ethers.ZeroAddress;
+  for (const log of receipt.logs) {
+    if (log instanceof EventLog && log.fragment && log.fragment.name === "AggregatorCreated") {
+      aggregatorAddress = log.args?.aggregator ?? ethers.ZeroAddress;
+      break;
+    }
+  }
 
   return aggregatorAddress;
 }

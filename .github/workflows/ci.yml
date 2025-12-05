@@ -63,6 +63,38 @@ jobs:
         run: yarn test
         working-directory: packages/hardhat
 
+      - name: 📊 Run Test Coverage
+        run: yarn test:coverage
+        working-directory: packages/hardhat
+
+      - name: 📈 Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: packages/hardhat/coverage/
+          retention-days: 7
+
+      - name: ✅ Check GasXERC20FeePaymaster Coverage
+        run: |
+          # Extract coverage for GasXERC20FeePaymaster
+          STMT_COV=$(cat coverage/coverage-final.json | node -e "
+            const data = require('fs').readFileSync('/dev/stdin', 'utf8');
+            const json = JSON.parse(data);
+            const file = Object.keys(json).find(k => k.includes('GasXERC20FeePaymaster.sol'));
+            if (!file) { console.log('0'); process.exit(0); }
+            const f = json[file];
+            const stmts = Object.values(f.s);
+            const covered = stmts.filter(v => v > 0).length;
+            console.log(Math.round((covered / stmts.length) * 100));
+          ")
+          echo "GasXERC20FeePaymaster Statement Coverage: ${STMT_COV}%"
+          if [ "$STMT_COV" -lt 95 ]; then
+            echo "❌ Coverage below 95% threshold!"
+            exit 1
+          fi
+          echo "✅ Coverage meets threshold"
+        working-directory: packages/hardhat
+
       - name: 🔐 Verify secrets for public network tests
         env:
           # Necesita los mismos secretos que el paso de prueba
@@ -80,3 +112,55 @@ jobs:
         run: |
           yarn test --network scrollSepolia
         working-directory: packages/hardhat
+
+  slither:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20.19.3
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.3
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Configure Git HTTPS
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Load fallback .env
+        run: cp packages/hardhat/.env.example packages/hardhat/.env
+
+      - name: Compile contracts
+        run: yarn compile
+        working-directory: packages/hardhat
+
+      - name: Run Slither Analysis
+        uses: crytic/slither-action@v0.4.0
+        id: slither
+        with:
+          target: packages/hardhat
+          slither-config: packages/hardhat/slither.config.json
+          fail-on: high
+          sarif: results.sarif
+        continue-on-error: true
+
+      - name: Upload Slither SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+        if: always()
+
+      - name: Check Slither Results
+        run: |
+          if [ "${{ steps.slither.outcome }}" == "failure" ]; then
+            echo "Slither found high severity issues!"
+            exit 1
+          fi
+          echo "Slither analysis passed"

@@ -6,6 +6,13 @@ import { parseUnits, Wallet } from "ethers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("MultiOracleAggregator", () => {
+  // Skip on non-local networks - this test deploys mock contracts
+  before(function () {
+    if (network.name !== "localhost" && network.name !== "hardhat") {
+      console.log(`[INFO] Skipping MultiOracleAggregator tests - designed for local networks only.`);
+      this.skip();
+    }
+  });
   async function deployAggregatorFixture() {
     const [owner] = await ethers.getSigners();
     const attacker = new Wallet(ethers.Wallet.createRandom().privateKey, ethers.provider);
