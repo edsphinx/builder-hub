@@ -7,26 +7,22 @@
     "fork": "MAINNET_FORKING_ENABLED=true hardhat node --network hardhat --no-deploy",
     "compile": "hardhat compile",
     "clean": "hardhat clean",
-
     "// 2. DEPLOYMENT & VERIFICATION ---------": "",
     "deploy": "hardhat deploy --network ${NETWORK:-hardhat}",
     "verify": "hardhat etherscan-verify",
     "hardhat-verify": "hardhat verify",
     "check:preflight": "ts-node scripts/pre_flight_check.ts",
     "verify-key": "ts-node helpers/verify-pk-key.ts",
-
     "// 3. PROTOCOL OPERATIONS -------------": "",
     "op:fund-paymaster": "hardhat run scripts/fundPaymaster.ts --network ${NETWORK:-hardhat}",
     "op:upgrade-aggregator": "hardhat run scripts/operations/upgrade_multiaggregator_v2.ts --network ${NETWORK:-hardhat}",
     "op:set-usd-limits": "hardhat run scripts/loadAndSetMaxUsd.ts --network ${NETWORK:-hardhat}",
-    
     "// 4. CODE QUALITY & MAINTENANCE --------": "",
     "format": "prettier --write './**/*.(ts|sol)'",
     "lint": "eslint",
     "lint-staged": "eslint",
     "check-types": "tsc --noEmit --incremental",
     "flatten": "hardhat flatten",
-  
     "// 5. TESTING ---------------------------": "",
     "test": "REPORT_GAS=true hardhat test",
     "test:coverage": "hardhat coverage",
@@ -35,7 +31,6 @@
     "testlocal:file": "REPORT_GAS=true hardhat test --network hardhat",
     "test:smart-account-creation": "REPORT_GAS=true hardhat test --network ${NETWORK:-hardhat} test/SmartAccount.test.ts",
     "test:sponsorship-verifications": "REPORT_GAS=true hardhat test --network ${NETWORK:-hardhat} test/SponsorshipVerifications.test.ts",
-    
     "// 6. ACCOUNT MANAGEMENT --------------": "",
     "account": "hardhat run scripts/listAccount.ts",
     "account:generate": "hardhat run scripts/generateAccount.ts",

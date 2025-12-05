@@ -5,8 +5,10 @@ import { BasePaymaster } from "@account-abstraction/contracts/core/BasePaymaster
 import { UserOperationLib, PackedUserOperation } from "@account-abstraction/contracts/core/UserOperationLib.sol";
 import { IEntryPoint } from "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { MultiOracleAggregator } from "../oracles/MultiOracleAggregator.sol";
 
 /**
@@ -16,11 +18,14 @@ import { MultiOracleAggregator } from "../oracles/MultiOracleAggregator.sol";
  * @dev    This contract enables users to transact without holding the native gas token (ETH). It uses an off-chain
  * signature for real-time price data and an on-chain oracle for security verification. The token addresses
  * (for the fee and for pricing) are configured at deployment time, making the contract chain-agnostic.
+ *
+ * x402 Integration Ready: This paymaster can be used with x402 payment protocol for micropayments.
  */
-contract GasXERC20FeePaymaster is BasePaymaster {
+contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
     using UserOperationLib for PackedUserOperation;
+    using SafeERC20 for IERC20;
 
     // --- State Variables ---
 
@@ -35,11 +40,21 @@ contract GasXERC20FeePaymaster is BasePaymaster {
 
     /// @notice The maximum allowed deviation between the off-chain signed price and the on-chain oracle price.
     uint256 public constant PRICE_DEVIATION_BPS = 500; // 5%
+    /// @notice Minimum fee in fee token units to cover operational costs (e.g., 0.01 USDC = 10000 for 6 decimals)
+    uint256 public minFee;
+    /// @notice Fee markup in basis points (e.g., 100 = 1% markup)
+    uint256 public feeMarkupBps;
+    /// @notice Total fees collected (for tracking)
+    uint256 public totalFeesCollected;
 
     // --- Events ---
 
     event OracleSignerUpdated(address indexed newSigner);
     event FeeCharged(bytes32 indexed userOpHash, address indexed user, uint256 feeAmount);
+    event FeesWithdrawn(address indexed to, uint256 amount);
+    event MinFeeUpdated(uint256 newMinFee);
+    event FeeMarkupUpdated(uint256 newMarkupBps);
+    // Note: Paused and Unpaused events are inherited from Pausable
 
     // --- Constructor ---
 
@@ -48,17 +63,22 @@ contract GasXERC20FeePaymaster is BasePaymaster {
         address _feeToken,
         address _priceQuoteBaseToken,
         address _priceOracle,
-        address _initialOracleSigner
+        address _initialOracleSigner,
+        uint256 _minFee,
+        uint256 _feeMarkupBps
     ) BasePaymaster(_entryPoint) {
         require(_feeToken != address(0), "GasX: Invalid feeToken address");
         require(_priceQuoteBaseToken != address(0), "GasX: Invalid priceQuoteBaseToken address");
         require(_priceOracle != address(0), "GasX: Invalid priceOracle address");
         require(_initialOracleSigner != address(0), "GasX: Invalid initialOracleSigner address");
+        require(_feeMarkupBps <= 1000, "GasX: Markup too high"); // Max 10%
         _transferOwnership(msg.sender);
         feeToken = _feeToken;
         priceQuoteBaseToken = _priceQuoteBaseToken;
         priceOracle = MultiOracleAggregator(_priceOracle);
         oracleSigner = _initialOracleSigner;
+        minFee = _minFee;
+        feeMarkupBps = _feeMarkupBps;
     }
 
     // --- Validation Logic ---
@@ -68,33 +88,55 @@ contract GasXERC20FeePaymaster is BasePaymaster {
         bytes32 userOpHash,
         uint256 maxCost
     ) internal view override returns (bytes memory context, uint256 validationData) {
-        // 1. Decode off-chain data from paymasterAndData
-        (uint256 offChainPrice, uint48 expiry, bytes memory signature) = _decodePaymasterData(op.paymasterAndData);
+        // Check if paused
+        require(!paused(), "GasX: Paymaster is paused");
 
-        // 2. Verify expiry
+        // 1. Decode and verify off-chain data
+        (uint256 offChainPrice, uint48 expiry, bytes memory signature) = _decodePaymasterData(op.paymasterAndData);
         require(block.timestamp < expiry, "GasX: Signature expired");
 
-        // 3. Verify off-chain price signature
+        // 2. Verify signature
+        _verifySignature(userOpHash, offChainPrice, expiry, signature);
+
+        // 3. Get and verify on-chain price
+        uint256 onChainPrice = _verifyAndGetPrice(offChainPrice);
+
+        // 4. Calculate and verify fee
+        uint256 requiredFee = _calculateFee(maxCost, onChainPrice);
+        _verifyUserFunds(op.sender, requiredFee);
+
+        // 5. Pack context for postOp
+        context = abi.encode(onChainPrice, op.sender, userOpHash);
+        return (context, 0);
+    }
+
+    function _verifySignature(
+        bytes32 userOpHash,
+        uint256 offChainPrice,
+        uint48 expiry,
+        bytes memory signature
+    ) internal view {
         bytes32 priceHash = keccak256(abi.encode(userOpHash, offChainPrice, expiry));
         bytes32 ethSignedHash = MessageHashUtils.toEthSignedMessageHash(priceHash);
         require(ECDSA.recover(ethSignedHash, signature) == oracleSigner, "GasX: Invalid signature");
+    }
 
-        // 4. Security Check: Verify price against on-chain oracle
-        uint256 onChainPrice = priceOracle.computeQuoteAverage(1e18, priceQuoteBaseToken, feeToken);
+    function _verifyAndGetPrice(uint256 offChainPrice) internal view returns (uint256 onChainPrice) {
+        onChainPrice = priceOracle.computeQuoteAverage(1e18, priceQuoteBaseToken, feeToken);
         require(onChainPrice > 0, "GasX: Invalid on-chain price");
         uint256 diff = onChainPrice > offChainPrice ? onChainPrice - offChainPrice : offChainPrice - onChainPrice;
         require((diff * 10_000) / onChainPrice <= PRICE_DEVIATION_BPS, "GasX: Price deviation too high");
+    }
 
-        // 5. Calculate required fee and pack context for _postOp
-        uint256 requiredFee = (maxCost * onChainPrice) / 1e18;
+    function _calculateFee(uint256 gasCost, uint256 price) internal view returns (uint256 fee) {
+        uint256 baseFee = (gasCost * price) / 1e18;
+        fee = baseFee + (baseFee * feeMarkupBps) / 10_000;
+        if (fee < minFee) fee = minFee;
+    }
 
-        // Ensure the user has enough allowance
-        require(IERC20(feeToken).allowance(op.sender, address(this)) >= requiredFee, "GasX: Insufficient allowance");
-
-        // Pass the calculated on-chain price and the sender to postOp via context
-        context = abi.encode(onChainPrice, op.sender);
-
-        return (context, 0);
+    function _verifyUserFunds(address user, uint256 requiredFee) internal view {
+        require(IERC20(feeToken).allowance(user, address(this)) >= requiredFee, "GasX: Insufficient allowance");
+        require(IERC20(feeToken).balanceOf(user) >= requiredFee, "GasX: Insufficient balance");
     }
 
     // --- Post-Op Payment ---
@@ -102,26 +144,138 @@ contract GasXERC20FeePaymaster is BasePaymaster {
     function _postOp(PostOpMode mode, bytes calldata context, uint256 actualGasCost, uint256) internal override {
         if (mode != PostOpMode.opSucceeded) return;
 
-        // Decode the price and sender address from the context set in the validation phase
-        (uint256 onChainPrice, address sender) = abi.decode(context, (uint256, address));
+        // Decode the price, sender address, and userOpHash from the context
+        (uint256 onChainPrice, address sender, bytes32 userOpHash) = abi.decode(context, (uint256, address, bytes32));
 
-        // Recalculate the fee with the actual gas cost to be fair to the user
-        uint256 actualFee = (actualGasCost * onChainPrice) / 1e18;
+        // Recalculate the fee with the actual gas cost
+        uint256 baseFee = (actualGasCost * onChainPrice) / 1e18;
+        uint256 markup = (baseFee * feeMarkupBps) / 10_000;
+        uint256 actualFee = baseFee + markup;
 
-        // Collect the fee
-        bool success = IERC20(feeToken).transferFrom(sender, address(this), actualFee);
-        require(success, "GasX: ERC20 transfer failed");
+        // Apply minimum fee
+        if (actualFee < minFee) {
+            actualFee = minFee;
+        }
 
-        // It's good practice to get the userOpHash here if possible for the event
-        // Note: Accessing userOpHash in postOp is complex, this is a simplification
-        emit FeeCharged(bytes32(0), sender, actualFee);
+        // Collect the fee using SafeERC20
+        IERC20(feeToken).safeTransferFrom(sender, address(this), actualFee);
+
+        // Update tracking
+        totalFeesCollected += actualFee;
+
+        emit FeeCharged(userOpHash, sender, actualFee);
     }
 
     // --- Admin Functions ---
 
+    /**
+     * @notice Update the oracle signer address
+     * @param _newSigner New signer address
+     */
     function setOracleSigner(address _newSigner) external onlyOwner {
+        require(_newSigner != address(0), "GasX: Invalid signer address");
         oracleSigner = _newSigner;
         emit OracleSignerUpdated(_newSigner);
+    }
+
+    /**
+     * @notice Update the minimum fee
+     * @param _newMinFee New minimum fee in fee token units
+     */
+    function setMinFee(uint256 _newMinFee) external onlyOwner {
+        minFee = _newMinFee;
+        emit MinFeeUpdated(_newMinFee);
+    }
+
+    /**
+     * @notice Update the fee markup
+     * @param _newMarkupBps New markup in basis points (max 1000 = 10%)
+     */
+    function setFeeMarkup(uint256 _newMarkupBps) external onlyOwner {
+        require(_newMarkupBps <= 1000, "GasX: Markup too high");
+        feeMarkupBps = _newMarkupBps;
+        emit FeeMarkupUpdated(_newMarkupBps);
+    }
+
+    /**
+     * @notice Withdraw accumulated ERC20 fees to a specified address
+     * @param _to Recipient address
+     * @param _amount Amount to withdraw (0 = all)
+     */
+    function withdrawFees(address _to, uint256 _amount) external onlyOwner {
+        require(_to != address(0), "GasX: Invalid recipient");
+        uint256 balance = IERC20(feeToken).balanceOf(address(this));
+        uint256 withdrawAmount = _amount == 0 ? balance : _amount;
+        require(withdrawAmount <= balance, "GasX: Insufficient balance");
+
+        IERC20(feeToken).safeTransfer(_to, withdrawAmount);
+        emit FeesWithdrawn(_to, withdrawAmount);
+    }
+
+    /**
+     * @notice Withdraw any ERC20 token (for recovering stuck tokens)
+     * @param _token Token address
+     * @param _to Recipient address
+     * @param _amount Amount to withdraw
+     */
+    function withdrawToken(address _token, address _to, uint256 _amount) external onlyOwner {
+        require(_to != address(0), "GasX: Invalid recipient");
+        IERC20(_token).safeTransfer(_to, _amount);
+    }
+
+    /**
+     * @notice Pause the paymaster (emergency stop)
+     */
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /**
+     * @notice Unpause the paymaster
+     */
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    // --- View Functions ---
+
+    /**
+     * @notice Get the current fee token balance held by this contract
+     */
+    function getFeeBalance() external view returns (uint256) {
+        return IERC20(feeToken).balanceOf(address(this));
+    }
+
+    /**
+     * @notice Estimate the fee for a given gas cost
+     * @param _gasCost Estimated gas cost in wei
+     * @return estimatedFee The estimated fee in fee token units
+     */
+    function estimateFee(uint256 _gasCost) external view returns (uint256 estimatedFee) {
+        uint256 onChainPrice = priceOracle.computeQuoteAverage(1e18, priceQuoteBaseToken, feeToken);
+        uint256 baseFee = (_gasCost * onChainPrice) / 1e18;
+        uint256 markup = (baseFee * feeMarkupBps) / 10_000;
+        estimatedFee = baseFee + markup;
+        if (estimatedFee < minFee) {
+            estimatedFee = minFee;
+        }
+    }
+
+    /**
+     * @notice Check if an address has sufficient allowance and balance
+     * @param _user User address
+     * @param _estimatedGasCost Estimated gas cost
+     * @return hasAllowance Whether user has approved enough
+     * @return hasBalance Whether user has enough balance
+     * @return requiredAmount The required fee amount
+     */
+    function checkUserReady(
+        address _user,
+        uint256 _estimatedGasCost
+    ) external view returns (bool hasAllowance, bool hasBalance, uint256 requiredAmount) {
+        requiredAmount = this.estimateFee(_estimatedGasCost);
+        hasAllowance = IERC20(feeToken).allowance(_user, address(this)) >= requiredAmount;
+        hasBalance = IERC20(feeToken).balanceOf(_user) >= requiredAmount;
     }
 
     // --- Helper Functions ---
