@@ -1,4 +1,4 @@
-import { Address, PublicClient, Account, Hex, encodeFunctionData } from "viem";
+import { Address, PublicClient, Account, Hex, encodeFunctionData, WalletClient } from "viem";
 import { createLocalSmartAccount } from "./localSmartAccount"; // Import the existing helper
 import { SimpleAccountFactory__factory } from "../typechain-types"; // Needed for ABI
 
@@ -7,6 +7,7 @@ import { SimpleAccountFactory__factory } from "../typechain-types"; // Needed fo
  * extending the base functionality from createLocalSmartAccount with
  * methods expected by SmartAccountClient (encodeCalls, getFactoryArgs).
  * @param client The Viem PublicClient.
+ * @param walletClient The Viem WalletClient for write operations.
  * @param owner The owner account.
  * @param entryPointAddress The EntryPoint contract address.
  * @param simpleAccountFactoryAddress The SimpleAccountFactory contract address.
@@ -14,12 +15,19 @@ import { SimpleAccountFactory__factory } from "../typechain-types"; // Needed fo
  */
 export async function createE2ELocalSmartAccount(
   client: PublicClient,
+  walletClient: WalletClient,
   owner: Account,
   entryPointAddress: Address,
   simpleAccountFactoryAddress: Address,
 ) {
   // Use the existing, stable helper to get the base account
-  const baseAccount = await createLocalSmartAccount(client, owner, entryPointAddress, simpleAccountFactoryAddress);
+  const baseAccount = await createLocalSmartAccount(
+    client,
+    walletClient,
+    owner,
+    entryPointAddress,
+    simpleAccountFactoryAddress,
+  );
 
   // Simulate encodeCalls for local testing
   const encodeCalls = async (calls: { to: Address; value?: bigint; data?: Hex }[]): Promise<Hex> => {

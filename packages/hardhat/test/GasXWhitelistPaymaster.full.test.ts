@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 import { assert, expect } from "chai";
 import {
   EntryPoint,
@@ -11,6 +11,13 @@ import {
 import type { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("GasXWhitelistPaymaster", () => {
+  // Skip on non-local networks - this test deploys contracts locally
+  before(function () {
+    if (network.name !== "localhost" && network.name !== "hardhat") {
+      console.log(`[INFO] Skipping GasXWhitelistPaymaster tests - designed for local networks only.`);
+      this.skip();
+    }
+  });
   let deployer: SignerWithAddress;
   let entryPoint: EntryPoint;
   let paymaster: TestableGasX;

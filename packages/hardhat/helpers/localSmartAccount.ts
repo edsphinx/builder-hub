@@ -1,8 +1,9 @@
-import { Address, PublicClient, Account, getContract } from "viem";
+import { Address, PublicClient, Account, getContract, WalletClient } from "viem";
 import { SimpleAccountFactory__factory } from "../typechain-types";
 
 export async function createLocalSmartAccount(
   client: PublicClient,
+  walletClient: WalletClient,
   owner: Account,
   entryPointAddress: Address,
   simpleAccountFactoryAddress: Address,
@@ -17,9 +18,12 @@ export async function createLocalSmartAccount(
   const accountAddress = await simpleAccountFactory.read.getAddress([owner.address, salt]);
 
   const code = await client.getBytecode({ address: accountAddress });
-  if (code === "0x") {
+  if (code === "0x" || !code) {
     const { request } = await simpleAccountFactory.simulate.createAccount([owner.address, salt]);
-    const hash = await client.writeContract(request);
+    const hash = await walletClient.writeContract({
+      ...request,
+      account: owner,
+    });
     await client.waitForTransactionReceipt({ hash });
   }
 

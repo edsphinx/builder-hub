@@ -1,4 +1,4 @@
-import { ethers, upgrades } from "hardhat";
+import { ethers, upgrades, network } from "hardhat";
 import { expect } from "chai";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import type { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
@@ -12,6 +12,13 @@ import {
 } from "../typechain-types";
 
 describe("GasXERC20FeePaymaster", function () {
+  // Skip on non-local networks - this test deploys mock contracts
+  before(function () {
+    if (network.name !== "localhost" && network.name !== "hardhat") {
+      console.log(`[INFO] Skipping GasXERC20FeePaymaster tests - designed for local networks only.`);
+      this.skip();
+    }
+  });
   // Test constants
   const MIN_FEE = ethers.parseUnits("0.01", 6); // 0.01 USDC (6 decimals)
   const FEE_MARKUP_BPS = 100n; // 1%
