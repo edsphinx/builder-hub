@@ -28,3 +28,16 @@ deployments/localhost
 
 # other
 temp
+
+# Foundry
+foundry-cache
+out
+cache/
+
+# Echidna
+crytic-export
+echidna-corpus
+
+# Slither
+slither-report.json
+slither-results.sarif
