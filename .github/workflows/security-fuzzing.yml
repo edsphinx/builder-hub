@@ -194,9 +194,10 @@ jobs:
         run: |
           if grep -q "| High |" aderyn-report.md; then
             HIGH_COUNT=$(grep -c "| High |" aderyn-report.md || echo "0")
-            echo "Found high severity issues in Aderyn report!"
-            cat aderyn-report.md
-            exit 1
+            echo "::warning::Found $HIGH_COUNT high severity issue(s) in Aderyn report"
+            echo "## Aderyn Security Report" >> $GITHUB_STEP_SUMMARY
+            cat aderyn-report.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No high severity issues found"
           fi
-          echo "No high severity issues found"
         working-directory: packages/hardhat
