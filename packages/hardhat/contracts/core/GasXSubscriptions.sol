@@ -343,6 +343,8 @@ contract GasXSubscriptions is Initializable, UUPSUpgradeable, ReentrancyGuardUpg
         if (!plan.active) revert InvalidPlan();
         if (plan.priceEth == 0) revert UnsupportedToken();
         if (msg.value < plan.priceEth) revert InsufficientPayment();
+        // Defensive check: treasury is validated in setTreasury, but check here too
+        if (treasury == address(0)) revert ZeroAddress();
 
         // Calculate platform fee
         uint256 fee = (plan.priceEth * plan.platformFeeBps) / 10000;
@@ -477,6 +479,8 @@ contract GasXSubscriptions is Initializable, UUPSUpgradeable, ReentrancyGuardUpg
         if (!pack.active) revert InvalidCreditPack();
         if (pack.priceEth == 0) revert UnsupportedToken();
         if (msg.value < pack.priceEth) revert InsufficientPayment();
+        // Defensive check: treasury is validated in setTreasury, but check here too
+        if (treasury == address(0)) revert ZeroAddress();
 
         // ─── EFFECTS ────────────────────────────────────
         // Update state BEFORE external calls (CEI pattern)
