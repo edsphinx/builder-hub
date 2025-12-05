@@ -26,47 +26,37 @@ contract TestableGasXERC20 is GasXERC20FeePaymaster {
         )
     {}
 
-    /// @notice Exposes the validation logic for tests
+    /// @notice Exposes internal _calculateFee function for testing
+    function exposedCalculateFee(uint256 gasCost, uint256 price) external view returns (uint256) {
+        return _calculateFee(gasCost, price);
+    }
+
+    /// @notice Exposes internal _estimateFee function for testing
+    function exposedEstimateFee(uint256 gasCost) external view returns (uint256) {
+        return _estimateFee(gasCost);
+    }
+
+    /// @notice Exposes internal _verifyUserFunds function for testing
+    function exposedVerifyUserFunds(address user, uint256 requiredFee) external view {
+        _verifyUserFunds(user, requiredFee);
+    }
+
+    /// @notice Exposes postOp for testing (success mode)
+    function exposedPostOp(bytes calldata context, uint256 actualGasCost, uint256 userOpGasPrice) external {
+        _postOp(PostOpMode.opSucceeded, context, actualGasCost, userOpGasPrice);
+    }
+
+    /// @notice Exposes postOp for testing (failed mode)
+    function exposedPostOpFailed(bytes calldata context, uint256 actualGasCost, uint256 userOpGasPrice) external {
+        _postOp(PostOpMode.opReverted, context, actualGasCost, userOpGasPrice);
+    }
+
+    /// @notice Exposes _validatePaymasterUserOp for testing
     function exposedValidate(
         PackedUserOperation calldata op,
         bytes32 opHash,
         uint256 maxCost
     ) external view returns (bytes memory ctx, uint256 vd) {
         return _validatePaymasterUserOp(op, opHash, maxCost);
-    }
-
-    /// @notice Exposes the postOp logic for tests
-    function exposedPostOp(bytes calldata context, uint256 actualGasCost, uint256 feePerGas) external {
-        _postOp(PostOpMode.opSucceeded, context, actualGasCost, feePerGas);
-    }
-
-    /// @notice Exposes postOp with failed mode for tests
-    function exposedPostOpFailed(bytes calldata context, uint256 actualGasCost, uint256 feePerGas) external {
-        _postOp(PostOpMode.opReverted, context, actualGasCost, feePerGas);
-    }
-
-    /// @notice Helper to generate valid paymaster data for testing
-    /// @dev Uses bytes.concat to avoid abi.encodePacked collision with dynamic types
-    function encodePaymasterData(
-        uint256 price,
-        uint48 expiry,
-        bytes memory signature
-    ) external view returns (bytes memory) {
-        // paymasterAndData structure:
-        // - 20 bytes: paymaster address
-        // - 16 bytes: verificationGasLimit (packed)
-        // - 16 bytes: postOpGasLimit (packed)
-        // - 32 bytes: price
-        // - 6 bytes: expiry
-        // - variable: signature
-
-        return bytes.concat(
-            bytes20(address(this)),           // 20 bytes: paymaster address
-            bytes16(uint128(100000)),         // 16 bytes: verificationGasLimit
-            bytes16(uint128(100000)),         // 16 bytes: postOpGasLimit
-            bytes32(price),                   // 32 bytes: price
-            bytes6(expiry),                   // 6 bytes: expiry
-            signature                         // variable: signature
-        );
     }
 }
