@@ -52,6 +52,7 @@ contract MockERC20 is IERC20 {
     }
 
     function transfer(address to, uint256 amount) external returns (bool) {
+        require(_balances[msg.sender] >= amount, "Insufficient balance");
         _balances[msg.sender] -= amount;
         _balances[to] += amount;
         return true;
@@ -67,6 +68,8 @@ contract MockERC20 is IERC20 {
     }
 
     function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        require(_allowances[from][msg.sender] >= amount, "Insufficient allowance");
+        require(_balances[from] >= amount, "Insufficient balance");
         _allowances[from][msg.sender] -= amount;
         _balances[from] -= amount;
         _balances[to] += amount;
@@ -338,9 +341,16 @@ contract GasXERC20FeePaymasterFuzzTest is Test {
 
     /**
      * @notice Fuzz test: Emergency withdrawal recipient validation
-     * @dev Tests that zero address is rejected
+     * @dev Tests that zero address is rejected and valid addresses receive ETH
+     *      Excludes addresses that cannot receive ETH (precompiles, VM addresses)
      */
     function testFuzz_EmergencyWithdrawRecipient(address recipient) public {
+        // Skip precompiles (0x01-0x09) and Foundry VM addresses that can't receive ETH
+        vm.assume(recipient > address(0x10));
+        vm.assume(recipient != address(vm));
+        // Skip known contract addresses that might not have receive/fallback
+        vm.assume(recipient.code.length == 0);
+
         vm.deal(address(paymaster), 1 ether);
 
         if (recipient == address(0)) {

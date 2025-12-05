@@ -43,6 +43,7 @@ contract EchidnaMockERC20 is IERC20 {
     function totalSupply() external view returns (uint256) { return _totalSupply; }
     function balanceOf(address account) external view returns (uint256) { return _balances[account]; }
     function transfer(address to, uint256 amount) external returns (bool) {
+        require(_balances[msg.sender] >= amount, "Insufficient balance");
         _balances[msg.sender] -= amount;
         _balances[to] += amount;
         return true;
@@ -55,6 +56,8 @@ contract EchidnaMockERC20 is IERC20 {
         return true;
     }
     function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        require(_allowances[from][msg.sender] >= amount, "Insufficient allowance");
+        require(_balances[from] >= amount, "Insufficient balance");
         _allowances[from][msg.sender] -= amount;
         _balances[from] -= amount;
         _balances[to] += amount;

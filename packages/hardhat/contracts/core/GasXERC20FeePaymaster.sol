@@ -263,9 +263,10 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
         require(_to != address(0), "GasX: Invalid recipient");
         uint256 toWithdraw = _amount == 0 ? address(this).balance : _amount;
         require(toWithdraw <= address(this).balance, "GasX: Insufficient balance");
+        // CEI pattern: emit event before external call to prevent reentrancy issues
+        emit EmergencyWithdraw(_to, toWithdraw);
         (bool success, ) = _to.call{ value: toWithdraw }("");
         require(success, "GasX: ETH transfer failed");
-        emit EmergencyWithdraw(_to, toWithdraw);
     }
 
     // --- Receive Function ---
