@@ -40,11 +40,7 @@ contract GasXSubscriptionsFuzzTest is Test {
         implementation = new GasXSubscriptions();
 
         // Deploy proxy
-        bytes memory initData = abi.encodeWithSelector(
-            GasXSubscriptions.initialize.selector,
-            treasury,
-            address(usdc)
-        );
+        bytes memory initData = abi.encodeWithSelector(GasXSubscriptions.initialize.selector, treasury, address(usdc));
         ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), initData);
         subscriptions = GasXSubscriptions(payable(address(proxy)));
 
@@ -53,8 +49,8 @@ contract GasXSubscriptionsFuzzTest is Test {
         subscriptions.addSupportedToken(address(usdt), 6);
 
         // Fund user
-        usdc.mint(user1, 1_000_000 * 10**USDC_DECIMALS);
-        usdt.mint(user1, 1_000_000 * 10**USDC_DECIMALS);
+        usdc.mint(user1, 1_000_000 * 10 ** USDC_DECIMALS);
+        usdt.mint(user1, 1_000_000 * 10 ** USDC_DECIMALS);
         vm.deal(user1, 100 ether);
     }
 
@@ -75,7 +71,7 @@ contract GasXSubscriptionsFuzzTest is Test {
             subscriptions.subscribe(planId, address(usdc), false);
         } else {
             // Get plan details
-            (,uint256 priceUsdc,,,, bool active) = subscriptions.plans(planId);
+            (, uint256 priceUsdc, , , , bool active) = subscriptions.plans(planId);
 
             if (!active) {
                 vm.expectRevert(GasXSubscriptions.InvalidPlan.selector);
@@ -86,7 +82,7 @@ contract GasXSubscriptionsFuzzTest is Test {
                 subscriptions.subscribe(planId, address(usdc), false);
 
                 // Verify subscription
-                (bool isActive, uint256 subPlanId,) = subscriptions.getSubscriptionStatus(user1);
+                (bool isActive, uint256 subPlanId, ) = subscriptions.getSubscriptionStatus(user1);
                 assertTrue(isActive || priceUsdc == 0, "Should be active or free plan");
                 assertEq(subPlanId, planId, "Plan ID should match");
             }
@@ -105,7 +101,7 @@ contract GasXSubscriptionsFuzzTest is Test {
 
         uint256 balanceBefore = user1.balance;
 
-        subscriptions.subscribeWithEth{value: ethAmount}(1, false);
+        subscriptions.subscribeWithEth{ value: ethAmount }(1, false);
 
         uint256 balanceAfter = user1.balance;
         uint256 spent = balanceBefore - balanceAfter;
@@ -125,7 +121,7 @@ contract GasXSubscriptionsFuzzTest is Test {
         vm.startPrank(user1);
 
         vm.expectRevert(GasXSubscriptions.InsufficientPayment.selector);
-        subscriptions.subscribeWithEth{value: ethAmount}(1, false);
+        subscriptions.subscribeWithEth{ value: ethAmount }(1, false);
 
         vm.stopPrank();
     }
@@ -145,7 +141,7 @@ contract GasXSubscriptionsFuzzTest is Test {
         for (uint8 i = 0; i < numSubscriptions; i++) {
             subscriptions.subscribe(1, address(usdc), false);
 
-            (,, uint256 endTime) = subscriptions.getSubscriptionStatus(user1);
+            (, , uint256 endTime) = subscriptions.getSubscriptionStatus(user1);
 
             // Each subscription should extend the end time
             assertGt(endTime, lastEndTime, "End time should increase");
@@ -169,8 +165,9 @@ contract GasXSubscriptionsFuzzTest is Test {
             vm.expectRevert(GasXSubscriptions.InvalidCreditPack.selector);
             subscriptions.purchaseCredits(packId, address(usdc));
         } else {
-            (,uint256 credits, uint256 bonusCredits, uint256 priceUsdc,, bool active) =
-                subscriptions.creditPacks(packId);
+            (, uint256 credits, uint256 bonusCredits, uint256 priceUsdc, , bool active) = subscriptions.creditPacks(
+                packId
+            );
 
             if (!active) {
                 vm.expectRevert(GasXSubscriptions.InvalidCreditPack.selector);
@@ -182,11 +179,7 @@ contract GasXSubscriptionsFuzzTest is Test {
                 subscriptions.purchaseCredits(packId, address(usdc));
                 uint256 creditsAfter = subscriptions.getCreditBalance(user1);
 
-                assertEq(
-                    creditsAfter - creditsBefore,
-                    credits + bonusCredits,
-                    "Should receive correct credits"
-                );
+                assertEq(creditsAfter - creditsBefore, credits + bonusCredits, "Should receive correct credits");
             }
         }
 
@@ -201,8 +194,7 @@ contract GasXSubscriptionsFuzzTest is Test {
         vm.startPrank(user1);
 
         // Purchase credits
-        (,uint256 credits, uint256 bonusCredits, uint256 priceUsdc,,) =
-            subscriptions.creditPacks(0); // Starter pack
+        (, uint256 credits, uint256 bonusCredits, uint256 priceUsdc, , ) = subscriptions.creditPacks(0); // Starter pack
 
         uint256 totalPrice = priceUsdc * purchaseCount;
         usdc.approve(address(subscriptions), totalPrice);
@@ -226,11 +218,7 @@ contract GasXSubscriptionsFuzzTest is Test {
             subscriptions.useCredits(user1, useAmount, "fuzz test");
         } else {
             subscriptions.useCredits(user1, useAmount, "fuzz test");
-            assertEq(
-                subscriptions.getCreditBalance(user1),
-                balance - useAmount,
-                "Balance should decrease"
-            );
+            assertEq(subscriptions.getCreditBalance(user1), balance - useAmount, "Balance should decrease");
         }
     }
 
@@ -248,7 +236,7 @@ contract GasXSubscriptionsFuzzTest is Test {
         } else {
             uint256 planId = subscriptions.createPlan("fuzz", 100_000000, 0.05 ether, 30, feeBps);
 
-            (,,,,uint256 storedFee,) = subscriptions.plans(planId);
+            (, , , , uint256 storedFee, ) = subscriptions.plans(planId);
             assertEq(storedFee, feeBps, "Fee should be stored correctly");
         }
     }
@@ -318,7 +306,7 @@ contract GasXSubscriptionsFuzzTest is Test {
             // The subscription should work
             subscriptions.subscribe(planId, address(fuzzToken), false);
 
-            (bool isActive,,) = subscriptions.getSubscriptionStatus(user1);
+            (bool isActive, , ) = subscriptions.getSubscriptionStatus(user1);
             assertTrue(isActive, "Should be subscribed");
         }
 

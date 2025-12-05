@@ -28,13 +28,24 @@ contract GasXConfig {
     // ────────────────────────────────────────────────
 
     /// @notice Emitted when the oracle signer is changed
+    /// @param previousSigner The previous oracle signer address
     /// @param newSigner The new authorized oracle signer address
-    event OracleUpdated(address newSigner);
+    event OracleSignerUpdated(address indexed previousSigner, address indexed newSigner);
 
     /// @notice Emitted when a selector's max USD subsidy is set or updated
     /// @param selector Function selector (4-byte method signature)
-    /// @param maxUsd Max allowed subsidy in USD (6 decimals)
-    event MaxUsdSet(bytes4 selector, uint256 maxUsd);
+    /// @param previousMaxUsd Previous max USD value (6 decimals)
+    /// @param newMaxUsd New max allowed subsidy in USD (6 decimals)
+    event MaxUsdSet(bytes4 indexed selector, uint256 previousMaxUsd, uint256 newMaxUsd);
+
+    // ────────────────────────────────────────────────
+    // ░░  ERRORS
+    // ────────────────────────────────────────────────
+
+    /// @notice Thrown when zero address is provided
+    error ZeroAddress();
+    /// @notice Thrown when array lengths don't match
+    error LengthMismatch();
 
     // ────────────────────────────────────────────────
     // ░░  CONSTRUCTOR
@@ -45,7 +56,7 @@ contract GasXConfig {
      * @param _oracleSigner Initial address allowed to sign oracle payloads
      */
     constructor(address _oracleSigner) {
-        require(_oracleSigner != address(0), "GasX: Invalid oracle signer address");
+        if (_oracleSigner == address(0)) revert ZeroAddress();
         owner = msg.sender;
         oracleSigner = _oracleSigner;
     }
@@ -71,8 +82,10 @@ contract GasXConfig {
      * @custom:security onlyOwner
      */
     function setOracleSigner(address newSigner) external onlyOwner {
+        if (newSigner == address(0)) revert ZeroAddress();
+        address previousSigner = oracleSigner;
         oracleSigner = newSigner;
-        emit OracleUpdated(newSigner);
+        emit OracleSignerUpdated(previousSigner, newSigner);
     }
 
     /**
@@ -83,8 +96,9 @@ contract GasXConfig {
      * @custom:security onlyOwner
      */
     function setMaxUsd(bytes4 selector, uint256 maxUsd) external onlyOwner {
+        uint256 previousMaxUsd = maxUsdPerSelector[selector];
         maxUsdPerSelector[selector] = maxUsd;
-        emit MaxUsdSet(selector, maxUsd);
+        emit MaxUsdSet(selector, previousMaxUsd, maxUsd);
     }
 
     /**
@@ -95,10 +109,11 @@ contract GasXConfig {
      * @custom:security onlyOwner
      */
     function bulkSetMaxUsd(bytes4[] calldata selectors, uint256[] calldata maxUsds) external onlyOwner {
-        require(selectors.length == maxUsds.length, "length mismatch");
+        if (selectors.length != maxUsds.length) revert LengthMismatch();
         for (uint256 i = 0; i < selectors.length; i++) {
+            uint256 previousMaxUsd = maxUsdPerSelector[selectors[i]];
             maxUsdPerSelector[selectors[i]] = maxUsds[i];
-            emit MaxUsdSet(selectors[i], maxUsds[i]);
+            emit MaxUsdSet(selectors[i], previousMaxUsd, maxUsds[i]);
         }
     }
 

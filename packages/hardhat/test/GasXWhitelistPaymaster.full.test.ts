@@ -73,11 +73,11 @@ describe("GasXWhitelistPaymaster", () => {
     it("should restrict limit and whitelist updates to owner", async () => {
       const [, attacker] = await ethers.getSigners();
 
-      // atacante no es owner
+      // attacker is not owner
       await expect(paymaster.connect(attacker).setLimit(1, 0)).to.be.reverted;
       await expect(paymaster.connect(attacker).setSelector("0x00001234", true)).to.be.reverted;
 
-      // el owner sí
+      // owner can update
       await paymaster.setLimit(1234, 0);
       const lims = await paymaster.limits();
       assert.equal(lims.maxGas, 1234n, "maxGas should update");
@@ -176,11 +176,11 @@ describe("GasXWhitelistPaymaster", () => {
       const sel = ethers.zeroPadValue("0x12345678", 4);
       await paymaster.setSelector(sel, true);
 
-      // empaqueta dos uint128 en 32 bytes: [verificationGasLimit(0), callGasLimit(1000)]
+      // pack two uint128 into 32 bytes: [verificationGasLimit(0), callGasLimit(1000)]
       const accountGasLimits = ethers.concat([
-        // 16 bytes de ceros para verificationGasLimit
+        // 16 bytes of zeros for verificationGasLimit
         ethers.zeroPadValue(ethers.toBeHex(0n), 16),
-        // 16 bytes con 1000 para callGasLimit
+        // 16 bytes with 1000 for callGasLimit
         ethers.zeroPadValue(ethers.toBeHex(1000n), 16),
       ]) as `0x${string}`;
 
@@ -372,28 +372,29 @@ describe("GasXWhitelistPaymaster", () => {
 
   // Last set of tests
   describe("GasXConfig", () => {
-    // `config` y `deployer` ya están definidos en el `beforeEach` principal,
-    // por lo que podemos usarlos directamente aquí.
+    // `config` and `deployer` are already defined in the main `beforeEach`,
+    // so we can use them directly here.
 
     it("should deploy with the correct owner and initial oracle signer", async () => {
-      // Verifica que el owner del contrato es quien lo desplegó
+      // Verify the contract owner is the deployer
       const contractOwner = await config.owner();
       assert.equal(contractOwner, deployer.address, "Owner should be the deployer");
 
-      // Verifica que el oracleSigner inicial es el correcto
+      // Verify the initial oracleSigner is correct
       const initialSigner = await config.oracleSigner();
       assert.equal(initialSigner, oracle.address, "Initial oracle signer is incorrect");
     });
 
     it("should allow the owner to update the oracle signer", async () => {
       const [, newSigner] = await ethers.getSigners();
+      const previousSigner = await config.oracleSigner();
 
-      // El owner cambia el signer
+      // Owner updates the signer
       await expect(config.connect(deployer).setOracleSigner(newSigner.address))
-        .to.emit(config, "OracleUpdated")
-        .withArgs(newSigner.address);
+        .to.emit(config, "OracleSignerUpdated")
+        .withArgs(previousSigner, newSigner.address);
 
-      // Verifica que la dirección se actualizó correctamente
+      // Verify the address was updated correctly
       const updatedSigner = await config.oracleSigner();
       assert.equal(updatedSigner, newSigner.address, "Oracle signer should be updated");
     });
@@ -402,10 +403,10 @@ describe("GasXWhitelistPaymaster", () => {
       const [, attacker, newSigner] = await ethers.getSigners();
       const sel = "0x12345678";
 
-      // Un atacante no puede cambiar el oracle signer
+      // Attacker cannot change the oracle signer
       await expect(config.connect(attacker).setOracleSigner(newSigner.address)).to.be.revertedWith("not owner");
 
-      // Un atacante no puede establecer límites de USD
+      // Attacker cannot set USD limits
       await expect(config.connect(attacker).setMaxUsd(sel, 100)).to.be.revertedWith("not owner");
 
       await expect(config.connect(attacker).bulkSetMaxUsd([sel], [100])).to.be.revertedWith("not owner");
@@ -413,12 +414,12 @@ describe("GasXWhitelistPaymaster", () => {
 
     it("should allow the owner to set and get max USD for a selector", async () => {
       const selector = "0xabcdef12";
-      const limit = ethers.parseUnits("10.5", 6); // 10.5 USD con 6 decimales
+      const limit = ethers.parseUnits("10.5", 6); // 10.5 USD with 6 decimals
 
-      // Establece el límite
-      await expect(config.setMaxUsd(selector, limit)).to.emit(config, "MaxUsdSet").withArgs(selector, limit);
+      // Set the limit (event now includes previousMaxUsd)
+      await expect(config.setMaxUsd(selector, limit)).to.emit(config, "MaxUsdSet").withArgs(selector, 0n, limit);
 
-      // Verifica el límite usando la función de vista individual
+      // Verify the limit using the individual view function
       const retrievedLimit = await config.getMaxUsd(selector);
       assert.equal(retrievedLimit.toString(), limit.toString(), "Max USD should be set correctly");
     });
@@ -433,7 +434,7 @@ describe("GasXWhitelistPaymaster", () => {
 
       await config.bulkSetMaxUsd(selectors, limits);
 
-      // Verifica los límites usando la función de vista múltiple
+      // Verify the limits using the batch view function
       const retrievedLimits = await config.getAllLimits(selectors);
       assert.deepEqual(
         retrievedLimits.map((l: { toString: () => any }) => l.toString()),
@@ -441,7 +442,7 @@ describe("GasXWhitelistPaymaster", () => {
         "Bulk-set limits should match",
       );
 
-      // Verifica uno de los límites individualmente también
+      // Verify one of the limits individually as well
       const singleLimit = await config.getMaxUsd("0x22222222");
       assert.equal(singleLimit.toString(), limits[1].toString(), "Individual limit after bulk set is incorrect");
     });
@@ -450,7 +451,7 @@ describe("GasXWhitelistPaymaster", () => {
       const selectors = ["0x11111111"];
       const limits = [ethers.parseUnits("1", 6), ethers.parseUnits("2", 6)];
 
-      await expect(config.bulkSetMaxUsd(selectors, limits)).to.be.revertedWith("length mismatch");
+      await expect(config.bulkSetMaxUsd(selectors, limits)).to.be.revertedWithCustomError(config, "LengthMismatch");
     });
   });
 

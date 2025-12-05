@@ -17,10 +17,14 @@ contract MockEntryPoint {
     }
     function depositTo(address) external payable {}
     function withdrawTo(address payable, uint256) external {}
-    function getDepositInfo(address) external pure returns (uint256 deposit, bool staked, uint112 stake, uint32 unstakeDelaySec, uint48 withdrawTime) {
+    function getDepositInfo(
+        address
+    ) external pure returns (uint256 deposit, bool staked, uint112 stake, uint32 unstakeDelaySec, uint48 withdrawTime) {
         return (0, false, 0, 0, 0);
     }
-    function balanceOf(address) external pure returns (uint256) { return 0; }
+    function balanceOf(address) external pure returns (uint256) {
+        return 0;
+    }
     function addStake(uint32) external payable {}
     function unlockStake() external {}
     function withdrawStake(address payable) external {}
@@ -33,7 +37,7 @@ contract MockERC20 is IERC20 {
     string public name = "Mock USDC";
     string public symbol = "MUSDC";
     uint8 public decimals = 6;
-    
+
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
     uint256 private _totalSupply;
@@ -150,7 +154,7 @@ contract GasXERC20FeePaymasterFuzzTest is Test {
         price = bound(price, MIN_PRICE, MAX_PRICE);
 
         uint256 fee = paymaster.exposedCalculateFee(gasCost, price);
-        
+
         // Calculate expected fee: gasCost * price * (10000 + 100) / (1e18 * 10000)
         uint256 expectedFee = (gasCost * price * 10100) / (1e18 * 10000);
         if (expectedFee < DEFAULT_MIN_FEE) {
@@ -169,7 +173,7 @@ contract GasXERC20FeePaymasterFuzzTest is Test {
         gasCost = bound(gasCost, 0, 1000); // Very small gas costs
 
         uint256 fee = paymaster.exposedCalculateFee(gasCost, 4000e6);
-        
+
         // Fee should never be less than minFee
         assertGe(fee, DEFAULT_MIN_FEE, "Fee should not be less than minFee");
     }
@@ -195,7 +199,7 @@ contract GasXERC20FeePaymasterFuzzTest is Test {
 
         uint256 price = 4000e6; // 4000 USDC per ETH
         uint256 fee = pm.exposedCalculateFee(gasCost, price);
-        
+
         // Calculate expected fee with markup
         uint256 expectedFee = (gasCost * price * (10000 + markup)) / (1e18 * 10000);
         if (expectedFee < 1) expectedFee = 1;
@@ -242,7 +246,7 @@ contract GasXERC20FeePaymasterFuzzTest is Test {
         if (newMarkup <= MAX_MARKUP_BPS) {
             vm.expectEmit(true, true, true, true);
             emit GasXERC20FeePaymaster.FeeMarkupUpdated(100, newMarkup);
-            
+
             paymaster.setFeeMarkup(newMarkup);
             assertEq(paymaster.feeMarkupBps(), newMarkup, "Markup not updated correctly");
         } else {
@@ -262,7 +266,7 @@ contract GasXERC20FeePaymasterFuzzTest is Test {
         } else {
             vm.expectEmit(true, true, true, true);
             emit GasXERC20FeePaymaster.OracleSignerUpdated(oracleSigner, newSigner);
-            
+
             paymaster.setOracleSigner(newSigner);
             assertEq(paymaster.oracleSigner(), newSigner, "Signer not updated correctly");
         }
@@ -317,10 +321,10 @@ contract GasXERC20FeePaymasterFuzzTest is Test {
      */
     function testFuzz_EmergencyWithdrawEth(uint256 depositAmount, uint256 withdrawAmount) public {
         depositAmount = bound(depositAmount, 0, 100 ether);
-        
+
         // Send ETH to paymaster
         vm.deal(address(this), depositAmount);
-        (bool success,) = address(paymaster).call{value: depositAmount}("");
+        (bool success, ) = address(paymaster).call{ value: depositAmount }("");
         require(success, "ETH transfer failed");
 
         if (withdrawAmount == 0) {
@@ -450,7 +454,7 @@ contract GasXERC20FeePaymasterFuzzTest is Test {
 
         address user = address(0x3333);
         feeToken.mint(user, userBalance);
-        
+
         vm.prank(user);
         feeToken.approve(address(paymaster), userAllowance);
 
@@ -477,7 +481,7 @@ contract GasXERC20FeePaymasterFuzzTest is Test {
 
         address user = address(0x4444);
         feeToken.mint(user, userBalance);
-        
+
         vm.prank(user);
         feeToken.approve(address(paymaster), userAllowance);
 
@@ -498,7 +502,7 @@ contract GasXERC20FeePaymasterFuzzTest is Test {
      */
     function testFuzz_TotalFeesTracking(uint256 actualGasCost) public {
         actualGasCost = bound(actualGasCost, 1e15, 1e18);
-        
+
         address user = address(0x5555);
         uint256 price = 4000e6;
         bytes32 userOpHash = keccak256("testOp");
@@ -506,7 +510,7 @@ contract GasXERC20FeePaymasterFuzzTest is Test {
         // Prepare user with sufficient funds
         uint256 expectedFee = paymaster.exposedCalculateFee(actualGasCost, price);
         feeToken.mint(user, expectedFee * 2);
-        
+
         vm.prank(user);
         feeToken.approve(address(paymaster), expectedFee * 2);
 
@@ -525,6 +529,6 @@ contract GasXERC20FeePaymasterFuzzTest is Test {
     // ─────────────────────────────────────────────────────────────────
     // HELPER: Receive ETH
     // ─────────────────────────────────────────────────────────────────
-    
+
     receive() external payable {}
 }
