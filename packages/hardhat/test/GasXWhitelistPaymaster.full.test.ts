@@ -476,8 +476,16 @@ describe("GasXWhitelistPaymaster", () => {
   });
 
   describe("9. Environment and View Functions", () => {
-    it("should return isDev as true by default", async () => {
-      assert.isTrue(await paymaster.isDev(), "isDev should be true by default");
+    it("should return isDev as false by default (security-first)", async () => {
+      // Note: This test creates a fresh paymaster to check default state
+      const freshPaymaster = await ethers.deployContract("GasXWhitelistPaymaster", [
+        await entryPoint.getAddress(),
+        await config.getAddress(),
+        deployer.address,
+        0, // Dev environment
+      ]);
+      // isDevMode defaults to false for security - must be explicitly enabled
+      assert.isFalse(await freshPaymaster.isDev(), "isDev should be false by default for security");
     });
 
     it("should return isProd as false for non-production environment", async () => {
@@ -529,8 +537,10 @@ describe("GasXWhitelistPaymaster", () => {
         callData: sel + "cafecafe",
       };
 
-      await expect(paymaster.exposedValidate(op as any, ethers.ZeroHash, 0n)).to.be.revertedWith(
-        "GasX: Paymaster is paused",
+      // whenNotPaused modifier uses OpenZeppelin's EnforcedPause() custom error
+      await expect(paymaster.exposedValidate(op as any, ethers.ZeroHash, 0n)).to.be.revertedWithCustomError(
+        paymaster,
+        "EnforcedPause",
       );
     });
 
@@ -643,6 +653,92 @@ describe("GasXWhitelistPaymaster", () => {
 
       // Should revert with either Invalid signature or ECDSAInvalidSignature
       await expect(paymaster.exposedValidate(op as any, ethers.ZeroHash, 0n)).to.be.reverted;
+    });
+  });
+
+  describe("13. Emergency Withdrawal", () => {
+    it("should receive ETH directly", async () => {
+      const amount = ethers.parseEther("0.1");
+      await deployer.sendTransaction({
+        to: await paymaster.getAddress(),
+        value: amount,
+      });
+      const balance = await ethers.provider.getBalance(await paymaster.getAddress());
+      assert.equal(balance, amount, "Paymaster should hold the sent ETH");
+    });
+
+    it("should allow owner to withdraw all ETH with amount=0", async () => {
+      const amount = ethers.parseEther("0.1");
+      const paymasterAddr = await paymaster.getAddress();
+
+      // Send ETH to paymaster
+      await deployer.sendTransaction({
+        to: paymasterAddr,
+        value: amount,
+      });
+
+      const [, recipient] = await ethers.getSigners();
+      const recipientBalanceBefore = await ethers.provider.getBalance(recipient.address);
+
+      // Withdraw all with amount=0
+      await paymaster.emergencyWithdrawEth(recipient.address, 0);
+
+      const recipientBalanceAfter = await ethers.provider.getBalance(recipient.address);
+      const paymasterBalance = await ethers.provider.getBalance(paymasterAddr);
+
+      assert.equal(paymasterBalance, 0n, "Paymaster should have 0 balance after withdrawal");
+      assert.equal(recipientBalanceAfter - recipientBalanceBefore, amount, "Recipient should receive all ETH");
+    });
+
+    it("should allow owner to withdraw specific amount", async () => {
+      const depositAmount = ethers.parseEther("0.5");
+      const withdrawAmount = ethers.parseEther("0.2");
+      const paymasterAddr = await paymaster.getAddress();
+
+      // Send ETH to paymaster
+      await deployer.sendTransaction({
+        to: paymasterAddr,
+        value: depositAmount,
+      });
+
+      const [, recipient] = await ethers.getSigners();
+      await paymaster.emergencyWithdrawEth(recipient.address, withdrawAmount);
+
+      const paymasterBalance = await ethers.provider.getBalance(paymasterAddr);
+      assert.equal(paymasterBalance, depositAmount - withdrawAmount, "Remaining balance should be correct");
+    });
+
+    it("should emit EmergencyWithdraw event", async () => {
+      const amount = ethers.parseEther("0.1");
+      const paymasterAddr = await paymaster.getAddress();
+
+      // Send ETH to paymaster
+      await deployer.sendTransaction({
+        to: paymasterAddr,
+        value: amount,
+      });
+
+      const [, recipient] = await ethers.getSigners();
+      await expect(paymaster.emergencyWithdrawEth(recipient.address, amount))
+        .to.emit(paymaster, "EmergencyWithdraw")
+        .withArgs(recipient.address, amount);
+    });
+
+    it("should reject withdrawal to zero address", async () => {
+      await expect(paymaster.emergencyWithdrawEth(ethers.ZeroAddress, 0)).to.be.revertedWith("GasX: Invalid recipient");
+    });
+
+    it("should reject withdrawal exceeding balance", async () => {
+      const excessiveAmount = ethers.parseEther("1000");
+      const [, recipient] = await ethers.getSigners();
+      await expect(paymaster.emergencyWithdrawEth(recipient.address, excessiveAmount)).to.be.revertedWith(
+        "GasX: Insufficient balance",
+      );
+    });
+
+    it("should only allow owner to call emergencyWithdrawEth", async () => {
+      const [, attacker, recipient] = await ethers.getSigners();
+      await expect(paymaster.connect(attacker).emergencyWithdrawEth(recipient.address, 0)).to.be.reverted;
     });
   });
 });

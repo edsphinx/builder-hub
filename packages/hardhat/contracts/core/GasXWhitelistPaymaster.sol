@@ -54,6 +54,16 @@ contract GasXWhitelistPaymaster is BasePaymaster, Pausable {
     /// @notice The currently enforced gas limits for sponsored operations.
     Limits public limits;
 
+    // --- Constants ---
+    /// @dev PAYMASTER_DATA_OFFSET is inherited from BasePaymaster (52 bytes):
+    ///      - Paymaster address: 20 bytes
+    ///      - Validation gas limit (uint128): 16 bytes
+    ///      - Post-op gas limit (uint128): 16 bytes
+    ///      Total: 52 bytes before custom data (expiry + signature)
+
+    /// @dev Size of expiry field (uint48 = 6 bytes)
+    uint256 private constant EXPIRY_SIZE = 6;
+
     /// @notice A mapping of `bytes4` function selectors to a boolean indicating if they are approved for sponsorship.
     mapping(bytes4 => bool) public allowedSelectors; // fast O(1) lookup for function selectors ok
 
@@ -68,8 +78,8 @@ contract GasXWhitelistPaymaster is BasePaymaster, Pausable {
         Production
     }
 
-    /// @notice The configured deployment environment.
-    Environment public environment;
+    /// @notice The configured deployment environment (immutable, set at construction).
+    Environment public immutable environment;
 
     // ----------------------------------------------------------------------
     //  IMMUTABLE REFERENCES
@@ -100,6 +110,9 @@ contract GasXWhitelistPaymaster is BasePaymaster, Pausable {
 
     /// @notice Emitted when developer mode is toggled.
     event DevModeChanged(bool enabled);
+
+    /// @notice Emitted when emergency Ether withdrawal is performed.
+    event EmergencyWithdraw(address indexed to, uint256 amount);
 
     // ----------------------------------------------------------------------
     // ░░  CONSTRUCTOR
@@ -147,10 +160,7 @@ contract GasXWhitelistPaymaster is BasePaymaster, Pausable {
         PackedUserOperation calldata op,
         bytes32 opHash,
         uint256 /*maxCost*/
-    ) internal view override returns (bytes memory context, uint256 validationData) {
-        // (0) Pause Check - prevent new sponsorships when paused
-        require(!paused(), "GasX: Paymaster is paused");
-
+    ) internal view override whenNotPaused returns (bytes memory context, uint256 validationData) {
         // (1) Selector Whitelist Check
         require(allowedSelectors[_firstSelector(op.callData)], "GasX: Disallowed function");
 
@@ -160,7 +170,7 @@ contract GasXWhitelistPaymaster is BasePaymaster, Pausable {
         // (3) optional oracle signature & expiry packed as:
         // paymasterAndData = abi.encodePacked(paymaster, validationGas, postOpGas, expiry, sig)
         bytes calldata pData = op.paymasterAndData;
-        if (pData.length > 52) {
+        if (pData.length > PAYMASTER_DATA_OFFSET) {
             // Standard length for paymaster address (20) + packed gas limits (32)
             (uint48 expiry, bytes memory sig) = _decodePaymasterData(pData);
             require(block.timestamp < expiry, "expired!");
@@ -269,6 +279,34 @@ contract GasXWhitelistPaymaster is BasePaymaster, Pausable {
         _unpause();
     }
 
+    /**
+     * @notice Emergency withdrawal of Ether accidentally sent to this contract.
+     * @dev This only withdraws ETH held directly by the contract, NOT the deposit
+     * with the EntryPoint (use withdrawTo from BasePaymaster for that).
+     * @custom:security onlyOwner
+     * @param to The address to send the recovered Ether to.
+     * @param amount The amount of Ether to withdraw (0 = withdraw all).
+     */
+    function emergencyWithdrawEth(address payable to, uint256 amount) external onlyOwner {
+        require(to != address(0), "GasX: Invalid recipient");
+        uint256 toWithdraw = amount == 0 ? address(this).balance : amount;
+        require(toWithdraw <= address(this).balance, "GasX: Insufficient balance");
+        (bool success, ) = to.call{ value: toWithdraw }("");
+        require(success, "GasX: ETH transfer failed");
+        emit EmergencyWithdraw(to, toWithdraw);
+    }
+
+    // ────────────────────────────────────────────────
+    // RECEIVE FUNCTION
+    // ────────────────────────────────────────────────
+
+    /**
+     * @notice Allows the contract to receive ETH directly.
+     * @dev ETH received this way can be recovered via emergencyWithdrawEth().
+     * Normal paymaster funding should use deposit() or addStake() to fund via EntryPoint.
+     */
+    receive() external payable {}
+
     // ────────────────────────────────────────────────
     // VIEW FUNCTIONS
     // ────────────────────────────────────────────────
@@ -279,7 +317,7 @@ contract GasXWhitelistPaymaster is BasePaymaster, Pausable {
     }
 
     /// @notice Returns true if the contract is configured for the Production environment.
-    function isProd() public view returns (bool) {
+    function isProd() external view returns (bool) {
         return environment == Environment.Production;
     }
 
@@ -303,10 +341,10 @@ contract GasXWhitelistPaymaster is BasePaymaster, Pausable {
      * @return sig The variable-length oracle signature.
      */
     function _decodePaymasterData(bytes calldata pData) private pure returns (uint48 expiry, bytes memory sig) {
-        // Skip the static fields: address (20) + validationGas (16) + postOpGas (16) = 52 bytes
-        bytes calldata data = pData[52:];
-        require(data.length >= 6, "invalid paymaster data length for expiry");
-        expiry = uint48(bytes6(data[:6]));
-        sig = data[6:];
+        // Skip the static fields: address (20) + validationGas (16) + postOpGas (16) = PAYMASTER_DATA_OFFSET bytes
+        bytes calldata data = pData[PAYMASTER_DATA_OFFSET:];
+        require(data.length >= EXPIRY_SIZE, "invalid paymaster data length for expiry");
+        expiry = uint48(bytes6(data[:EXPIRY_SIZE]));
+        sig = data[EXPIRY_SIZE:];
     }
 }

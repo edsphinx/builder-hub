@@ -186,7 +186,8 @@ contract GasXWhitelistPaymasterFuzzTest is Test {
 
         PackedUserOperation memory op = _createBaseUserOp(selector, gasLimit);
 
-        vm.expectRevert("GasX: Paymaster is paused");
+        // whenNotPaused modifier uses OpenZeppelin's EnforcedPause() custom error
+        vm.expectRevert(abi.encodeWithSignature("EnforcedPause()"));
         paymaster.exposedValidate(op, bytes32(0), 0);
     }
 
