@@ -1,9 +1,17 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 import { GasXConfig } from "../typechain-types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("GasXConfig", function () {
+  // Skip on non-local networks - this test requires multiple signers
+  before(function () {
+    if (network.name !== "localhost" && network.name !== "hardhat") {
+      console.log(`[INFO] Skipping GasXConfig tests - designed for local networks only.`);
+      this.skip();
+    }
+  });
+
   let config: GasXConfig;
   let owner: HardhatEthersSigner;
   let oracleSigner: HardhatEthersSigner;
