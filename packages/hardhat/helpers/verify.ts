@@ -9,24 +9,22 @@ export async function verifyContract(
   const { network } = hre;
 
   if (network.name === "hardhat" || network.name === "localhost") {
-    return; // No verificar en redes locales
+    return; // Skip verification on local networks
   }
 
-  console.log(`
-Verificando ${name} en ${network.name}...
-`);
+  console.log(`\n[VERIFY] Verifying ${name} on ${network.name}...`);
 
   try {
     await hre.run("verify:verify", {
       address,
       constructorArguments,
     });
-    console.log(`✅ ${name} verificado exitosamente.`);
+    console.log(`[OK] ${name} verified successfully.`);
   } catch (error: any) {
     if (error.message.toLowerCase().includes("already verified")) {
-      console.log(`ℹ️ ${name} ya está verificado.`);
+      console.log(`[INFO] ${name} is already verified.`);
     } else {
-      console.error(`❌ Error al verificar ${name}:`, error);
+      console.error(`[ERROR] Failed to verify ${name}:`, error.message);
     }
   }
 }

@@ -49,11 +49,12 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
 
     // --- Events ---
 
-    event OracleSignerUpdated(address indexed newSigner);
+    event OracleSignerUpdated(address indexed previousSigner, address indexed newSigner);
     event FeeCharged(bytes32 indexed userOpHash, address indexed user, uint256 feeAmount);
     event FeesWithdrawn(address indexed to, uint256 amount);
-    event MinFeeUpdated(uint256 newMinFee);
-    event FeeMarkupUpdated(uint256 newMarkupBps);
+    event MinFeeUpdated(uint256 previousMinFee, uint256 newMinFee);
+    event FeeMarkupUpdated(uint256 previousMarkupBps, uint256 newMarkupBps);
+    event TokenRecovered(address indexed token, address indexed to, uint256 amount);
     // Note: Paused and Unpaused events are inherited from Pausable
 
     // --- Constructor ---
@@ -174,8 +175,9 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
      */
     function setOracleSigner(address _newSigner) external onlyOwner {
         require(_newSigner != address(0), "GasX: Invalid signer address");
+        address previousSigner = oracleSigner;
         oracleSigner = _newSigner;
-        emit OracleSignerUpdated(_newSigner);
+        emit OracleSignerUpdated(previousSigner, _newSigner);
     }
 
     /**
@@ -183,8 +185,9 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
      * @param _newMinFee New minimum fee in fee token units
      */
     function setMinFee(uint256 _newMinFee) external onlyOwner {
+        uint256 previousMinFee = minFee;
         minFee = _newMinFee;
-        emit MinFeeUpdated(_newMinFee);
+        emit MinFeeUpdated(previousMinFee, _newMinFee);
     }
 
     /**
@@ -193,8 +196,9 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
      */
     function setFeeMarkup(uint256 _newMarkupBps) external onlyOwner {
         require(_newMarkupBps <= 1000, "GasX: Markup too high");
+        uint256 previousMarkupBps = feeMarkupBps;
         feeMarkupBps = _newMarkupBps;
-        emit FeeMarkupUpdated(_newMarkupBps);
+        emit FeeMarkupUpdated(previousMarkupBps, _newMarkupBps);
     }
 
     /**
@@ -214,13 +218,16 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
 
     /**
      * @notice Withdraw any ERC20 token (for recovering stuck tokens)
+     * @dev Cannot withdraw the fee token - use withdrawFees() instead
      * @param _token Token address
      * @param _to Recipient address
      * @param _amount Amount to withdraw
      */
     function withdrawToken(address _token, address _to, uint256 _amount) external onlyOwner {
         require(_to != address(0), "GasX: Invalid recipient");
+        require(_token != feeToken, "GasX: Use withdrawFees for fee token");
         IERC20(_token).safeTransfer(_to, _amount);
+        emit TokenRecovered(_token, _to, _amount);
     }
 
     /**
@@ -252,6 +259,15 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
      * @return estimatedFee The estimated fee in fee token units
      */
     function estimateFee(uint256 _gasCost) external view returns (uint256 estimatedFee) {
+        return _estimateFee(_gasCost);
+    }
+
+    /**
+     * @notice Internal fee estimation function
+     * @param _gasCost Estimated gas cost in wei
+     * @return estimatedFee The estimated fee in fee token units
+     */
+    function _estimateFee(uint256 _gasCost) internal view returns (uint256 estimatedFee) {
         uint256 onChainPrice = priceOracle.computeQuoteAverage(1e18, priceQuoteBaseToken, feeToken);
         uint256 baseFee = (_gasCost * onChainPrice) / 1e18;
         uint256 markup = (baseFee * feeMarkupBps) / 10_000;
@@ -273,7 +289,7 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
         address _user,
         uint256 _estimatedGasCost
     ) external view returns (bool hasAllowance, bool hasBalance, uint256 requiredAmount) {
-        requiredAmount = this.estimateFee(_estimatedGasCost);
+        requiredAmount = _estimateFee(_estimatedGasCost);
         hasAllowance = IERC20(feeToken).allowance(_user, address(this)) >= requiredAmount;
         hasBalance = IERC20(feeToken).balanceOf(_user) >= requiredAmount;
     }
