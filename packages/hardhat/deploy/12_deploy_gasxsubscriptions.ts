@@ -119,7 +119,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     // DAI addresses by chain
     const daiAddresses: Record<string, string> = {
-      "1": "0x6B175474E89094C44Da98b954EescdeCB5BE1Bf14", // Ethereum
+      "1": "0x6B175474E89094C44Da98b954EedeeCB5BE1Bf14", // Ethereum
       "42161": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1", // Arbitrum
       "8453": "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb", // Base
       "534352": "0xcA77eB3fEFe3725Dc33bccB54eDEFc3D9f764f97", // Scroll

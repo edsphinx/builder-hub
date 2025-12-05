@@ -181,6 +181,7 @@ contract GasXSubscriptions is
     event UpgradeScheduled(address indexed newImplementation, uint256 readyTime);
     event UpgradeCanceled(address indexed canceledImplementation);
     event UpgradeExecuted(address indexed newImplementation);
+    event OwnershipTransferCanceled(address indexed previousPendingOwner);
 
     // ────────────────────────────────────────────────
     // ░░  ERRORS
@@ -201,6 +202,7 @@ contract GasXSubscriptions is
     error UpgradeNotReady();
     error NoUpgradePending();
     error InvalidUpgrade();
+    error AmountTooSmall();
 
     // ────────────────────────────────────────────────
     // ░░  MODIFIERS
@@ -303,6 +305,7 @@ contract GasXSubscriptions is
         address token,
         bool autoRenew
     ) external nonReentrant whenNotPaused {
+        if (planId >= planCount) revert InvalidPlan();
         Plan storage plan = plans[planId];
         if (!plan.active) revert InvalidPlan();
         if (!supportedTokens[token]) revert UnsupportedToken();
@@ -350,6 +353,8 @@ contract GasXSubscriptions is
         uint256 planId,
         bool autoRenew
     ) external payable nonReentrant whenNotPaused {
+        // ─── CHECKS ─────────────────────────────────────
+        if (planId >= planCount) revert InvalidPlan();
         Plan storage plan = plans[planId];
         if (!plan.active) revert InvalidPlan();
         if (plan.priceEth == 0) revert UnsupportedToken();
@@ -359,23 +364,8 @@ contract GasXSubscriptions is
         uint256 fee = (plan.priceEth * plan.platformFeeBps) / 10000;
         uint256 netAmount = plan.priceEth - fee;
 
-        // Transfer ETH
-        (bool success, ) = treasury.call{value: netAmount}("");
-        if (!success) revert TransferFailed();
-
-        if (fee > 0) {
-            (success, ) = feeCollector.call{value: fee}("");
-            if (!success) revert TransferFailed();
-            accumulatedFees[address(0)] += fee;
-        }
-
-        // Refund excess ETH
-        if (msg.value > plan.priceEth) {
-            (success, ) = msg.sender.call{value: msg.value - plan.priceEth}("");
-            if (!success) revert TransferFailed();
-        }
-
-        // Update subscription
+        // ─── EFFECTS ────────────────────────────────────
+        // Update subscription state BEFORE external calls (CEI pattern)
         Subscription storage sub = subscriptions[msg.sender];
         uint256 startTime = block.timestamp;
 
@@ -391,7 +381,27 @@ contract GasXSubscriptions is
         sub.paymentToken = address(0);
         sub.autoRenew = autoRenew;
 
+        if (fee > 0) {
+            accumulatedFees[address(0)] += fee;
+        }
+
         emit SubscriptionPurchased(msg.sender, planId, address(0), plan.priceEth, startTime, endTime);
+
+        // ─── INTERACTIONS ───────────────────────────────
+        // External calls AFTER state changes
+        (bool success, ) = treasury.call{value: netAmount}("");
+        if (!success) revert TransferFailed();
+
+        if (fee > 0) {
+            (success, ) = feeCollector.call{value: fee}("");
+            if (!success) revert TransferFailed();
+        }
+
+        // Refund excess ETH
+        if (msg.value > plan.priceEth) {
+            (success, ) = msg.sender.call{value: msg.value - plan.priceEth}("");
+            if (!success) revert TransferFailed();
+        }
     }
 
     /**
@@ -457,6 +467,7 @@ contract GasXSubscriptions is
         uint256 packId,
         address token
     ) external nonReentrant whenNotPaused {
+        if (packId >= creditPackCount) revert InvalidCreditPack();
         CreditPack storage pack = creditPacks[packId];
         if (!pack.active) revert InvalidCreditPack();
         if (!supportedTokens[token]) revert UnsupportedToken();
@@ -479,12 +490,23 @@ contract GasXSubscriptions is
      * @param packId ID of the credit package
      */
     function purchaseCreditsWithEth(uint256 packId) external payable nonReentrant whenNotPaused {
+        // ─── CHECKS ─────────────────────────────────────
+        if (packId >= creditPackCount) revert InvalidCreditPack();
         CreditPack storage pack = creditPacks[packId];
         if (!pack.active) revert InvalidCreditPack();
         if (pack.priceEth == 0) revert UnsupportedToken();
         if (msg.value < pack.priceEth) revert InsufficientPayment();
 
-        // Transfer ETH to treasury
+        // ─── EFFECTS ────────────────────────────────────
+        // Update state BEFORE external calls (CEI pattern)
+        uint256 totalCredits = pack.credits + pack.bonusCredits;
+        creditBalances[msg.sender] += totalCredits;
+        totalCreditsPurchased[msg.sender] += totalCredits;
+
+        emit CreditsPurchased(msg.sender, packId, totalCredits, address(0), pack.priceEth);
+
+        // ─── INTERACTIONS ───────────────────────────────
+        // External calls AFTER state changes
         (bool success, ) = treasury.call{value: pack.priceEth}("");
         if (!success) revert TransferFailed();
 
@@ -493,13 +515,6 @@ contract GasXSubscriptions is
             (success, ) = msg.sender.call{value: msg.value - pack.priceEth}("");
             if (!success) revert TransferFailed();
         }
-
-        // Add credits
-        uint256 totalCredits = pack.credits + pack.bonusCredits;
-        creditBalances[msg.sender] += totalCredits;
-        totalCreditsPurchased[msg.sender] += totalCredits;
-
-        emit CreditsPurchased(msg.sender, packId, totalCredits, address(0), pack.priceEth);
     }
 
     /**
@@ -712,7 +727,9 @@ contract GasXSubscriptions is
      * @notice Cancel pending ownership transfer
      */
     function cancelOwnershipTransfer() external onlyOwner {
+        address canceled = pendingOwner;
         pendingOwner = address(0);
+        emit OwnershipTransferCanceled(canceled);
     }
 
     // ────────────────────────────────────────────────
@@ -769,17 +786,26 @@ contract GasXSubscriptions is
      * @dev Convert USDC price to another token's price based on decimals
      * @param usdcAmount Amount in USDC (6 decimals)
      * @param token Target token address
-     * @return Amount in target token
+     * @return result Amount in target token
+     * @notice Reverts if conversion results in 0 for non-zero input (precision loss protection)
      */
-    function _convertPrice(uint256 usdcAmount, address token) internal view returns (uint256) {
+    function _convertPrice(uint256 usdcAmount, address token) internal view returns (uint256 result) {
+        // Free plans have 0 price, allow them
+        if (usdcAmount == 0) {
+            return 0;
+        }
+
         uint8 decimals = tokenDecimals[token];
         if (decimals == 6) {
-            return usdcAmount; // Same decimals as USDC
+            result = usdcAmount; // Same decimals as USDC
         } else if (decimals > 6) {
-            return usdcAmount * (10 ** (decimals - 6));
+            result = usdcAmount * (10 ** (decimals - 6));
         } else {
-            return usdcAmount / (10 ** (6 - decimals));
+            result = usdcAmount / (10 ** (6 - decimals));
         }
+
+        // Protect against precision loss for non-free plans
+        if (result == 0) revert AmountTooSmall();
     }
 
     /**
@@ -886,6 +912,12 @@ contract GasXSubscriptions is
     // ░░  RECEIVE
     // ────────────────────────────────────────────────
 
-    /// @notice Allow contract to receive ETH
+    /**
+     * @notice Allow contract to receive ETH
+     * @dev Intentionally accepts ETH without restrictions for:
+     *      - Receiving ETH payments
+     *      - Receiving refunds from failed transactions
+     *      Any accidentally sent ETH can be recovered via emergencyWithdrawEth()
+     */
     receive() external payable {}
 }
