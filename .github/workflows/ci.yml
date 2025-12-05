@@ -113,6 +113,36 @@ jobs:
           yarn test --network scrollSepolia
         working-directory: packages/hardhat
 
+  foundry-fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: 🧰 Set up Node.js 20.19.3
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.3
+
+      - name: 🚀 Enable Corepack
+        run: corepack enable
+
+      - name: ⚙️ Configure Git HTTPS
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: 📦 Install dependencies
+        run: yarn install --immutable
+
+      - name: 🔍 Run Foundry Fuzz Tests
+        run: yarn test:fuzz
+        working-directory: packages/hardhat
+
   slither:
     runs-on: ubuntu-latest
     permissions:

@@ -1,0 +1,122 @@
+name: Security Fuzzing
+
+on:
+  # Run on schedule (weekly)
+  schedule:
+    - cron: '0 0 * * 0'  # Every Sunday at midnight UTC
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      fuzz_runs:
+        description: 'Number of fuzz runs'
+        required: false
+        default: '5000'
+      echidna_limit:
+        description: 'Echidna test limit'
+        required: false
+        default: '10000'
+  # Run on PRs that touch contracts
+  pull_request:
+    paths:
+      - 'packages/hardhat/contracts/**'
+      - 'packages/hardhat/test/foundry/**'
+      - 'packages/hardhat/test/echidna/**'
+
+jobs:
+  foundry-deep-fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.3
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Configure Git HTTPS
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run Deep Fuzz Tests
+        run: |
+          FUZZ_RUNS="${{ github.event.inputs.fuzz_runs || '5000' }}"
+          forge test --match-path 'test/foundry/*.sol' -vvv --fuzz-runs $FUZZ_RUNS
+        working-directory: packages/hardhat
+
+      - name: Upload Foundry Corpus
+        uses: actions/upload-artifact@v4
+        with:
+          name: foundry-corpus
+          path: packages/hardhat/cache/fuzz/
+          retention-days: 30
+        if: always()
+
+  echidna-invariants:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.3
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Configure Git HTTPS
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install crytic-compile and slither
+        run: pip install crytic-compile slither-analyzer
+
+      - name: Install Echidna
+        run: |
+          wget -q https://github.com/crytic/echidna/releases/download/v2.2.5/echidna-2.2.5-x86_64-linux.tar.gz -O /tmp/echidna.tar.gz
+          tar -xzf /tmp/echidna.tar.gz -C /tmp/
+          sudo mv /tmp/echidna /usr/local/bin/
+          echidna --version
+
+      - name: Run Echidna Invariant Tests
+        run: |
+          TEST_LIMIT="${{ github.event.inputs.echidna_limit || '10000' }}"
+          echidna test/echidna/GasXSubscriptions.echidna.sol \
+            --contract GasXSubscriptionsEchidna \
+            --test-limit $TEST_LIMIT \
+            --format text
+        working-directory: packages/hardhat
+
+      - name: Upload Echidna Corpus
+        uses: actions/upload-artifact@v4
+        with:
+          name: echidna-corpus
+          path: packages/hardhat/echidna-corpus/
+          retention-days: 30
+        if: always()
