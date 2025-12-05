@@ -79,6 +79,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
   log(`✅ ${artifactName} deployed at: ${deployResult.address}`);
 
+  // --- Enable Dev Mode ONLY for local networks (hardhat/localhost) ---
+  // Dev mode bypasses oracle signature validation for easier testing
+  // Testnets are treated as production environments for security
+  const paymaster = await hre.ethers.getContractAt(artifactName, deployResult.address);
+  if (isLocalNetwork) {
+    log(`\n🔧 Enabling Dev Mode for local development...`);
+    await (await paymaster.setDevMode(true)).wait();
+    log(`    ✅ Dev Mode enabled.`);
+  } else {
+    log(`\n🔒 ${envName} environment detected. Dev Mode remains disabled for security.`);
+  }
+
   // --- Optional Funding ---
   const shouldFund = process.env.FUND_ON_DEPLOY === "true";
   if (shouldFund) {

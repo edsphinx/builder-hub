@@ -66,10 +66,10 @@ This document provides all necessary information for a professional security aud
 
 | Metric | Coverage |
 |--------|----------|
-| Statements | 91.67% |
-| Branches | 80.77% |
-| Functions | 81.82% |
-| Lines | 93.94% |
+| Statements | 100% |
+| Branches | 88.1% |
+| Functions | 100% |
+| Lines | 100% |
 
 ### GasXConfig.sol
 
@@ -106,8 +106,11 @@ This document provides all necessary information for a professional security aud
 | Test Suite | Tests | Runs/Test | Status |
 |------------|-------|-----------|--------|
 | GasXSubscriptions | 9 | 1,000 | **All Passing** |
+| GasXWhitelistPaymaster | 9 | 1,000 | **All Passing** |
 
 ### Echidna Invariant Testing
+
+**GasXSubscriptions:**
 
 | Invariant | Status |
 |-----------|--------|
@@ -118,6 +121,20 @@ This document provides all necessary information for a professional security aud
 | Fee capped | **Passing** |
 | No stuck ETH | **Passing** |
 | Subscription time valid | **Passing** |
+
+**GasXWhitelistPaymaster:**
+
+| Invariant | Status |
+|-----------|--------|
+| Treasury not zero | **Passing** |
+| Config not zero | **Passing** |
+| Owner not zero | **Passing** |
+| Limits readable | **Passing** |
+| Dev mode consistent | **Passing** |
+| Environment valid | **Passing** |
+| isProd consistent | **Passing** |
+| Pause state valid | **Passing** |
+| Selectors queryable | **Passing** |
 
 ---
 

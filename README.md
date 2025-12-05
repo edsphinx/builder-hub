@@ -34,10 +34,12 @@ The GasX Protocol has achieved a **feature-complete MVP (Minimum Viable Product)
 | :--- | :--- | :---: |
 | **Smart Contracts** | **`GasXWhitelistPaymaster`** deployed and verified on-chain. | ✅ |
 | | **`GasXConfig`** and **`MultiOracleAggregator`** deployed and verified. | ✅ |
-| | **`GasXERC20FeePaymaster`** development in progress. | ⏳ |
+| | **`GasXERC20FeePaymaster`** deployed and verified. | ✅ |
+| | **`GasXSubscriptions`** subscription & credit payment system. | ✅ |
 | **Tooling** | Professional, multi-chain Hardhat deployment and testing suite. | ✅ |
 | **Frontend** | Functional Next.js demo app for gasless transactions. | ✅ |
-| **Testing** | Comprehensive unit, integration, and E2E tests with high coverage. | ✅ |
+| **Testing** | Unit, Integration, E2E, Fuzz, and Invariant tests with 100% coverage on core. | ✅ |
+| **Security** | Pausable contracts, emergency withdrawals, events for monitoring. | ✅ |
 | **Documentation** | Complete `/docs` suite, including architecture, guides, and references. | ✅ |
 | **Open Source** | MIT License, `CONTRIBUTING.md`, and `SECURITY.md` in place. | ✅ |
 
@@ -47,15 +49,30 @@ The project is fully prepared for deployment and E2E testing on the **Arbitrum**
 
 ## ✅ Comprehensive Test Coverage
 
-The GasX Protocol is rigorously tested using a multi-layered approach to ensure reliability and security. Our test suite, executed via Hardhat, covers everything from individual contract logic to full, end-to-end transaction flows on live testnets.
+The GasX Protocol is rigorously tested using a multi-layered approach to ensure reliability and security. Our test suite includes unit tests, integration tests, fuzz tests, and invariant tests.
 
 | Test Type | Contract / System Tested | Key Verifications |
 | :--- | :--- | :--- |
-| **Unit & Integration** | `GasXWhitelistPaymaster` | Owner-only access, selector whitelisting, gas limit enforcement, oracle signature logic. |
+| **Unit & Integration** | `GasXWhitelistPaymaster` | Owner-only access, selector whitelisting, gas limit enforcement, oracle signature logic, pausable, emergency withdrawal. |
+| | `GasXERC20FeePaymaster` | Token fee payments, price oracle integration, pausable functionality. |
+| | `GasXSubscriptions` | Plan management, credit system, ETH/token payments, CEI pattern. |
 | | `GasXConfig` | Correct deployment, access control, and parameter updates. |
 | | `MultiOracleAggregator`| Oracle management, average/median price calculation, and deviation checks. |
+| **Fuzz Testing** | `GasXWhitelistPaymaster` | 9 fuzz tests with 1,000 runs each. |
+| | `GasXSubscriptions` | 9 fuzz tests with 1,000 runs each. |
+| **Invariant Testing** | `GasXWhitelistPaymaster` | 9 invariant properties verified via Echidna. |
+| | `GasXSubscriptions` | 7 invariant properties verified via Echidna. |
 | **End-to-End (E2E)** | Full AA Stack (Local) | Simulates a complete, sponsored `UserOperation` on a local Hardhat network. |
 | | Full AA Stack (Public) | Verifies the entire flow on live testnets (e.g., Arbitrum Sepolia) using a real bundler. |
+
+### Coverage Summary
+
+| Contract | Statements | Branches | Functions | Lines |
+|----------|------------|----------|-----------|-------|
+| `GasXWhitelistPaymaster` | 100% | 88.1% | 100% | 100% |
+| `GasXERC20FeePaymaster` | 100% | 96.88% | 100% | 100% |
+| `GasXSubscriptions` | 93.18% | 68.82% | 88.57% | 95.57% |
+| `GasXConfig` | 100% | 91.67% | 100% | 100% |
 
 > The entire test suite is run automatically on every commit via our **Continuous Integration** pipeline.
 
@@ -64,6 +81,9 @@ The GasX Protocol is rigorously tested using a multi-layered approach to ensure 
 ## 🛠️ Architectural & Security Highlights
 
 -   **Security-First Design:** V1 contracts are deployed as **immutable** for maximum trust. The protocol uses a strict separation of concerns and includes on-chain protections like gas ceilings and selector whitelists.
+-   **Pausable Contracts:** All paymasters can be paused by the owner in case of emergency, using OpenZeppelin's `Pausable` with `whenNotPaused` modifier.
+-   **Emergency Recovery:** `emergencyWithdrawEth()` allows recovery of accidentally sent ETH.
+-   **Comprehensive Events:** All admin actions emit events for monitoring: `LimitsUpdated`, `SelectorUpdated`, `DevModeChanged`, `Paused`, `Unpaused`, `EmergencyWithdraw`.
 -   **Multi-Paymaster Suite:** A suite of specialized paymasters allows dApps to choose the exact tool for their needs.
 -   **Resilient On-Chain Oracles:** A robust `MultiOracleAggregator` provides reliable price data with built-in deviation checks.
 -   **Chain-Agnostic Architecture:** Professional deployment scripts and a centralized configuration allow for seamless multi-chain support.

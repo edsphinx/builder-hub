@@ -2,20 +2,28 @@
 
 This document provides a detailed technical reference for the `GasXWhitelistPaymaster` contract.
 
-- **Source Code:** [`contracts/core/GasXWhitelistPaymaster.sol`](../../contracts/core/GasXWhitelistPaymaster.sol)
+- **Source Code:** [`contracts/core/GasXWhitelistPaymaster.sol`](../../packages/hardhat/contracts/core/GasXWhitelistPaymaster.sol)
 - **Type:** ERC-4337 Paymaster
+- **Inherits:** `BasePaymaster`, `Pausable`
 
 ## 1. Overview
 
 The `GasXWhitelistPaymaster` is a smart contract that provides **full gas sponsorship** for `UserOperations`. Its core security mechanism is a whitelist of approved function selectors. If a `UserOperation` calls a function whose selector is on the whitelist (and meets other criteria), the paymaster will pay 100% of the gas fee on behalf of the user.
 
+### Key Security Features
+- **Pausable:** Owner can pause/unpause the contract to prevent new sponsorships in emergencies.
+- **Immutable Configuration:** `config`, `treasury`, and `environment` are set at deployment and cannot be changed.
+- **Dev Mode Disabled by Default:** `isDevMode` defaults to `false` for production safety.
+- **Emergency Withdrawal:** Owner can recover ETH accidentally sent to the contract.
+
 ## 2. Core Logic (`_validatePaymasterUserOp`)
 
-The validation logic follows a strict, sequential process to ensure security and prevent abuse:
+The validation logic follows a strict, sequential process to ensure security and prevent abuse. The function uses the `whenNotPaused` modifier from OpenZeppelin's Pausable.
 
-1.  **Selector Whitelist Check:** The first 4 bytes of the `UserOperation.callData` (the function selector) are checked against the `allowedSelectors` mapping. If the selector is not present and set to `true`, the transaction is rejected.
-2.  **Gas Ceiling Check:** The `UserOperation.callGasLimit` is checked against the `limits.maxGas` value set by the contract owner. This prevents griefing attacks with excessively high gas limits.
-3.  **Optional Oracle Signature Check:** If `paymasterAndData` contains more than the standard 52 bytes, the contract proceeds to validate the appended oracle data.
+1.  **Pause Check:** If the contract is paused, validation reverts with `EnforcedPause()`.
+2.  **Selector Whitelist Check:** The first 4 bytes of the `UserOperation.callData` (the function selector) are checked against the `allowedSelectors` mapping. If the selector is not present and set to `true`, the transaction is rejected.
+3.  **Gas Ceiling Check:** The `UserOperation.callGasLimit` is checked against the `limits.maxGas` value set by the contract owner. This prevents griefing attacks with excessively high gas limits.
+4.  **Optional Oracle Signature Check:** If `paymasterAndData` contains more than the standard 52 bytes, the contract proceeds to validate the appended oracle data.
 
 ## 3. `paymasterAndData` Structure
 
@@ -40,10 +48,43 @@ A `paymasterAndData` field with an oracle signature will have a minimum length o
 
 ## 4. Admin Functions (`onlyOwner`)
 
-- **`setLimit(uint256 gas, uint256 usd)`:** Sets the `maxGas` limit for all sponsored transactions.
-- **`setSelector(bytes4 sel, bool allowed)`:** Adds or removes a function selector from the whitelist.
-- **`setDevMode(bool enabled)`:** Enables or disables developer mode, which bypasses the oracle signature check.
+- **`setLimit(uint256 gas, uint256 usd)`:** Sets the `maxGas` limit for all sponsored transactions. Emits `LimitsUpdated`.
+- **`setSelector(bytes4 sel, bool allowed)`:** Adds or removes a function selector from the whitelist. Emits `SelectorUpdated`.
+- **`setDevMode(bool enabled)`:** Enables or disables developer mode, which bypasses the oracle signature check. Emits `DevModeChanged`.
+- **`pause()`:** Pauses the paymaster, preventing new sponsorships. Emits `Paused`.
+- **`unpause()`:** Unpauses the paymaster, allowing sponsorships again. Emits `Unpaused`.
+- **`emergencyWithdrawEth(address payable to, uint256 amount)`:** Withdraws ETH accidentally sent to the contract. If `amount` is 0, withdraws all balance. Emits `EmergencyWithdraw`.
 
-## 5. Events
+## 5. View Functions
 
-- **`GasSponsored(address indexed user, uint256 gasUsed, uint256 feeInWei)`:** Emitted in `_postOp` after a transaction is successfully sponsored, providing data for off-chain analytics.
+- **`isDev()`:** Returns `true` if developer mode is enabled.
+- **`isProd()`:** Returns `true` if the contract is configured for Production environment.
+- **`limits()`:** Returns the current gas and USD limits.
+- **`paused()`:** Returns `true` if the contract is paused.
+
+## 6. Events
+
+| Event | Parameters | Description |
+|-------|------------|-------------|
+| `GasSponsored` | `address indexed sender, uint256 gasUsed, uint256 feeWei` | Emitted in `_postOp` after a transaction is successfully sponsored |
+| `LimitsUpdated` | `uint256 maxGas, uint256 maxUsd` | Emitted when gas/USD limits are changed |
+| `SelectorUpdated` | `bytes4 indexed selector, bool allowed` | Emitted when a selector is added/removed from whitelist |
+| `DevModeChanged` | `bool enabled` | Emitted when developer mode is toggled |
+| `EmergencyWithdraw` | `address indexed to, uint256 amount` | Emitted when ETH is withdrawn via emergency function |
+| `Paused` | `address account` | Emitted when contract is paused (from OpenZeppelin) |
+| `Unpaused` | `address account` | Emitted when contract is unpaused (from OpenZeppelin) |
+
+## 7. Constants
+
+| Name | Value | Description |
+|------|-------|-------------|
+| `PAYMASTER_DATA_OFFSET` | 52 | Inherited from BasePaymaster. Standard header size. |
+| `EXPIRY_SIZE` | 6 | Size of expiry timestamp field (uint48 = 6 bytes) |
+
+## 8. Security Considerations
+
+1. **Dev Mode:** NEVER enable dev mode in production. It bypasses oracle signature validation.
+2. **Pause Capability:** Use `pause()` immediately if suspicious activity is detected.
+3. **Selector Management:** Only whitelist selectors for functions that should be sponsored.
+4. **Gas Limits:** Set appropriate `maxGas` limits to prevent griefing attacks.
+5. **Immutable Addresses:** `config`, `treasury`, and `environment` cannot be changed after deployment.
