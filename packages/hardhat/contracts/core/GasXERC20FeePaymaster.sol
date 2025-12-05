@@ -130,8 +130,11 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
     }
 
     function _calculateFee(uint256 gasCost, uint256 price) internal view returns (uint256 fee) {
-        uint256 baseFee = (gasCost * price) / 1e18;
-        fee = baseFee + (baseFee * feeMarkupBps) / 10_000;
+        // Calculate fee with markup in a single division to avoid precision loss
+        // Formula: baseFee * (10000 + feeMarkupBps) / 10000
+        // Where baseFee = gasCost * price / 1e18
+        // Combined: gasCost * price * (10000 + feeMarkupBps) / (1e18 * 10000)
+        fee = (gasCost * price * (10_000 + feeMarkupBps)) / (1e18 * 10_000);
         if (fee < minFee) fee = minFee;
     }
 
@@ -148,10 +151,9 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
         // Decode the price, sender address, and userOpHash from the context
         (uint256 onChainPrice, address sender, bytes32 userOpHash) = abi.decode(context, (uint256, address, bytes32));
 
-        // Recalculate the fee with the actual gas cost
-        uint256 baseFee = (actualGasCost * onChainPrice) / 1e18;
-        uint256 markup = (baseFee * feeMarkupBps) / 10_000;
-        uint256 actualFee = baseFee + markup;
+        // Recalculate the fee with the actual gas cost using single division to avoid precision loss
+        // Formula: actualGasCost * onChainPrice * (10000 + feeMarkupBps) / (1e18 * 10000)
+        uint256 actualFee = (actualGasCost * onChainPrice * (10_000 + feeMarkupBps)) / (1e18 * 10_000);
 
         // Apply minimum fee
         if (actualFee < minFee) {
@@ -269,9 +271,9 @@ contract GasXERC20FeePaymaster is BasePaymaster, Pausable {
      */
     function _estimateFee(uint256 _gasCost) internal view returns (uint256 estimatedFee) {
         uint256 onChainPrice = priceOracle.computeQuoteAverage(1e18, priceQuoteBaseToken, feeToken);
-        uint256 baseFee = (_gasCost * onChainPrice) / 1e18;
-        uint256 markup = (baseFee * feeMarkupBps) / 10_000;
-        estimatedFee = baseFee + markup;
+        // Calculate fee with markup in single division to avoid precision loss
+        // Formula: _gasCost * onChainPrice * (10000 + feeMarkupBps) / (1e18 * 10000)
+        estimatedFee = (_gasCost * onChainPrice * (10_000 + feeMarkupBps)) / (1e18 * 10_000);
         if (estimatedFee < minFee) {
             estimatedFee = minFee;
         }

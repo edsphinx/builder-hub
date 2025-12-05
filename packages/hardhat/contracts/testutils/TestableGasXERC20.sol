@@ -46,6 +46,7 @@ contract TestableGasXERC20 is GasXERC20FeePaymaster {
     }
 
     /// @notice Helper to generate valid paymaster data for testing
+    /// @dev Uses bytes.concat to avoid abi.encodePacked collision with dynamic types
     function encodePaymasterData(
         uint256 price,
         uint48 expiry,
@@ -59,17 +60,13 @@ contract TestableGasXERC20 is GasXERC20FeePaymaster {
         // - 6 bytes: expiry
         // - variable: signature
 
-        bytes memory priceBytes = abi.encode(price);
-        bytes memory expiryBytes = abi.encodePacked(expiry);
-
-        return
-            abi.encodePacked(
-                address(this), // 20 bytes
-                uint128(100000), // verificationGasLimit: 16 bytes
-                uint128(100000), // postOpGasLimit: 16 bytes
-                priceBytes, // 32 bytes (price)
-                expiryBytes, // 6 bytes (expiry)
-                signature // variable (signature)
-            );
+        return bytes.concat(
+            bytes20(address(this)),           // 20 bytes: paymaster address
+            bytes16(uint128(100000)),         // 16 bytes: verificationGasLimit
+            bytes16(uint128(100000)),         // 16 bytes: postOpGasLimit
+            bytes32(price),                   // 32 bytes: price
+            bytes6(expiry),                   // 6 bytes: expiry
+            signature                         // variable: signature
+        );
     }
 }

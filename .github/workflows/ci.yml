@@ -146,7 +146,7 @@ jobs:
         id: slither
         with:
           target: packages/hardhat
-          slither-args: --filter-paths "node_modules" --exclude-informational --exclude-low --exclude-optimization
+          slither-config: packages/hardhat/slither.config.json
           fail-on: high
           sarif: results.sarif
         continue-on-error: true
