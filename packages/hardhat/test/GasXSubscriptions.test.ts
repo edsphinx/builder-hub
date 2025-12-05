@@ -1118,4 +1118,213 @@ describe("GasXSubscriptions", function () {
       expect(isActive).to.equal(true);
     });
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EMERGENCY FUNCTIONS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe("Emergency Functions", function () {
+    it("Should allow owner to withdraw stuck ETH", async function () {
+      const { subscriptions, owner, user1 } = await loadFixture(deployFixture);
+
+      // Send ETH directly to contract (simulating stuck funds)
+      await owner.sendTransaction({
+        to: await subscriptions.getAddress(),
+        value: ethers.parseEther("1.0"),
+      });
+
+      const contractBalance = await ethers.provider.getBalance(await subscriptions.getAddress());
+      expect(contractBalance).to.equal(ethers.parseEther("1.0"));
+
+      const user1BalanceBefore = await ethers.provider.getBalance(user1.address);
+
+      // Owner withdraws stuck ETH
+      await subscriptions.connect(owner).emergencyWithdrawEth(user1.address, ethers.parseEther("1.0"));
+
+      const user1BalanceAfter = await ethers.provider.getBalance(user1.address);
+      expect(user1BalanceAfter - user1BalanceBefore).to.equal(ethers.parseEther("1.0"));
+
+      const contractBalanceAfter = await ethers.provider.getBalance(await subscriptions.getAddress());
+      expect(contractBalanceAfter).to.equal(0n);
+    });
+
+    it("Should emit EmergencyWithdraw event for ETH", async function () {
+      const { subscriptions, owner, user1 } = await loadFixture(deployFixture);
+
+      await owner.sendTransaction({
+        to: await subscriptions.getAddress(),
+        value: ethers.parseEther("0.5"),
+      });
+
+      await expect(subscriptions.connect(owner).emergencyWithdrawEth(user1.address, ethers.parseEther("0.5")))
+        .to.emit(subscriptions, "EmergencyWithdraw")
+        .withArgs(ethers.ZeroAddress, user1.address, ethers.parseEther("0.5"));
+    });
+
+    it("Should reject emergencyWithdrawEth to zero address", async function () {
+      const { subscriptions, owner } = await loadFixture(deployFixture);
+
+      await owner.sendTransaction({
+        to: await subscriptions.getAddress(),
+        value: ethers.parseEther("0.1"),
+      });
+
+      await expect(
+        subscriptions.connect(owner).emergencyWithdrawEth(ethers.ZeroAddress, ethers.parseEther("0.1")),
+      ).to.be.revertedWithCustomError(subscriptions, "ZeroAddress");
+    });
+
+    it("Should reject emergencyWithdrawEth from non-owner", async function () {
+      const { subscriptions, owner, user1 } = await loadFixture(deployFixture);
+
+      await owner.sendTransaction({
+        to: await subscriptions.getAddress(),
+        value: ethers.parseEther("0.1"),
+      });
+
+      await expect(
+        subscriptions.connect(user1).emergencyWithdrawEth(user1.address, ethers.parseEther("0.1")),
+      ).to.be.revertedWithCustomError(subscriptions, "Unauthorized");
+    });
+
+    it("Should allow owner to withdraw stuck ERC20 tokens", async function () {
+      const { subscriptions, owner, user1, usdc } = await loadFixture(deployFixture);
+
+      // Send tokens directly to contract (simulating stuck funds)
+      await usdc.mint(await subscriptions.getAddress(), ethers.parseUnits("100", USDC_DECIMALS));
+
+      const user1BalanceBefore = await usdc.balanceOf(user1.address);
+
+      await subscriptions
+        .connect(owner)
+        .emergencyWithdrawToken(await usdc.getAddress(), user1.address, ethers.parseUnits("100", USDC_DECIMALS));
+
+      const user1BalanceAfter = await usdc.balanceOf(user1.address);
+      expect(user1BalanceAfter - user1BalanceBefore).to.equal(ethers.parseUnits("100", USDC_DECIMALS));
+    });
+
+    it("Should reject emergencyWithdrawToken to zero address", async function () {
+      const { subscriptions, owner, usdc } = await loadFixture(deployFixture);
+
+      await usdc.mint(await subscriptions.getAddress(), ethers.parseUnits("100", USDC_DECIMALS));
+
+      await expect(
+        subscriptions
+          .connect(owner)
+          .emergencyWithdrawToken(await usdc.getAddress(), ethers.ZeroAddress, ethers.parseUnits("100", USDC_DECIMALS)),
+      ).to.be.revertedWithCustomError(subscriptions, "ZeroAddress");
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ADDITIONAL BRANCH COVERAGE TESTS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  describe("Additional Branch Coverage", function () {
+    it("Should revert when subscribing with unsupported token", async function () {
+      const { subscriptions, user1, dai } = await loadFixture(deployFixture);
+
+      // DAI is not added as supported token by default
+      await dai.connect(user1).approve(await subscriptions.getAddress(), ethers.parseUnits("100", DAI_DECIMALS));
+
+      await expect(
+        subscriptions.connect(user1).subscribe(1, await dai.getAddress(), false),
+      ).to.be.revertedWithCustomError(subscriptions, "UnsupportedToken");
+    });
+
+    it("Should revert when purchasing credits with ETH for invalid pack", async function () {
+      const { subscriptions, user1 } = await loadFixture(deployFixture);
+
+      await expect(
+        subscriptions.connect(user1).purchaseCreditsWithEth(999, { value: ethers.parseEther("1.0") }),
+      ).to.be.revertedWithCustomError(subscriptions, "InvalidCreditPack");
+    });
+
+    it("Should handle receive() function (direct ETH transfer)", async function () {
+      const { subscriptions, owner } = await loadFixture(deployFixture);
+
+      // Direct ETH transfer should be accepted by receive()
+      await owner.sendTransaction({
+        to: await subscriptions.getAddress(),
+        value: ethers.parseEther("0.01"),
+      });
+
+      const balance = await ethers.provider.getBalance(await subscriptions.getAddress());
+      expect(balance).to.equal(ethers.parseEther("0.01"));
+    });
+
+    it("Should revert setTreasury to zero address", async function () {
+      const { subscriptions, owner } = await loadFixture(deployFixture);
+
+      await expect(subscriptions.connect(owner).setTreasury(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+        subscriptions,
+        "ZeroAddress",
+      );
+    });
+
+    it("Should revert setFeeCollector to zero address", async function () {
+      const { subscriptions, owner } = await loadFixture(deployFixture);
+
+      await expect(subscriptions.connect(owner).setFeeCollector(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+        subscriptions,
+        "ZeroAddress",
+      );
+    });
+
+    it("Should allow removing a secondary supported token", async function () {
+      const { subscriptions, owner, usdt } = await loadFixture(deployFixture);
+
+      // First add USDT
+      await subscriptions.connect(owner).addSupportedToken(await usdt.getAddress(), USDC_DECIMALS);
+      expect(await subscriptions.supportedTokens(await usdt.getAddress())).to.equal(true);
+
+      // Remove USDT
+      await subscriptions.connect(owner).removeSupportedToken(await usdt.getAddress());
+      expect(await subscriptions.supportedTokens(await usdt.getAddress())).to.equal(false);
+    });
+
+    it("Should allow creating a credit pack with zero ETH price (USDC only)", async function () {
+      const { subscriptions, owner } = await loadFixture(deployFixture);
+
+      // Create pack with USDC price but no ETH price
+      const packId = await subscriptions
+        .connect(owner)
+        .createCreditPack.staticCall("USDC Only Pack", 50, 5, 5_000000n, 0);
+      await subscriptions.connect(owner).createCreditPack("USDC Only Pack", 50, 5, 5_000000n, 0);
+
+      const pack = await subscriptions.getCreditPack(packId);
+      expect(pack.priceUsdc).to.equal(5_000000n);
+      expect(pack.priceEth).to.equal(0);
+    });
+
+    it("Should refund credits correctly", async function () {
+      const { subscriptions, owner, user1 } = await loadFixture(deployFixture);
+
+      // Refund adds credits to user
+      const balanceBefore = await subscriptions.getCreditBalance(user1.address);
+      await subscriptions.connect(owner).refundCredits(user1.address, 100n);
+      const balanceAfter = await subscriptions.getCreditBalance(user1.address);
+
+      expect(balanceAfter - balanceBefore).to.equal(100n);
+    });
+
+    it("Should update plan correctly", async function () {
+      const { subscriptions, owner } = await loadFixture(deployFixture);
+
+      // Update Pro plan price (planId, priceUsdc, priceEth, platformFeeBps, active)
+      await subscriptions.connect(owner).updatePlan(1, 150_000000n, ethers.parseEther("0.06"), 300, true);
+
+      const plan = await subscriptions.getPlan(1);
+      expect(plan.priceUsdc).to.equal(150_000000n);
+      expect(plan.priceEth).to.equal(ethers.parseEther("0.06"));
+    });
+
+    it("Should revert updatePlan with fee too high", async function () {
+      const { subscriptions, owner } = await loadFixture(deployFixture);
+
+      await expect(
+        subscriptions.connect(owner).updatePlan(1, 100_000000n, ethers.parseEther("0.04"), 10000, true),
+      ).to.be.revertedWithCustomError(subscriptions, "FeeTooHigh");
+    });
+  });
 });
