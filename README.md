@@ -94,11 +94,12 @@ The GasX Protocol is rigorously tested using a multi-layered approach to ensure 
 
 ## 🚀 Roadmap
 
-| Quarter | Phase | Key Deliverables |
-| :--- | :--- | :--- |
-| **Q3 2025** | **Foundation & Launch** | - **`GasXWhitelistPaymaster`:** Deploy the immutable contract on Arbitrum & other L2s.<br>- **Professional Tooling:** Finalize the multi-chain deployment and testing suite.<br>- **Complete Documentation:** Publish the full `/docs` suite. |
-| **Q4 2025**| **USDC & Partner Onboarding**| - **`GasXERC20FeePaymaster`:** Develop, test, and deploy the USDC fee paymaster.<br>- **Off-Chain Service:** Launch the secure Oracle Signer service.<br>- **First Partner Integrations:** Onboard the first wave of dApps. |
-| **Q1 2026**| **SDK & Scalability** | - **Developer SDK:** Release a public NPM package to simplify dApp integration.<br>- **Admin Dashboard v1:** Launch a UI for partners to manage paymaster configurations. |
+| Quarter | Phase | Key Deliverables | Status |
+| :--- | :--- | :--- | :---: |
+| **Q3 2025** | **Foundation & Core Infrastructure** | - **`GasXWhitelistPaymaster`:** Deployed on Arbitrum & Scroll Sepolia.<br>- **`GasXConfig` & `MultiOracleAggregator`:** Multi-oracle price feeds.<br>- **Oracle Adapters:** DIA & Euler adapters with factory deployment. | ✅ |
+| **Q4 2025** | **USDC & Subscriptions** | - **`GasXERC20FeePaymaster`:** Token fee payments (100% coverage).<br>- **`GasXSubscriptions`:** Tiered subscriptions with credit system.<br>- **Security Prep:** 344 tests, 101 fuzz tests, Slither & Aderyn clean. | ✅ |
+| **Q1 2026** | **SDK & Partner Onboarding** | - **Developer SDK:** NPM package for dApp integration.<br>- **Admin Dashboard v1:** UI for paymaster management.<br>- **First Partner Integrations:** Onboard initial dApps. | 📝 |
+| **Q2 2026** | **Mainnet & Scalability** | - **Mainnet Deployment:** Arbitrum, Base, Scroll mainnets.<br>- **Oracle Signer Service:** Production off-chain backend.<br>- **`GasXMerkleProofPaymaster`:** On-chain modular eligibility. | 📝 |
 
 ---
 ## 📘 Documentation

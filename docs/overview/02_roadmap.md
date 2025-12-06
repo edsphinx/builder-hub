@@ -49,9 +49,10 @@ This path aligns GasX with the dominant, highly scalable pattern used by major i
 
 | Quarter | Phase | Key Deliverables | Status |
 | :--- | :--- | :--- | :--- |
-| **Q4 2025** | **Foundation & USDC Support** | - **`GasXERC20FeePaymaster.sol`:** Finalize, test, and deploy the USDC fee paymaster.<br>- **Oracle Signer Service:** Build and deploy the secure off-chain backend for signing validation requests.<br>- **Admin Dashboard v1:** Implement UI for managing `oracleSigner` addresses. | ⏳ In Progress |
-| **Q1 2026** | **Whitelist Paymaster Refactor** | - Refactor `GasXWhitelistPaymaster` to fully embrace the signature-based model.<br>- Introduce on-chain selector whitelist as an optional, secondary check.<br>- Launch Admin Dashboard features for managing whitelist rules. | 📝 Planned |
-| **Q2 2026** | **Scalability & New Strategies** | - Begin development of the first on-chain module from Path A (`GasXMerkleProofPaymaster`).<br>- Onboard first wave of integration partners.<br>- Publish a professional SDK for easy dApp integration. | 📝 Planned |
+| **Q3 2025** | **Foundation & Core Infrastructure** | - **`GasXWhitelistPaymaster.sol`:** Deployed and verified on Arbitrum & Scroll Sepolia.<br>- **`GasXConfig.sol`:** Centralized configuration deployed.<br>- **`MultiOracleAggregator.sol`:** Multi-oracle price feed with deviation checks.<br>- **Oracle Adapters:** DIA and Euler adapters with factory deployment. | ✅ Complete |
+| **Q4 2025** | **USDC & Subscriptions** | - **`GasXERC20FeePaymaster.sol`:** Token fee payments deployed and tested.<br>- **`GasXSubscriptions.sol`:** Tiered subscriptions with credit system.<br>- **Security Audit Preparation:** 97% coverage, 344 unit tests, 101 fuzz tests.<br>- **Static Analysis:** Slither (0 Med/High), Aderyn (0 High). | ✅ Complete |
+| **Q1 2026** | **SDK & Partner Onboarding** | - **Developer SDK:** Publish NPM package for dApp integration.<br>- **Admin Dashboard v1:** UI for managing paymaster configurations.<br>- **First Partner Integrations:** Onboard initial dApps. | 📝 Planned |
+| **Q2 2026** | **Scalability & New Strategies** | - **`GasXMerkleProofPaymaster`:** On-chain modular eligibility (Path A).<br>- **Off-Chain Oracle Signer Service:** Production backend for signature validation.<br>- **Mainnet Deployment:** Launch on Arbitrum, Base, Scroll mainnets. | 📝 Planned |
 
 ---
 
@@ -104,7 +105,19 @@ This section documents key architectural patterns and optimizations that have be
 
 ## 8. Next Steps
 
-- **Develop `GasXERC20FeePaymaster.sol`:** Finalize and test the single-token (USDC) paymaster contract based on the off-chain signature pattern.
-- **Refactor `GasXWhitelistPaymaster.sol`:** Fully embrace the signature-based pattern, making the on-chain selector whitelist an optional, secondary check.
-- **Build the Oracle Signer Service:** Develop the off-chain backend service required for both paymasters to sign validation requests.
-- **Update the Admin Dashboard:** Create the UI for managing authorized `oracleSigner` addresses in `GasXConfig`.
+### Completed ✅
+- **`GasXERC20FeePaymaster.sol`:** Finalized, tested (100% coverage), and deployed.
+- **`GasXSubscriptions.sol`:** Implemented tiered subscription system with credit packs.
+- **`GasXWhitelistPaymaster.sol`:** Signature-based pattern with optional selector whitelist.
+- **Oracle Infrastructure:** MultiOracleAggregator, DIA & Euler adapters, factory contracts.
+- **Security Audit Prep:** 97% line coverage, 344 unit tests, 101 fuzz tests, Slither & Aderyn clean.
+
+### In Progress 🔄
+- **Formal Security Audit:** Preparing for external audit engagement.
+- **Mainnet Deployment Planning:** Finalizing deployment strategy for Arbitrum, Base, Scroll.
+
+### Upcoming 📝
+- **Developer SDK:** NPM package for simplified dApp integration.
+- **Admin Dashboard v1:** UI for managing paymaster configurations.
+- **Oracle Signer Service:** Production off-chain backend for signature validation.
+- **Partner Integrations:** Onboarding first wave of dApp partners.
