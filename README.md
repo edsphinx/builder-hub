@@ -78,6 +78,47 @@ The GasX Protocol is rigorously tested using a multi-layered approach to ensure 
 
 ---
 
+## 🔒 Security Analysis
+
+All smart contracts have been analyzed with industry-standard static analysis tools and passed with zero high/medium severity findings.
+
+### Static Analysis Tools
+
+| Tool | Version | High | Medium | Low | Status |
+|:-----|:--------|:----:|:------:|:---:|:------:|
+| **Slither** | 0.10.x | 0 | 0 | 0 | ✅ Pass |
+| **Aderyn** | 0.4.x | 0 | 0 | 14 | ✅ Pass |
+
+### Security Testing
+
+| Test Type | Framework | Count | Status |
+|:----------|:----------|------:|:------:|
+| Unit Tests | Hardhat + Chai | 344 | ✅ Pass |
+| Fuzz Tests | Foundry | 101 | ✅ Pass |
+| Invariant Tests | Echidna | Configured | ✅ Ready |
+
+### Key Security Features
+
+- **CEI Pattern:** All state changes occur before external calls (Checks-Effects-Interactions)
+- **Reentrancy Protection:** Critical functions follow strict ordering to prevent reentrancy
+- **Access Control:** Owner-only functions with proper modifiers
+- **Pausable:** Emergency pause functionality on all paymasters
+- **Emergency Withdrawal:** Recovery functions for accidentally sent ETH/tokens
+
+### Audit Status
+
+| Item | Status |
+|:-----|:------:|
+| Internal Security Review | ✅ Complete |
+| Static Analysis (Slither/Aderyn) | ✅ 0 High/Medium |
+| Fuzz Testing (Foundry) | ✅ 101 tests passing |
+| Invariant Testing (Echidna) | ✅ Configured |
+| Formal External Audit | 🔄 Pending |
+
+> Full security reports available in [`packages/hardhat/report-aderyn.md`](./packages/hardhat/report-aderyn.md)
+
+---
+
 ## 🛠️ Architectural & Security Highlights
 
 -   **Security-First Design:** V1 contracts are deployed as **immutable** for maximum trust. The protocol uses a strict separation of concerns and includes on-chain protections like gas ceilings and selector whitelists.
