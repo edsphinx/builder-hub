@@ -14,7 +14,7 @@ describe("MultiOracleAggregator", () => {
     }
   });
   async function deployAggregatorFixture() {
-    const [owner] = await ethers.getSigners();
+    const [owner, user] = await ethers.getSigners();
     const attacker = new Wallet(ethers.Wallet.createRandom().privateKey, ethers.provider);
 
     const createOracle = async (price: string): Promise<MockOracle> => {
@@ -34,12 +34,12 @@ describe("MultiOracleAggregator", () => {
     const BASE = "0x0000000000000000000000000000000000000001";
     const QUOTE = "0x0000000000000000000000000000000000000002";
 
-    return { aggregator, owner, attacker, mockOracle, createOracle, BASE, QUOTE };
+    return { aggregator, owner, user, attacker, mockOracle, createOracle, BASE, QUOTE };
   }
 
   // Declare variables in the top-level scope
   let aggregator: MultiOracleAggregator;
-  let owner: SignerWithAddress, attacker: SignerWithAddress | Wallet;
+  let owner: SignerWithAddress, user: SignerWithAddress, attacker: SignerWithAddress | Wallet;
   let createOracle: (price: string) => Promise<MockOracle>;
   let BASE: string, QUOTE: string;
   let mockOracle: MockOracle;
@@ -53,6 +53,7 @@ describe("MultiOracleAggregator", () => {
       const fixtureData = await loadFixture(deployAggregatorFixture);
       aggregator = fixtureData.aggregator;
       owner = fixtureData.owner;
+      user = fixtureData.user;
       attacker = fixtureData.attacker;
       createOracle = fixtureData.createOracle;
       BASE = fixtureData.BASE;
@@ -64,6 +65,7 @@ describe("MultiOracleAggregator", () => {
       const setupData = await deployAggregatorFixture();
       aggregator = setupData.aggregator;
       owner = setupData.owner;
+      user = setupData.user;
       attacker = setupData.attacker;
       createOracle = setupData.createOracle;
       BASE = setupData.BASE;
@@ -263,6 +265,232 @@ describe("MultiOracleAggregator", () => {
       // Check if state is preserved
       const ownerAfterUpgrade = await upgraded.owner();
       expect(ownerAfterUpgrade).to.equal(owner.address);
+    });
+  });
+
+  describe("Trusted Forwarder", () => {
+    it("should return false for isTrustedForwarder when not set", async () => {
+      expect(await aggregator.isTrustedForwarder(owner.address)).to.equal(false);
+    });
+
+    it("should allow owner to set trusted forwarder", async () => {
+      const forwarder = "0x0000000000000000000000000000000000000099";
+      await expect(aggregator.setTrustedForwarder(forwarder))
+        .to.emit(aggregator, "TrustedForwarderUpdated")
+        .withArgs(ethers.ZeroAddress, forwarder);
+    });
+
+    it("should return true for isTrustedForwarder after setting", async () => {
+      const forwarder = "0x0000000000000000000000000000000000000099";
+      await aggregator.setTrustedForwarder(forwarder);
+      expect(await aggregator.isTrustedForwarder(forwarder)).to.equal(true);
+    });
+
+    it("should revert when non-owner tries to set trusted forwarder", async () => {
+      const forwarder = "0x0000000000000000000000000000000000000099";
+      await expect(aggregator.connect(user).setTrustedForwarder(forwarder)).to.be.revertedWithCustomError(
+        aggregator,
+        "OwnableUnauthorizedAccount",
+      );
+    });
+  });
+
+  describe("Additional Edge Cases", () => {
+    it("should revert with ZeroAddress when initializing with zero owner", async () => {
+      const AggregatorFactory = await ethers.getContractFactory("MultiOracleAggregator");
+      // The deployProxy call itself throws when initialize fails
+      await expect(
+        upgrades.deployProxy(AggregatorFactory, [ethers.ZeroAddress, 1000], {
+          initializer: "initialize",
+          kind: "uups",
+        }),
+      ).to.be.reverted;
+    });
+
+    it("should revert with DeviationTooHigh when deviation exceeds 10000 bps", async () => {
+      await expect(aggregator.setMaxDeviationBps(10001)).to.be.revertedWithCustomError(aggregator, "DeviationTooHigh");
+    });
+
+    it("should emit MaxDeviationUpdated with previous value", async () => {
+      const previousBps = await aggregator.maxDeviationBps();
+      await expect(aggregator.setMaxDeviationBps(500))
+        .to.emit(aggregator, "MaxDeviationUpdated")
+        .withArgs(previousBps, 500);
+    });
+
+    it("should revert addOracle with ZeroOracle when oracle is zero", async () => {
+      await expect(aggregator.addOracle(BASE, QUOTE, ethers.ZeroAddress)).to.be.revertedWithCustomError(
+        aggregator,
+        "ZeroOracle",
+      );
+    });
+
+    it("should revert addOracle with ZeroAddress when base is zero", async () => {
+      await expect(
+        aggregator.addOracle(ethers.ZeroAddress, QUOTE, await mockOracle.getAddress()),
+      ).to.be.revertedWithCustomError(aggregator, "ZeroAddress");
+    });
+
+    it("should revert addOracle with InvalidPair when base equals quote", async () => {
+      await expect(aggregator.addOracle(BASE, BASE, await mockOracle.getAddress())).to.be.revertedWithCustomError(
+        aggregator,
+        "InvalidPair",
+      );
+    });
+
+    it("should revert updateOracle with ZeroOracle when new oracle is zero", async () => {
+      await aggregator.addOracle(BASE, QUOTE, await mockOracle.getAddress());
+      await expect(aggregator.updateOracle(BASE, QUOTE, 0, ethers.ZeroAddress)).to.be.revertedWithCustomError(
+        aggregator,
+        "ZeroOracle",
+      );
+    });
+
+    it("should revert updateOracle with InvalidIndex", async () => {
+      await aggregator.addOracle(BASE, QUOTE, await mockOracle.getAddress());
+      const newOracle = await createOracle("1.5");
+      await expect(
+        aggregator.updateOracle(BASE, QUOTE, 99, await newOracle.getAddress()),
+      ).to.be.revertedWithCustomError(aggregator, "InvalidIndex");
+    });
+
+    it("should revert updateOracle with DuplicateOracle", async () => {
+      const o1 = await createOracle("1.0");
+      const o2 = await createOracle("1.1");
+      await aggregator.addOracle(BASE, QUOTE, await o1.getAddress());
+      await aggregator.addOracle(BASE, QUOTE, await o2.getAddress());
+      await expect(aggregator.updateOracle(BASE, QUOTE, 0, await o2.getAddress())).to.be.revertedWithCustomError(
+        aggregator,
+        "DuplicateOracle",
+      );
+    });
+
+    it("should revert toggleOracle with InvalidIndex", async () => {
+      await aggregator.addOracle(BASE, QUOTE, await mockOracle.getAddress());
+      await expect(aggregator.toggleOracle(BASE, QUOTE, 99, false)).to.be.revertedWithCustomError(
+        aggregator,
+        "InvalidIndex",
+      );
+    });
+
+    it("should return correct oracleCount", async () => {
+      expect(await aggregator.oracleCount(BASE, QUOTE)).to.equal(0);
+      await aggregator.addOracle(BASE, QUOTE, await mockOracle.getAddress());
+      expect(await aggregator.oracleCount(BASE, QUOTE)).to.equal(1);
+    });
+
+    it("should revert computeQuoteAverage with NoOracles", async () => {
+      await expect(aggregator.computeQuoteAverage(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWithCustomError(
+        aggregator,
+        "NoOracles",
+      );
+    });
+
+    it("should revert computeQuoteMedian with NoOracles", async () => {
+      await expect(aggregator.computeQuoteMedian(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWithCustomError(
+        aggregator,
+        "NoOracles",
+      );
+    });
+
+    it("should revert getQuoteMedian with DeviationTooHigh", async () => {
+      await aggregator.setMaxDeviationBps(100); // 1% max deviation
+
+      const o1 = await createOracle("1.0");
+      const o2 = await createOracle("1.2"); // 20% deviation
+
+      await aggregator.addOracle(BASE, QUOTE, await o1.getAddress());
+      await aggregator.addOracle(BASE, QUOTE, await o2.getAddress());
+
+      await expect(aggregator.getQuoteMedian(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWithCustomError(
+        aggregator,
+        "DeviationTooHigh",
+      );
+    });
+
+    it("should revert getQuoteMedian with NoData when all oracles revert", async () => {
+      const o1 = await createOracle("1.0");
+      await o1.setRevert(true);
+      await aggregator.addOracle(BASE, QUOTE, await o1.getAddress());
+
+      await expect(aggregator.getQuoteMedian(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWithCustomError(
+        aggregator,
+        "NoData",
+      );
+    });
+
+    it("should revert computeQuoteAverage with NoData when all oracles fail", async () => {
+      const o1 = await createOracle("1.0");
+      await o1.setRevert(true);
+      await aggregator.addOracle(BASE, QUOTE, await o1.getAddress());
+
+      await expect(aggregator.computeQuoteAverage(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWithCustomError(
+        aggregator,
+        "NoData",
+      );
+    });
+
+    it("should revert computeQuoteMedian with NoData when all oracles fail", async () => {
+      const o1 = await createOracle("1.0");
+      await o1.setRevert(true);
+      await aggregator.addOracle(BASE, QUOTE, await o1.getAddress());
+
+      await expect(aggregator.computeQuoteMedian(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWithCustomError(
+        aggregator,
+        "NoData",
+      );
+    });
+
+    it("should revert computeQuoteAverage with DeviationTooHigh", async () => {
+      await aggregator.setMaxDeviationBps(100); // 1%
+
+      const o1 = await createOracle("1.0");
+      const o2 = await createOracle("1.2"); // 20% deviation
+
+      await aggregator.addOracle(BASE, QUOTE, await o1.getAddress());
+      await aggregator.addOracle(BASE, QUOTE, await o2.getAddress());
+
+      await expect(aggregator.computeQuoteAverage(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWithCustomError(
+        aggregator,
+        "DeviationTooHigh",
+      );
+    });
+
+    it("should revert computeQuoteMedian with DeviationTooHigh", async () => {
+      await aggregator.setMaxDeviationBps(100); // 1%
+
+      const o1 = await createOracle("1.0");
+      const o2 = await createOracle("1.2"); // 20% deviation
+
+      await aggregator.addOracle(BASE, QUOTE, await o1.getAddress());
+      await aggregator.addOracle(BASE, QUOTE, await o2.getAddress());
+
+      await expect(aggregator.computeQuoteMedian(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWithCustomError(
+        aggregator,
+        "DeviationTooHigh",
+      );
+    });
+
+    it("should revert getQuoteAverage with ZeroQuote", async () => {
+      const o1 = await createOracle("0"); // Zero price
+
+      await aggregator.addOracle(BASE, QUOTE, await o1.getAddress());
+
+      await expect(aggregator.getQuoteAverage(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWithCustomError(
+        aggregator,
+        "ZeroQuote",
+      );
+    });
+
+    it("should revert getQuoteMedian with ZeroQuote", async () => {
+      const o1 = await createOracle("0"); // Zero price
+
+      await aggregator.addOracle(BASE, QUOTE, await o1.getAddress());
+
+      await expect(aggregator.getQuoteMedian(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWithCustomError(
+        aggregator,
+        "ZeroQuote",
+      );
     });
   });
 });

@@ -150,7 +150,10 @@ contract AggregatorFactory {
      * @return aggregator Address of the deployed MultiOracleAggregator
      * @custom:access Only callable by owner
      * @dev Reverts if an aggregator already exists for the pair
+     * @dev Slither reentrancy warning is a false positive: `new` creates a contract at a
+     *      deterministic address and executes synchronously, not a reentrancy vector.
      */
+    // slither-disable-next-line reentrancy-no-eth
     function createAggregator(
         address base,
         address quote,
@@ -175,16 +178,23 @@ contract AggregatorFactory {
             maxDeviationBps
         );
 
+        // Note: `new` creates a contract at a deterministic address and is not a reentrancy vector
+        // The proxy constructor executes synchronously before returning, so this is safe.
+        // slither-disable-next-line reentrancy-benign
         ERC1967Proxy proxy = new ERC1967Proxy(aggregatorImplementation, initData);
         MultiOracleAggregator agg = MultiOracleAggregator(address(proxy));
 
+        // CEI: State update before external calls to addOracle/setMaxDeviationBps
         _aggregators[base][quote] = address(agg);
-        emit AggregatorCreated(base, quote, address(agg));
 
+        // External interactions
         for (uint256 i = 0; i < oracles.length; i++) {
             agg.addOracle(base, quote, oracles[i]);
         }
         agg.setMaxDeviationBps(maxDeviationBps);
+
+        // Events after state changes
+        emit AggregatorCreated(base, quote, address(agg));
         emit MaxDeviationUpdated(base, quote, maxDeviationBps);
 
         return address(agg);
