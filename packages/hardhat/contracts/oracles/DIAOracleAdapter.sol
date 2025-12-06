@@ -13,6 +13,26 @@ import { IDIAOracleV2 } from "../interfaces/IDIAOracleV2.sol";
  *      Validates that the price is non-zero and not older than 1 hour.
  */
 contract DIAOracleAdapter is IPriceOracle {
+    // ────────────────────────────────────────────────
+    // ░░ CUSTOM ERRORS
+    // ────────────────────────────────────────────────
+
+    error ZeroAddress();
+    error PairNotSet();
+    error ZeroPrice();
+    error StalePrice();
+
+    // ────────────────────────────────────────────────
+    // ░░ EVENTS
+    // ────────────────────────────────────────────────
+
+    /// @notice Emitted when a pair key is set
+    event PairKeySet(address indexed base, address indexed quote, string key);
+
+    // ────────────────────────────────────────────────
+    // ░░ STATE
+    // ────────────────────────────────────────────────
+
     /// @notice DIA oracle contract reference
     IDIAOracleV2 public immutable dia;
 
@@ -34,11 +54,17 @@ contract DIAOracleAdapter is IPriceOracle {
     /**
      * @notice Deploys the DIAOracleAdapter
      * @param _diaOracle Address of the DIA oracle contract
+     * @param _base Address of the base token
+     * @param _quote Address of the quote token
+     * @param _key DIA feed key string
      */
     constructor(address _diaOracle, address _base, address _quote, string memory _key) {
+        if (_diaOracle == address(0)) revert ZeroAddress();
+        if (_base == address(0) || _quote == address(0)) revert ZeroAddress();
         dia = IDIAOracleV2(_diaOracle);
         owner = msg.sender;
         pairKeys[_base][_quote] = _key;
+        emit PairKeySet(_base, _quote, _key);
     }
 
     /**
@@ -49,7 +75,9 @@ contract DIAOracleAdapter is IPriceOracle {
      * @param key Key used to fetch the price from DIA oracle (e.g., "ETH/USD")
      */
     function setPairKey(address base, address quote, string memory key) external onlyOwner {
+        if (base == address(0) || quote == address(0)) revert ZeroAddress();
         pairKeys[base][quote] = key;
+        emit PairKeySet(base, quote, key);
     }
 
     /**
@@ -68,11 +96,11 @@ contract DIAOracleAdapter is IPriceOracle {
         address quote
     ) external view override returns (uint256 outAmount) {
         string memory key = pairKeys[base][quote];
-        require(bytes(key).length > 0, "DIA: pair not set");
+        if (bytes(key).length == 0) revert PairNotSet();
 
         (uint128 price, uint128 ts) = dia.getValue(key);
-        require(price > 0, "DIA: zero price");
-        require(block.timestamp - ts < 1 hours, "DIA: stale");
+        if (price == 0) revert ZeroPrice();
+        if (block.timestamp - ts >= 1 hours) revert StalePrice();
 
         outAmount = (uint256(price) * inAmount) / 1e8;
     }

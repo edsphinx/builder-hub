@@ -819,7 +819,13 @@ describe("GasXERC20FeePaymaster", function () {
       };
 
       // The aggregator rejects zero quotes before the paymaster can check
-      await expect(paymaster.exposedValidate(op as any, userOpHash, maxCost)).to.be.revertedWith("zero quote");
+      // We need to get the aggregator contract to check against its custom error
+      const oracleAddress = await paymaster.priceOracle();
+      const aggregator = await ethers.getContractAt("MultiOracleAggregator", oracleAddress);
+      await expect(paymaster.exposedValidate(op as any, userOpHash, maxCost)).to.be.revertedWithCustomError(
+        aggregator,
+        "ZeroQuote",
+      );
     });
 
     it("Should accept when off-chain price is slightly lower than on-chain (within 5%)", async function () {

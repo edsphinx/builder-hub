@@ -11,6 +11,17 @@ import { IOracleAggregator } from "../interfaces/IOracleAggregator.sol";
  * @dev Each deployed adapter is preconfigured with a specific DIA key and registered with the provided aggregator.
  */
 contract DIAAdapterFactory {
+    // ────────────────────────────────────────────────
+    // ░░  CUSTOM ERRORS
+    // ────────────────────────────────────────────────
+
+    error ZeroAddress();
+    error ZeroKey();
+
+    // ────────────────────────────────────────────────
+    // ░░  STATE
+    // ────────────────────────────────────────────────
+
     /// @notice Address of the oracle aggregator that supports `addOracle`
     address public immutable aggregator;
 
@@ -19,6 +30,10 @@ contract DIAAdapterFactory {
 
     /// @notice Owner address with permission to deploy adapters
     address public immutable owner;
+
+    // ────────────────────────────────────────────────
+    // ░░  EVENTS
+    // ────────────────────────────────────────────────
 
     /**
      * @notice Emitted when a new DIAOracleAdapter is deployed and registered
@@ -29,11 +44,19 @@ contract DIAAdapterFactory {
      */
     event AdapterCreated(address indexed adapter, address indexed base, address indexed quote, string key);
 
+    // ────────────────────────────────────────────────
+    // ░░  MODIFIERS
+    // ────────────────────────────────────────────────
+
     /// @notice Restricts function access to the contract owner
     modifier onlyOwner() {
         require(msg.sender == owner, "not owner");
         _;
     }
+
+    // ────────────────────────────────────────────────
+    // ░░  CONSTRUCTOR
+    // ────────────────────────────────────────────────
 
     /**
      * @notice Deploys the factory and binds it to a DIA oracle and an oracle aggregator
@@ -41,10 +64,16 @@ contract DIAAdapterFactory {
      * @param _diaOracle Address of the DIA oracle contract
      */
     constructor(address _aggregator, address _diaOracle) {
+        if (_aggregator == address(0)) revert ZeroAddress();
+        if (_diaOracle == address(0)) revert ZeroAddress();
         aggregator = _aggregator;
         dia = _diaOracle;
         owner = msg.sender;
     }
+
+    // ────────────────────────────────────────────────
+    // ░░  FUNCTIONS
+    // ────────────────────────────────────────────────
 
     /**
      * @notice Deploys a new DIAOracleAdapter for a specific base/quote pair and key, and registers it
@@ -52,9 +81,12 @@ contract DIAAdapterFactory {
      * @param base Address of the base token (e.g. ETH)
      * @param quote Address of the quote token (e.g. USDC)
      * @param key DIA feed key string (e.g. "ETH/USD")
-     * @return Address of the newly deployed DIAOracleAdapter
+     * @return adapter Address of the newly deployed DIAOracleAdapter
      */
     function deployAdapter(address base, address quote, string calldata key) external onlyOwner returns (address) {
+        if (base == address(0) || quote == address(0)) revert ZeroAddress();
+        if (bytes(key).length == 0) revert ZeroKey();
+
         DIAOracleAdapter adapter = new DIAOracleAdapter(dia, base, quote, key);
 
         emit AdapterCreated(address(adapter), base, quote, key);
