@@ -29,11 +29,19 @@ If you are a developer looking to integrate or contribute to the GasX protocol, 
 - **[Environment Implementation Details](./guides/04_environment_implementation.md):** A technical reference with code snippets on how environment handling is implemented.
 
 ### 3. Smart Contract Reference
+
+#### Core Contracts
 - **[`GasXWhitelistPaymaster`](./contracts/01_GasXWhitelistPaymaster.md):** Technical reference for the pure gas sponsorship paymaster.
 - **[`GasXERC20FeePaymaster`](./contracts/02_GasXERC20FeePaymaster.md):** Technical reference for the paymaster that allows users to pay fees in ERC20 tokens.
 - **[`GasXConfig`](./contracts/03_GasXConfig.md):** Technical reference for the protocol's updatable configuration contract.
+- **[`GasXSubscriptions`](./contracts/09_GasXSubscriptions.md):** Technical reference for the subscription and credit payment system.
+
+#### Oracle Infrastructure
 - **[`MultiOracleAggregator`](./contracts/04_MultiOracleAggregator.md):** Technical reference for the on-chain price oracle aggregation system.
 - **[`AggregatorFactory`](./contracts/05_AggregatorFactory.md):** Technical reference for the factory that deploys oracle aggregators.
+- **[`DIAOracleAdapter`](./contracts/06_DIAOracleAdapter.md):** Technical reference for the DIA Oracle V2 adapter.
+- **[`EulerOracleAdapter`](./contracts/07_EulerOracleAdapter.md):** Technical reference for the Euler Protocol oracle adapter.
+- **[`DIAAdapterFactory`](./contracts/08_DIAAdapterFactory.md):** Technical reference for the DIA adapter factory.
 
 
 ---
