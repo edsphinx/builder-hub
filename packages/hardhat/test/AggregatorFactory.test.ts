@@ -1,10 +1,14 @@
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { AggregatorFactory, MockOracle } from "../typechain-types";
 import { parseUnits } from "ethers";
 
-describe("AggregatorFactory", function () {
+// Skip tests if not on Hardhat network (loadFixture only works on Hardhat)
+const isHardhatNetwork = network.name === "hardhat" || network.name === "localhost";
+const describeOrSkip = isHardhatNetwork ? describe : describe.skip;
+
+describeOrSkip("AggregatorFactory", function () {
   const BASE = "0x0000000000000000000000000000000000000001";
   const QUOTE = "0x0000000000000000000000000000000000000002";
   const MAX_DEVIATION_BPS = 1000n; // 10%

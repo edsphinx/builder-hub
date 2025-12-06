@@ -1,10 +1,14 @@
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 import { expect } from "chai";
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { parseUnits } from "ethers";
 import { DIAOracleAdapter, EulerOracleAdapter, DIAAdapterFactory } from "../typechain-types";
 
-describe("Oracle Adapters", function () {
+// Skip tests if not on Hardhat network (loadFixture only works on Hardhat)
+const isHardhatNetwork = network.name === "hardhat" || network.name === "localhost";
+const describeOrSkip = isHardhatNetwork ? describe : describe.skip;
+
+describeOrSkip("Oracle Adapters", function () {
   const BASE = "0x0000000000000000000000000000000000000001";
   const QUOTE = "0x0000000000000000000000000000000000000002";
 
