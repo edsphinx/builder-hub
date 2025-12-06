@@ -30,17 +30,38 @@ interface IEulerOracle {
  * @dev Fixed scale of 1e18. Reverts if price is zero. Uses full-precision mulDiv for safety.
  */
 contract EulerOracleAdapter is IPriceOracle {
+    // ────────────────────────────────────────────────
+    // ░░ CUSTOM ERRORS
+    // ────────────────────────────────────────────────
+
+    error ZeroAddress();
+    error NotContract();
+    error InvalidPair();
+    error ZeroPrice();
+
+    // ────────────────────────────────────────────────
+    // ░░ STATE
+    // ────────────────────────────────────────────────
+
     /// @notice Address of the underlying Euler oracle contract
     IEulerOracle public immutable euler;
 
+    /// @notice Base token address
     address public immutable base;
+
+    /// @notice Quote token address
     address public immutable quote;
 
     /**
+     * @notice Deploys the EulerOracleAdapter
      * @param _euler Address of the deployed Euler oracle
+     * @param _base Address of the base token
+     * @param _quote Address of the quote token
      */
     constructor(address _euler, address _base, address _quote) {
-        require(_euler.code.length > 0, "euler: not contract");
+        if (_euler == address(0)) revert ZeroAddress();
+        if (_euler.code.length == 0) revert NotContract();
+        if (_base == address(0) || _quote == address(0)) revert ZeroAddress();
         euler = IEulerOracle(_euler);
         base = _base;
         quote = _quote;
@@ -59,9 +80,9 @@ contract EulerOracleAdapter is IPriceOracle {
         address _base,
         address _quote
     ) external view override returns (uint256 outAmount) {
-        require(base == _base && quote == _quote, "invalid pair");
+        if (base != _base || quote != _quote) revert InvalidPair();
         uint256 price = euler.getPrice(base, quote);
-        require(price > 0, "euler: zero price");
+        if (price == 0) revert ZeroPrice();
         outAmount = Math.mulDiv(inAmount, price, 1e18);
     }
 }

@@ -14,10 +14,23 @@ import { EulerOracleAdapter } from "../oracles/EulerOracleAdapter.sol";
  * @dev Designed for compatibility with MultiOracleAggregator and oracle adapters conforming to IPriceOracle.
  */
 contract AggregatorFactory {
+    // ────────────────────────────────────────────────
+    // ░░  CUSTOM ERRORS
+    // ────────────────────────────────────────────────
+
+    error ZeroAddress();
+    error IdenticalTokens();
+    error AggregatorAlreadyExists();
+    error ReversePairExists();
+    error NoOracles();
+    error AggregatorNotFound();
+    error SameOwner();
+    error ZeroImplementation();
+
     /// @notice Owner address with permissions to create and remove aggregators
     address public owner;
 
-    /// @notice Dirección del contrato lógico previamente desplegado
+    /// @notice Address of the previously deployed logic contract
     address public immutable aggregatorImplementation;
 
     /// @notice Mapping from base token ⇒ quote token ⇒ aggregator address
@@ -101,10 +114,11 @@ contract AggregatorFactory {
 
     /**
      * @notice Deploys the factory contract
-     * @dev Sets the deployer as the immutable owner
+     * @dev Sets the deployer as the owner
+     * @param _implementation Address of the MultiOracleAggregator implementation contract
      */
     constructor(address _implementation) {
-        require(_implementation != address(0), "impl required");
+        if (_implementation == address(0)) revert ZeroImplementation();
         aggregatorImplementation = _implementation;
         owner = msg.sender;
         emit OwnershipTransferred(address(0), msg.sender);
@@ -114,11 +128,11 @@ contract AggregatorFactory {
      * @notice Transfers the ownership of the contract to a new address
      * @param newOwner New owner address
      * @custom:access Only callable by owner
-     * @dev Reverts if the new owner is zero
+     * @dev Reverts if the new owner is zero or same as current
      */
     function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "zero address");
-        require(newOwner != owner, "same owner");
+        if (newOwner == address(0)) revert ZeroAddress();
+        if (newOwner == owner) revert SameOwner();
         emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
     }
@@ -143,21 +157,21 @@ contract AggregatorFactory {
         address[] calldata oracles,
         uint256 maxDeviationBps
     ) external onlyOwner returns (address aggregator) {
-        require(base != address(0) && quote != address(0), "zero address");
-        require(base != quote, "identical tokens");
+        if (base == address(0) || quote == address(0)) revert ZeroAddress();
+        if (base == quote) revert IdenticalTokens();
         if (_aggregators[base][quote] != address(0)) {
             emit AggregatorCreationSkipped(base, quote, "already exists");
-            revert("already exists");
+            revert AggregatorAlreadyExists();
         }
         if (_aggregators[quote][base] != address(0)) {
             emit AggregatorCreationSkipped(base, quote, "reverse pair exists");
-            revert("reverse pair exists");
+            revert ReversePairExists();
         }
-        require(oracles.length > 0, "no oracles");
+        if (oracles.length == 0) revert NoOracles();
 
         bytes memory initData = abi.encodeWithSelector(
             MultiOracleAggregator.initialize.selector,
-            address(this), // el factory será el owner inicial
+            address(this), // Factory will be the initial owner
             maxDeviationBps
         );
 
@@ -185,7 +199,7 @@ contract AggregatorFactory {
      */
     function removeAggregator(address base, address quote) external onlyOwner {
         address aggregator = _aggregators[base][quote];
-        require(aggregator != address(0), "not found");
+        if (aggregator == address(0)) revert AggregatorNotFound();
         delete _aggregators[base][quote];
         emit AggregatorRemoved(base, quote);
     }
@@ -200,8 +214,8 @@ contract AggregatorFactory {
      */
     function transferAggregatorOwnership(address base, address quote, address newOwner) external onlyOwner {
         address aggregator = _aggregators[base][quote];
-        require(aggregator != address(0), "not found");
-        require(newOwner != address(0), "zero address");
+        if (aggregator == address(0)) revert AggregatorNotFound();
+        if (newOwner == address(0)) revert ZeroAddress();
 
         MultiOracleAggregator(aggregator).transferOwnership(newOwner);
         emit AggregatorOwnershipTransferred(base, quote, newOwner);
@@ -247,7 +261,7 @@ contract AggregatorFactory {
         bool useMedian
     ) external returns (uint256 quoteAmount) {
         address aggregator = _aggregators[base][quote];
-        require(aggregator != address(0), "not found");
+        if (aggregator == address(0)) revert AggregatorNotFound();
 
         string memory method = useMedian ? "median" : "average";
         emit QuoteRequested(msg.sender, base, quote, inAmount, method);
