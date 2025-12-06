@@ -40,6 +40,14 @@ contract MultiOracleAggregator is OwnableUpgradeable, UUPSUpgradeable {
         bool enabled;
     }
 
+    /// @notice Structure for deviation validation parameters
+    struct DeviationParams {
+        address base;
+        address quote;
+        uint256 amount;
+        uint256 refPrice;
+    }
+
     /// @notice Mapping of base ⇒ quote ⇒ list of oracles
     mapping(address => mapping(address => OracleInfo[])) private _oracles;
 
@@ -233,13 +241,16 @@ contract MultiOracleAggregator is OwnableUpgradeable, UUPSUpgradeable {
         OracleInfo[] storage list = _oracles[base][quote];
         if (list.length == 0) revert NoOracles();
         uint256[] memory quotes = new uint256[](list.length);
+        address[] memory oracleAddrs = new address[](list.length);
         uint256 count;
 
         for (uint256 i; i < list.length; i++) {
             if (!list[i].enabled) continue;
             try IPriceOracle(list[i].oracleAddress).getQuote(amount, base, quote) returns (uint256 q) {
                 if (q == 0) revert ZeroQuote();
-                quotes[count++] = q;
+                quotes[count] = q;
+                oracleAddrs[count] = list[i].oracleAddress;
+                count++;
                 emit QuoteUsed(base, quote, list[i].oracleAddress, amount, q);
             } catch {}
         }
@@ -249,14 +260,7 @@ contract MultiOracleAggregator is OwnableUpgradeable, UUPSUpgradeable {
         for (uint256 i; i < count; i++) sum += quotes[i];
         uint256 avg = sum / count;
 
-        for (uint256 i; i < count; i++) {
-            uint256 diff = quotes[i] > avg ? quotes[i] - avg : avg - quotes[i];
-            uint256 deviationBps = (diff * 10_000) / avg;
-            if (deviationBps > maxDeviationBps) {
-                emit QuoteDeviationRejected(base, quote, list[i].oracleAddress, amount, quotes[i], avg);
-                revert DeviationTooHigh(deviationBps);
-            }
-        }
+        _validateDeviation(quotes, oracleAddrs, count, DeviationParams(base, quote, amount, avg));
         return avg;
     }
 
@@ -306,13 +310,16 @@ contract MultiOracleAggregator is OwnableUpgradeable, UUPSUpgradeable {
         OracleInfo[] storage list = _oracles[base][quote];
         if (list.length == 0) revert NoOracles();
         uint256[] memory quotes = new uint256[](list.length);
+        address[] memory oracleAddrs = new address[](list.length);
         uint256 count;
 
         for (uint256 i; i < list.length; i++) {
             if (!list[i].enabled) continue;
             try IPriceOracle(list[i].oracleAddress).getQuote(amount, base, quote) returns (uint256 q) {
                 if (q == 0) revert ZeroQuote();
-                quotes[count++] = q;
+                quotes[count] = q;
+                oracleAddrs[count] = list[i].oracleAddress;
+                count++;
                 emit QuoteUsed(base, quote, list[i].oracleAddress, amount, q);
             } catch {}
         }
@@ -322,14 +329,7 @@ contract MultiOracleAggregator is OwnableUpgradeable, UUPSUpgradeable {
         for (uint256 i; i < count; i++) valid[i] = quotes[i];
         uint256 med = _median(valid);
 
-        for (uint256 i; i < count; i++) {
-            uint256 diff = quotes[i] > med ? quotes[i] - med : med - quotes[i];
-            uint256 deviationBps = (diff * 10_000) / med;
-            if (deviationBps > maxDeviationBps) {
-                emit QuoteDeviationRejected(base, quote, list[i].oracleAddress, amount, quotes[i], med);
-                revert DeviationTooHigh(deviationBps);
-            }
-        }
+        _validateDeviation(quotes, oracleAddrs, count, DeviationParams(base, quote, amount, med));
         return med;
     }
 
@@ -381,6 +381,29 @@ contract MultiOracleAggregator is OwnableUpgradeable, UUPSUpgradeable {
             }
         }
         return arr[arr.length / 2];
+    }
+
+    /**
+     * @dev Internal method to validate deviation and emit events
+     * @param quotes Array of quote values
+     * @param oracleAddrs Array of oracle addresses corresponding to quotes
+     * @param count Number of valid quotes
+     * @param params Deviation validation parameters (base, quote, amount, refPrice)
+     */
+    function _validateDeviation(
+        uint256[] memory quotes,
+        address[] memory oracleAddrs,
+        uint256 count,
+        DeviationParams memory params
+    ) internal {
+        for (uint256 i; i < count; i++) {
+            uint256 diff = quotes[i] > params.refPrice ? quotes[i] - params.refPrice : params.refPrice - quotes[i];
+            uint256 deviationBps = (diff * 10_000) / params.refPrice;
+            if (deviationBps > maxDeviationBps) {
+                emit QuoteDeviationRejected(params.base, params.quote, oracleAddrs[i], params.amount, quotes[i], params.refPrice);
+                revert DeviationTooHigh(deviationBps);
+            }
+        }
     }
 
     // ────────────────────────────────────────────────
