@@ -109,7 +109,10 @@ describe("MultiOracleAggregator", () => {
 
     it("rejects duplicates", async () => {
       await aggregator.connect(owner).addOracle(BASE, QUOTE, await mockOracle.getAddress());
-      await expect(aggregator.addOracle(BASE, QUOTE, await mockOracle.getAddress())).to.be.revertedWith("duplicate");
+      await expect(aggregator.addOracle(BASE, QUOTE, await mockOracle.getAddress())).to.be.revertedWithCustomError(
+        aggregator,
+        "DuplicateOracle",
+      );
     });
 
     it("toggles oracle", async () => {
@@ -159,7 +162,7 @@ describe("MultiOracleAggregator", () => {
     it("should revert when removing with an out-of-bounds index", async () => {
       await aggregator.addOracle(BASE, QUOTE, await mockOracle.getAddress());
       // Try to remove at index 1 when the length is only 1
-      await expect(aggregator.removeOracle(BASE, QUOTE, 1)).to.be.revertedWith("invalid idx");
+      await expect(aggregator.removeOracle(BASE, QUOTE, 1)).to.be.revertedWithCustomError(aggregator, "InvalidIndex");
     });
   });
 
@@ -227,8 +230,9 @@ describe("MultiOracleAggregator", () => {
       await aggregator.addOracle(BASE, QUOTE, await o1.getAddress());
       await aggregator.addOracle(BASE, QUOTE, await o2.getAddress());
 
-      await expect(aggregator.getQuoteAverage(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWith(
-        "deviation too high",
+      await expect(aggregator.getQuoteAverage(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWithCustomError(
+        aggregator,
+        "DeviationTooHigh",
       );
     });
 
@@ -237,7 +241,10 @@ describe("MultiOracleAggregator", () => {
       await o1.setRevert(true);
       await aggregator.addOracle(BASE, QUOTE, await o1.getAddress());
 
-      await expect(aggregator.getQuoteAverage(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWith("no data");
+      await expect(aggregator.getQuoteAverage(parseUnits("1", 18), BASE, QUOTE)).to.be.revertedWithCustomError(
+        aggregator,
+        "NoData",
+      );
     });
   });
 
