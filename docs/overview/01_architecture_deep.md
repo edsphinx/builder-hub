@@ -119,6 +119,13 @@ Understanding the exact structure of the `paymasterAndData` field is crucial for
 
 ## 6. Future Considerations
 
+### No-Code Platform Integration
+- **Admin Dashboard:** Visual interface for paymaster configuration and monitoring.
+- **Campaign Builder:** No-code tool for creating gas sponsorship campaigns with budget limits.
+- **Whitelist Manager:** CSV import, API integrations, and visual rule builder.
+- **Analytics Dashboard:** Real-time usage metrics, spending reports, and alerts.
+
+### On-Chain Enhancements
 - Full integration of oracle-based USD limits in `GasX`.
 - More sophisticated oracle adapters and aggregation logic.
-- Integration with ZK identity solutions.
+- `GasXMerkleProofPaymaster` for on-chain modular eligibility.

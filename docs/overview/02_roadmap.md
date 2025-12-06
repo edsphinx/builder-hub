@@ -2,47 +2,82 @@
 
 ## Executive Summary
 
-This document outlines the strategic roadmap for the GasX Protocol, evolving it from its current state as a specialized paymaster into a highly adaptable, multi-strategy gas abstraction layer. The vision is to provide a modular solution for any dApp to sponsor user transactions through a variety of configurable on-chain and off-chain rules. We will explore two primary architectural paths for expansion: a highly flexible on-chain modular system and an industry-standard, off-chain signature-based model.
+This document outlines the strategic roadmap for the GasX Protocol, evolving it from its current state as a specialized paymaster into a **No-Code Gas Sponsorship Platform**. Unlike enterprise SDK solutions (Pimlico, Alchemy, Biconomy), GasX focuses on enabling **any project to implement gas sponsorship without developer resources**.
 
 ---
 
 ## 1. Vision for the GasX Protocol
 
-The ultimate goal is to evolve GasX into a comprehensive gas abstraction module that any dApp can integrate. Eligibility for gas sponsorship will be determined by a rich set of configurable strategies, including:
+The ultimate goal is to evolve GasX into a **No-Code/Low-Code platform** where non-technical teams can:
 
-- **Asset-Gated Access:** Sponsoring users who hold specific ERC-20 tokens or NFTs.
-- **Identity & Reputation:** Leveraging on-chain attestations (e.g., from EAS) to identify eligible users.
-- **On-Chain Behavior:** Identifying users based on their historical interactions with specific protocols.
-- **Permissioned Lists:** Granular control via whitelists or Merkle trees.
+- **Configure gas sponsorship visually** through an Admin Dashboard
+- **Create campaigns** with budget limits, time windows, and eligibility rules
+- **Import whitelists** via CSV, API connections, or visual rule builders
+- **Monitor spending and usage** with real-time analytics
+- **Integrate instantly** with copy-paste embed widgets
 
----
+### Target Users
 
-## 2. Architectural Paths for Expansion
-
-To achieve the vision, we propose two primary architectural paths.
-
-### 2.1. Path A: On-Chain Modular Eligibility
-
-This path focuses on creating a highly flexible and decentralized system where all eligibility logic is verifiable on-chain.
-
-- **Concept:** Introduce a new, pluggable "module" system where a core `GasXStrategyPaymaster` delegates eligibility checks to specialized, single-purpose contracts.
-- **Architectural Components:** This includes a core routing paymaster, a standard `IEligibilityProvider` interface, and specialized modules for checking NFT/Token ownership, Merkle proofs, and on-chain attestations.
-
-### 2.2. Path B: Off-Chain Signature-Based Sponsorship (Industry Standard)
-
-This path aligns GasX with the dominant, highly scalable pattern used by major infrastructure providers.
-
-- **Concept:** Move the complex, dApp-specific eligibility logic off-chain to the dApp's own backend. The paymaster's on-chain role is simplified to only verifying a cryptographic signature from an authorized "oracle signer."
-- **Architectural Impact:** This simplifies the on-chain contracts, maximizes flexibility for integrating dApps, and focuses the `GasXConfig` contract on managing trusted signers.
+| User Type | Need | GasX Solution |
+|:---|:---|:---|
+| **Marketing Teams** | Sponsor gas for promotional campaigns | Campaign Builder with budget caps |
+| **Community Managers** | Reward active community members | Whitelist Manager with CSV import |
+| **Product Managers** | Reduce friction for new users | Embed Widget for instant integration |
+| **Founders** | Launch without hiring Web3 devs | No-Code Dashboard for full control |
 
 ---
 
-## 3. Prioritization & Recommended Strategy
+## 2. Competitive Differentiation
 
-- **Path B (Signature-Based) is the highest priority.** It is the most scalable, secure, and industry-aligned model for a general-purpose paymaster.
-- **Path A (On-Chain Modular) is a valuable long-term goal,** ideal for use cases that require maximum decentralization.
+### Why Not Use Existing Solutions?
 
-**Recommendation:** Focus immediate development on perfecting the signature-based model for the entire GasX Suite.
+| Feature | Pimlico/Alchemy/Biconomy | GasX |
+|:---|:---|:---|
+| **Target User** | Developers | Non-technical teams |
+| **Integration** | SDK/API coding required | No-code dashboard |
+| **Campaign Management** | Build your own | Built-in campaign builder |
+| **Whitelist Management** | Manual API calls | CSV import, visual rules |
+| **Analytics** | Build your own | Built-in dashboard |
+| **Time to Launch** | Days/weeks of development | Minutes |
+
+### GasX Unique Value
+
+- **No-Code First:** Every feature designed for non-developers
+- **Campaign-Centric:** Built around marketing/growth use cases
+- **Self-Service:** No sales calls, no enterprise contracts
+- **Transparent Pricing:** Pay-as-you-go with credit system
+
+---
+
+## 3. Platform Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    GasX No-Code Platform                        │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
+│  │ Admin Dashboard │  │ Campaign Builder│  │    Analytics    │  │
+│  ├─────────────────┤  ├─────────────────┤  ├─────────────────┤  │
+│  │ - Paymaster     │  │ - Budget Limits │  │ - Usage Metrics │  │
+│  │   Configuration │  │ - Time Windows  │  │ - Cost Reports  │  │
+│  │ - Whitelist     │  │ - Eligibility   │  │ - User Insights │  │
+│  │   Management    │  │   Rules         │  │ - Alerts        │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
+│                              │                                   │
+│  ┌───────────────────────────┴───────────────────────────────┐  │
+│  │              Embed Widget / Webhook Integration           │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                              │                                   │
+├──────────────────────────────┼───────────────────────────────────┤
+│                     Smart Contracts (On-Chain)                  │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
+│  │   Paymasters    │  │    Oracles      │  │  Subscriptions  │  │
+│  ├─────────────────┤  ├─────────────────┤  ├─────────────────┤  │
+│  │ GasXWhitelist   │  │ MultiOracle     │  │ GasXSubscript.  │  │
+│  │ GasXERC20Fee    │  │ DIAAdapter      │  │ Credit System   │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 ## 4. Development Roadmap
@@ -51,8 +86,8 @@ This path aligns GasX with the dominant, highly scalable pattern used by major i
 | :--- | :--- | :--- | :--- |
 | **Q3 2025** | **Foundation & Core Infrastructure** | - **`GasXWhitelistPaymaster.sol`:** Deployed and verified on Arbitrum & Scroll Sepolia.<br>- **`GasXConfig.sol`:** Centralized configuration deployed.<br>- **`MultiOracleAggregator.sol`:** Multi-oracle price feed with deviation checks.<br>- **Oracle Adapters:** DIA and Euler adapters with factory deployment. | ✅ Complete |
 | **Q4 2025** | **USDC & Subscriptions** | - **`GasXERC20FeePaymaster.sol`:** Token fee payments deployed and tested.<br>- **`GasXSubscriptions.sol`:** Tiered subscriptions with credit system.<br>- **Security Audit Preparation:** 97% coverage, 344 unit tests, 101 fuzz tests.<br>- **Static Analysis:** Slither (0 Med/High), Aderyn (0 High). | ✅ Complete |
-| **Q1 2026** | **SDK & Partner Onboarding** | - **Developer SDK:** Publish NPM package for dApp integration.<br>- **Admin Dashboard v1:** UI for managing paymaster configurations.<br>- **First Partner Integrations:** Onboard initial dApps. | 📝 Planned |
-| **Q2 2026** | **Scalability & New Strategies** | - **`GasXMerkleProofPaymaster`:** On-chain modular eligibility (Path A).<br>- **Off-Chain Oracle Signer Service:** Production backend for signature validation.<br>- **Mainnet Deployment:** Launch on Arbitrum, Base, Scroll mainnets. | 📝 Planned |
+| **Q1 2026** | **No-Code Platform v1** | - **Admin Dashboard:** Visual paymaster configuration & real-time monitoring.<br>- **Campaign Builder:** Create sponsorship campaigns with budget limits & time windows.<br>- **Whitelist Manager:** CSV import, API connections, visual rule builder. | 📝 Planned |
+| **Q2 2026** | **Platform Expansion** | - **Analytics Dashboard:** Usage metrics, spending reports, user insights, alerts.<br>- **Embed Widget:** Copy-paste integration snippet for any website.<br>- **Webhook/Zapier Integration:** Connect with existing tools and workflows.<br>- **Mainnet Deployment:** Launch on Arbitrum, Base, Scroll mainnets. | 📝 Planned |
 
 ---
 
@@ -116,8 +151,14 @@ This section documents key architectural patterns and optimizations that have be
 - **Formal Security Audit:** Preparing for external audit engagement.
 - **Mainnet Deployment Planning:** Finalizing deployment strategy for Arbitrum, Base, Scroll.
 
-### Upcoming 📝
-- **Developer SDK:** NPM package for simplified dApp integration.
-- **Admin Dashboard v1:** UI for managing paymaster configurations.
-- **Oracle Signer Service:** Production off-chain backend for signature validation.
-- **Partner Integrations:** Onboarding first wave of dApp partners.
+### Upcoming - No-Code Platform 📝
+
+| Feature | Description | Priority |
+|:---|:---|:---:|
+| **Admin Dashboard** | Visual paymaster configuration, real-time monitoring | P0 |
+| **Campaign Builder** | Budget limits, time windows, eligibility rules | P0 |
+| **Whitelist Manager** | CSV import, API integrations, visual rule builder | P0 |
+| **Analytics Dashboard** | Usage metrics, spending reports, user insights | P1 |
+| **Embed Widget** | Copy-paste integration snippet for any website | P1 |
+| **Webhook/Zapier** | Connect with existing tools and workflows | P2 |
+| **Multi-tenant Support** | Multiple projects per account | P2 |

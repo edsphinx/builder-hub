@@ -94,12 +94,16 @@ The GasX Protocol is rigorously tested using a multi-layered approach to ensure 
 
 ## 🚀 Roadmap
 
+### No-Code First Strategy
+
+GasX differentiates from enterprise solutions (Pimlico, Alchemy, Biconomy) by focusing on **No-Code/Low-Code tools** that enable any project to implement gas sponsorship without developer resources.
+
 | Quarter | Phase | Key Deliverables | Status |
 | :--- | :--- | :--- | :---: |
 | **Q3 2025** | **Foundation & Core Infrastructure** | - **`GasXWhitelistPaymaster`:** Deployed on Arbitrum & Scroll Sepolia.<br>- **`GasXConfig` & `MultiOracleAggregator`:** Multi-oracle price feeds.<br>- **Oracle Adapters:** DIA & Euler adapters with factory deployment. | ✅ |
 | **Q4 2025** | **USDC & Subscriptions** | - **`GasXERC20FeePaymaster`:** Token fee payments (100% coverage).<br>- **`GasXSubscriptions`:** Tiered subscriptions with credit system.<br>- **Security Prep:** 344 tests, 101 fuzz tests, Slither & Aderyn clean. | ✅ |
-| **Q1 2026** | **SDK & Partner Onboarding** | - **Developer SDK:** NPM package for dApp integration.<br>- **Admin Dashboard v1:** UI for paymaster management.<br>- **First Partner Integrations:** Onboard initial dApps. | 📝 |
-| **Q2 2026** | **Mainnet & Scalability** | - **Mainnet Deployment:** Arbitrum, Base, Scroll mainnets.<br>- **Oracle Signer Service:** Production off-chain backend.<br>- **`GasXMerkleProofPaymaster`:** On-chain modular eligibility. | 📝 |
+| **Q1 2026** | **No-Code Platform v1** | - **Admin Dashboard:** Visual paymaster configuration & monitoring.<br>- **Campaign Builder:** Create gas sponsorship campaigns without code.<br>- **Whitelist Manager:** CSV import, API integrations, rule builder. | 📝 |
+| **Q2 2026** | **Platform Expansion** | - **Analytics Dashboard:** Usage metrics, spending reports, user insights.<br>- **Embed Widget:** Copy-paste integration snippet for any website.<br>- **Webhook/Zapier:** Connect with existing tools and workflows.<br>- **Mainnet Deployment:** Arbitrum, Base, Scroll mainnets. | 📝 |
 
 ---
 ## 📘 Documentation
